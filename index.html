@@ -19,16 +19,18 @@
     
     var canvas = new Martin({
         id: 'canvas',
-        background: '#eee'
+        background: '#ddd'
     });
 
     for (var i = 0; i < 10; i++) {
-        canvas.createRect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');
+        canvas.rect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');
     }
 
     canvas
-        .createRect(10, 0, '50%', 50, '#f95') // orange
-        .createRect(600, 240, '30%', 120, '#59c'); // blue
+        .rect(10, 0, '50%', 50, '#f95') // orange
+        .rect(600, 240, '30%', 120, '#59c'); // blue
+
+    canvas.polygon([ [20, 10], [40, 40], [10, 40] ], '#fff');
 
     canvas.convertToImage();
 

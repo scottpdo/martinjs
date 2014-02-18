@@ -11,7 +11,7 @@
 		this.context = this.canvas.getContext('2d');
 
 		if ( obj.background ) {
-			this.createRect( 0, 0, '100%', '100%', obj.background );
+			this.rect( 0, 0, '100%', '100%', obj.background );
 		}
 
 		return this;
@@ -30,7 +30,7 @@
 	// Create a rectangle with position, dimensions, determined percentage-wise.
 	// Takes five inputs -- the x offset, y offset, width, and height (all normalized 
 	// relative to the canvas), and the color of the rectangle.
-	Martin.prototype.createRect = function( offsetX, offsetY, width, height, color ) {
+	Martin.prototype.rect = function( offsetX, offsetY, width, height, color ) {
 
 		var _this = this,
 			attributes = {
@@ -63,6 +63,32 @@
         );
 
         return this;
+    };
+
+    // Given an array of points i.e. [ [0, 10], [5, 20], [0, 15] ], draw a polygon.
+    // Points are parsed as pixels if integers or percentage if of the form '10%'
+    Martin.prototype.polygon = function( arr, color ) {
+
+    	var height = 0;
+
+    	for (var i = 1; i < arr.length; i++) {
+
+    		height = Math.abs(arr[i][1] - arr[i - 1][1]) > height ? Math.abs(arr[i][1] - arr[i - 1][1]) : height;
+		}
+
+		this.context.fillStyle = color;
+    	this.context.beginPath();
+    	this.context.moveTo( arr[0][0], this.canvas.height - arr[0][1] );
+
+		for (var i = 0; i < arr.length; i++) {
+
+    		this.context.lineTo( arr[i][0], this.canvas.height - arr[i][1] );
+
+		}
+
+    	this.context.closePath();
+    	this.context.fill();
+
     };
 
     // "Replace" a canvas with an image by hiding the canvas and inserting
