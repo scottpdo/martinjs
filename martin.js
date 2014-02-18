@@ -3,6 +3,11 @@
 	window.Martin = function( obj ) {
 
 		this.canvas = document.getElementById( obj.id );
+
+		if ( !this.canvas || this.canvas.tagName !== 'CANVAS' ) {
+			return false;
+		}
+
 		this.context = this.canvas.getContext('2d');
 
 		if ( obj.background ) {
