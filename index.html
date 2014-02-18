@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+
+    <title>Martin</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    
+</head>
+
+<body>
+
+    <canvas id="canvas" width="1000" height="400"></canvas>
+
+    <script src="martin.js"></script>
+
+    <script>
+    
+    var canvas = new Martin({
+        id: 'canvas',
+        background: '#eee'
+    });
+
+    for (var i = 0; i < 10; i++) {
+        canvas.createRect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');
+    }
+
+    canvas
+        .createRect(10, 0, '50%', 50, '#f95') // orange
+        .createRect(600, 240, '30%', 120, '#59c'); // blue
+
+    canvas.convertToImage();
+
+    </script>
+</body>
+</html>
