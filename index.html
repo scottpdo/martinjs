@@ -29,6 +29,8 @@
         [ 80, 340]
     ], '#f34');
 
+    canvas.circle('50%', '50%', 30);
+
     canvas.convertToImage();
 
     var drawing = new Martin({
@@ -42,7 +44,7 @@
 
     drawing
         .rect(10, 0, '50%', 50, '#f95') // orange
-        .rect(600, 240, '30%', 120, '#59c'); // blue
+        .rect(600, 240, 200, 120, '#59c'); // blue
 
     drawing.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
 

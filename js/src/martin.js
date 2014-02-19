@@ -117,6 +117,22 @@
         return this;
     };
 
+    // Make a circle -- center X, center Y, radius, color
+    Martin.prototype.circle = function( offsetX, offsetY, radius, color ) {
+
+    	var centerX = typeof offsetX === 'string' && offsetX.slice(-1) === '%' ? this.normalizePercentX( +offsetX.slice(0, -1) ) : offsetX,
+    		centerY = typeof offsetY === 'string' && offsetY.slice(-1) === '%' ? this.normalizePercentY( +offsetY.slice(0, -1) ) : offsetY;
+
+    	this.context.beginPath();
+
+    	if ( !color ) { color = '#000'; }
+    	this.context.fillStyle = color;
+
+    	this.context.arc( centerX, centerY, radius, 0, 2 * Math.PI, false);
+    	this.context.fill();
+
+    }
+
     // Given an array of points i.e. [ [0, 10], [5, 20], [0, 15] ], draw a polygon.
     // Points are parsed as pixels if integers or percentage if of the form '10%'
     Martin.prototype.polygon = function( arr, color ) {
