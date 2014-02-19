@@ -69,25 +69,26 @@
     // Points are parsed as pixels if integers or percentage if of the form '10%'
     Martin.prototype.polygon = function( arr, color ) {
 
-    	var height = 0;
-
-    	for (var i = 1; i < arr.length; i++) {
-
-    		height = Math.abs(arr[i][1] - arr[i - 1][1]) > height ? Math.abs(arr[i][1] - arr[i - 1][1]) : height;
-		}
-
 		this.context.fillStyle = color;
     	this.context.beginPath();
-    	this.context.moveTo( arr[0][0], this.canvas.height - arr[0][1] );
 
 		for (var i = 0; i < arr.length; i++) {
 
-    		this.context.lineTo( arr[i][0], this.canvas.height - arr[i][1] );
+			var toX = typeof arr[i][0] === 'string' && arr[i][0].slice(-1) === '%' ? this.normalizePercentX( +arr[i][0].slice(0, -1) ) : arr[i][0],
+				toY = typeof arr[i][1] === 'string' && arr[i][1].slice(-1) === '%' ? this.normalizePercentY( +arr[i][1].slice(0, -1) ) : arr[i][1];
+
+			if ( i === 0 ) {
+				this.context.moveTo( toX, this.canvas.height - toY );
+			}
+
+    		this.context.lineTo( toX, this.canvas.height - toY );
 
 		}
 
     	this.context.closePath();
     	this.context.fill();
+
+    	return this;
 
     };
 
