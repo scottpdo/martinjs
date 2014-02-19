@@ -104,6 +104,7 @@
 
 		}
 
+		if ( !color ) { color = '#000'; }
         this.context.fillStyle = color;
 
         this.context.fillRect(
@@ -120,6 +121,7 @@
     // Points are parsed as pixels if integers or percentage if of the form '10%'
     Martin.prototype.polygon = function( arr, color ) {
 
+    	if ( !color ) { color = '#000'; }
 		this.context.fillStyle = color;
 		this.context.beginPath();
 
