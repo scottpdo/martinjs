@@ -11,28 +11,42 @@
 
 <body>
 
-    <canvas id="canvas" width="1000" height="400"></canvas>
+    <img id="humph" height="400" width="400" src="images/humphrey.jpg">
 
-    <script src="martin.js"></script>
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <script src="js/src/martin.js"></script>
 
     <script>
-    
-    var canvas = new Martin({
+
+    var canvas = new Martin('humph');
+
+    canvas.polygon([
+        [ 80, 380],
+        [100, 380],
+        [140, 300],
+        [100, 300],
+        [ 80, 340]
+    ], '#f34');
+
+    canvas.convertToImage();
+
+    var drawing = new Martin({
         id: 'canvas',
         background: '#ddd'
     });
 
     for (var i = 0; i < 10; i++) {
-        canvas.rect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');
+        drawing.rect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');
     }
 
-    canvas
+    drawing
         .rect(10, 0, '50%', 50, '#f95') // orange
         .rect(600, 240, '30%', 120, '#59c'); // blue
 
-    canvas.polygon([ [20, 10], [40, 40], [10, 40] ], '#fff');
+    drawing.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
 
-    canvas.convertToImage();
+    drawing.convertToImage();
 
     </script>
 </body>
