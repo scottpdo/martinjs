@@ -128,7 +128,7 @@
     	if ( !color ) { color = '#000'; }
     	this.context.fillStyle = color;
 
-    	this.context.arc( centerX, centerY, radius, 0, 2 * Math.PI, false);
+    	this.context.arc( centerX, this.canvas.height - centerY, radius, 0, 2 * Math.PI, false);
     	this.context.fill();
 
     }
