@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+
+    <title>Martin</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    
+</head>
+
+<body>
+
+    <canvas id="canvas" width="1000" height="400"></canvas>
+
+    <script src="js/src/martin.js"></script>
+
+    <script>
+
+    var canvas = new Martin({
+        id: 'canvas',
+        background: '#8a8'
+    });
+
+    function house(x, y) {
+        // left face
+        canvas.polygon([
+            [x - 40, y + 20],
+            [x, y],
+            [x, y + 40],
+            [x - 20, y + 80],
+            [x - 40, y + 60]
+        ], '#fff');
+        // right face
+        canvas.polygon([
+            [x, y],
+            [x + 40, y + 20],
+            [x + 40, y + 60],
+            [x, y + 40]
+        ], '#bbb');
+        // roof
+        canvas.polygon([
+            [x, y + 40],
+            [x + 40, y + 60],
+            [x + 20, y + 100],
+            [x - 20, y + 80]
+        ], '#ddd');
+        // door
+        canvas.polygon([
+            [x - 30, y + 15],
+            [x - 20, y + 10],
+            [x - 20, y + 35],
+            [x - 30, y + 40]
+        ], '#777');
+    }
+
+    function tree(x, y) {
+        canvas.polygon([
+            [x - 5, y - 5],
+            [x + 5, y - 5],
+            [x + 5, y + 40],
+            [x - 5, y + 40]
+        ], '#865');
+        canvas.circle(x, y + 60, 25, '#8f8');
+    }
+
+    // road
+    canvas.polygon([
+        [200, 0],
+        [280, 00],
+        [1080, 400],
+        [1000, 400]
+    ], '#888');
+    // stripes
+    for (var i = 0; i < 10; i++) {
+        canvas.polygon([
+            [236 + 80 * i, 40 * i],
+            [244 + 80 * i, 40 * i],
+            [284 + 80 * i, 20 + 40 * i],
+            [276 + 80 * i, 20 + 40 * i]
+        ], '#fff');
+    }
+
+    house(120, 80);
+    house(280, 80);
+
+    tree(200, 80);
+
+    canvas.convertToImage();
+
+    </script>
+
+    <script src="https://apis.google.com/js/platform.js"></script>
+    <br>
+    <div class="g-savetodrive" data-src="<script>document.write(canvas.toDataURL();</script>" data-filename="image.png" data-sitename="Martin">Save</div>
+</body>
+</html>

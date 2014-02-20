@@ -20,8 +20,6 @@
 
 		}
 
-		var _this = this;
-
 		// In case the element selected is an image,
 		// wait for it to load before initializing
 		this.original.onload = this.handleLoad();
