@@ -17,10 +17,7 @@
 
     <script>
 
-    var canvas = new Martin({
-        id: 'canvas',
-        background: '#8a8'
-    });
+    var canvas = new Martin('canvas').background('#8a8');
 
     function house(x, y) {
         // left face
@@ -90,8 +87,5 @@
 
     </script>
 
-    <script src="https://apis.google.com/js/platform.js"></script>
-    <br>
-    <div class="g-savetodrive" data-src="<script>document.write(canvas.toDataURL();</script>" data-filename="image.png" data-sitename="Martin">Save</div>
 </body>
 </html>

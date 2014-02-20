@@ -33,10 +33,7 @@
 
     canvas.convertToImage();
 
-    var drawing = new Martin({
-        id: 'canvas',
-        background: '#ddd'
-    });
+    var drawing = new Martin('canvas').background('#ddd');
 
     for (var i = 0; i < 10; i++) {
         drawing.rect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');

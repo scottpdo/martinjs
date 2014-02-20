@@ -1,18 +1,14 @@
 (function() {
 
-	window.Martin = function( obj ) {
+	window.Martin = function( id ) {
 
-		if ( typeof obj === 'string' ) {
+		if ( !id ) {
 
-			obj = {
-				id: obj
-			};
+			return false;
 
 		}
 
-		this.obj = obj;
-
-		this.original = document.getElementById( obj.id );
+		this.original = document.getElementById( id );
 
 		if ( !this.original ) {
 
@@ -28,17 +24,11 @@
 
 	Martin.prototype.handleLoad = function() {
 
-		this.canvas = this.convertToCanvas();
+		this.canvas = this.makeCanvas();
 
 		if ( this.canvas ) {
 
 			this.context = this.canvas.getContext('2d');
-
-			if ( this.obj.background ) {
-
-				this.rect( 0, 0, '100%', '100%', this.obj.background );
-
-			}
 
 			return this;
 
@@ -51,19 +41,56 @@
 	};
 
 	// Convert an image to a canvas
-	Martin.prototype.convertToCanvas = function() {
+	Martin.prototype.makeCanvas = function() {
 
-		var canvas = document.createElement('canvas');
+		if ( this.original.tagName === 'IMG' ) {
 
-		canvas.width = this.original.width;
-		canvas.height = this.original.height;
-		
-		canvas.getContext('2d').drawImage( this.original, 0, 0 );
+			var canvas = document.createElement('canvas');
 
-		this.original.style.display = 'none';
-		this.original.parentNode.insertBefore( canvas, this.original );
+			canvas.width = this.original.width;
+			canvas.height = this.original.height;
+			
+			canvas.getContext('2d').drawImage( this.original, 0, 0 );
 
-		return canvas;
+			this.original.style.display = 'none';
+			this.original.parentNode.insertBefore( canvas, this.original );
+
+			return canvas;
+
+		} else if ( this.original.tagName === 'CANVAS' ) {
+
+			return this.original;
+
+		} else {
+
+			return false;
+
+		}
+
+	};
+
+	// Set or change dimensions
+	Martin.prototype.width = function( val ) {
+
+		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height );
+
+		this.canvas.width = val;
+
+		this.context.putImageData(imageData, 0, 0);
+
+		return this;
+
+	};
+
+	Martin.prototype.height = function( val ) {
+
+		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height );
+
+		this.canvas.height = val;
+
+		this.context.putImageData(imageData, 0, 0);
+
+		return this;
 
 	};
 
@@ -76,10 +103,71 @@
 		return ( val / 100 ) * this.canvas.height;
 	};
 
+	function hexToRGB( hex ) {
+		
+		if ( !hex ) { return false; }
+
+		if ( hex.slice(0, 1) === '#' ) { hex = hex.slice(1); }
+		
+		var r, g, b;
+		
+		if ( hex.length === 6 ) {
+
+			r = hex.slice(0, 2);
+			g = hex.slice(2, 4);
+			b = hex.slice(4, 6);
+
+		} else if ( hex.length === 3 ) {
+			
+			r = hex.slice(0, 1) + hex.slice(0, 1);
+			g = hex.slice(1, 2) + hex.slice(1, 2);
+			b = hex.slice(2, 3) + hex.slice(2, 3);
+
+		}
+		console.log(r, g, b);
+		return { r: parseInt(r, 16), g: parseInt(g, 16), b: parseInt(b, 16) };
+
+	}
+
+	// Method for giving a canvas a background color.
+	// Only target semi-transparent pixels, and use a weighted
+	// average to calculate the outcome.
+	Martin.prototype.background = function( color ) {
+
+		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
+			pixels = imageData.data,
+			len = pixels.length;
+
+		var rgb = hexToRGB( color ),
+			r = rgb.r,
+			g = rgb.g,
+			b = rgb.b;
+
+		for (var i = 0; i < len; i += 4) {
+
+			if ( pixels[i + 3] < 255 ) {
+
+				var alpha = pixels[i + 3] / 255;
+
+				pixels[i]		= ( ( 1 + alpha) * pixels[i] + r ) / ( 1 + alpha );
+				pixels[i + 1]	= ( ( 1 + alpha) * pixels[i + 1] + g ) / ( 1 + alpha );
+				pixels[i + 2]	= ( ( 1 + alpha) * pixels[i + 2] + b ) / ( 1 + alpha );
+				pixels[i + 3]	= 255;
+
+			}
+
+		}
+
+		this.context.putImageData( imageData, 0, 0 );
+
+		return this;
+
+	};
+
 	// Create a rectangle with position, dimensions, determined percentage-wise.
 	// Takes five inputs -- the x offset, y offset, width, and height (all normalized 
 	// relative to the canvas), and the color of the rectangle.
-	Martin.prototype.rect = function( offsetX, offsetY, width, height, color ) {
+	Martin.prototype.rect = function( offsetX, offsetY, width, height, color, alpha ) {
 
 		var _this = this,
 			attributes = {
@@ -102,8 +190,8 @@
 
 		}
 
-		if ( !color ) { color = '#000'; }
-        this.context.fillStyle = color;
+        this.context.fillStyle = color || '#000';
+        this.context.globalAlpha = alpha || 1;
 
         this.context.fillRect(
 			attributes.offsetX,
@@ -116,27 +204,30 @@
     };
 
     // Make a circle -- center X, center Y, radius, color
-    Martin.prototype.circle = function( offsetX, offsetY, radius, color ) {
+    Martin.prototype.circle = function( offsetX, offsetY, radius, color, alpha ) {
 
-    	var centerX = typeof offsetX === 'string' && offsetX.slice(-1) === '%' ? this.normalizePercentX( +offsetX.slice(0, -1) ) : offsetX,
-    		centerY = typeof offsetY === 'string' && offsetY.slice(-1) === '%' ? this.normalizePercentY( +offsetY.slice(0, -1) ) : offsetY;
+		var centerX = typeof offsetX === 'string' && offsetX.slice(-1) === '%' ? this.normalizePercentX( +offsetX.slice(0, -1) ) : offsetX,
+			centerY = typeof offsetY === 'string' && offsetY.slice(-1) === '%' ? this.normalizePercentY( +offsetY.slice(0, -1) ) : offsetY;
 
-    	this.context.beginPath();
+		this.context.beginPath();
 
-    	if ( !color ) { color = '#000'; }
-    	this.context.fillStyle = color;
+		this.context.fillStyle = color || '#000';
+		this.context.globalAlpha = alpha || 1;
 
-    	this.context.arc( centerX, this.canvas.height - centerY, radius, 0, 2 * Math.PI, false);
-    	this.context.fill();
+		this.context.arc( centerX, this.canvas.height - centerY, radius, 0, 2 * Math.PI, false);
+		this.context.fill();
 
-    }
+		return this;
+
+    };
 
     // Given an array of points i.e. [ [0, 10], [5, 20], [0, 15] ], draw a polygon.
     // Points are parsed as pixels if integers or percentage if of the form '10%'
-    Martin.prototype.polygon = function( arr, color ) {
+    Martin.prototype.polygon = function( arr, color, alpha ) {
 
-    	if ( !color ) { color = '#000'; }
-		this.context.fillStyle = color;
+		this.context.fillStyle = color || '#000';
+		this.context.globalAlpha = alpha || 1;
+
 		this.context.beginPath();
 
 		for (var i = 0; i < arr.length; i++) {
@@ -202,7 +293,10 @@
 	};
 
 	Martin.prototype.darken = function( amt ) {
-		return this.lighten( -amt );
+
+		this.lighten( -amt );
+
+		return this;
 	};
 
 	// "Replace" a canvas with an image by hiding the canvas and inserting
