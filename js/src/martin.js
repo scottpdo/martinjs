@@ -1,13 +1,19 @@
 (function() {
 
+	// The great initializer.
 	window.Martin = function( id ) {
 
+		// Must take an ID as a selector which has a corresponding element on the page.
+		
+		// TODO: allow no selector to be passed, in which case
+		// create a new canvas
 		if ( !id ) {
 
 			return false;
 
 		}
 
+		// Set the original element.
 		this.original = document.getElementById( id );
 
 		if ( !this.original ) {
@@ -22,6 +28,7 @@
 
 	};
 
+	// Function to handle the element's load (in case it is an image).
 	Martin.prototype.handleLoad = function() {
 
 		this.canvas = this.makeCanvas();
@@ -29,6 +36,37 @@
 		if ( this.canvas ) {
 
 			this.context = this.canvas.getContext('2d');
+
+			// Refer to the original parent container
+			var originalContainer = this.canvas.parentNode;
+
+			// Create a new container (with data-martin)
+			// that will house everything in the DOM from here on out
+			this.container = document.createElement('div');
+			this.container.setAttribute('data-martin', '');
+			
+			// Insert the new container into the DOM
+			originalContainer.insertBefore( this.container, this.canvas );
+
+			// And move the canvas into the new container
+			this.container.appendChild( this.canvas );
+
+			// Position the container relatively so that we can absolutely
+			// position any children within it. Also set dimensions.
+			this.container.style.position = 'relative';
+			this.container.style.width = this.canvas.width + 'px';
+			this.container.style.height = this.canvas.height + 'px';
+
+			// Create a stylesheet that will declare position all children of [data-martin]
+			var style = document.createElement('style');
+			style.innerHTML = '[data-martin] *{position:absolute;bottom:0;left:0;}';
+			document.head.appendChild(style);
+
+			// Set the layers (currently just this.canvas)
+			this.layers = [{
+				canvas: this.canvas,
+				context: this.context
+			}];
 
 			return this;
 
@@ -52,8 +90,8 @@
 			
 			canvas.getContext('2d').drawImage( this.original, 0, 0 );
 
-			this.original.style.display = 'none';
 			this.original.parentNode.insertBefore( canvas, this.original );
+			this.original.parentNode.removeChild( this.original );
 
 			return canvas;
 
@@ -69,30 +107,126 @@
 
 	};
 
-	// Set or change dimensions
-	Martin.prototype.width = function( val ) {
+	// Set or change dimensions.
+	[ 'width', 'height' ].forEach(function( which ) {
 
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height );
+		Martin.prototype[which] = function( val ) {
 
-		this.canvas.width = val;
+			var imageData = this.context.getImageData(
+				0,
+				which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0, // want this to be relative to Cartesian grid, also see below 2x
+				this.canvas.width,
+				this.canvas.height
+			);
 
-		this.context.putImageData(imageData, 0, 0);
+			// Update the container
+			this.container.style[which] = val + 'px';
+
+			// Update height or width of the master canvas
+			// and update the context
+			this.canvas[which] = val;
+			this.context.putImageData( imageData, 0, which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0 );
+
+			// Update height or width of all the layers' canvases
+			// and update their contexts
+			for ( var i = 0; i < this.layers.length; i++ ) {
+
+				var imageData = this.layers[i].context.getImageData(
+					0,
+					which === 'height' ? this.canvas[which] - val : 0,
+					this.canvas.width,
+					this.canvas.height
+				);
+
+				this.layers[i].canvas[which] = val;
+				this.layers[i].context.putImageData( imageData, 0, which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0 );
+
+			}
+
+			return this;
+
+		};
+
+	});
+
+	// TODO: crop
+	Martin.prototype.crop = function( offsetX, offsetY, x, y ) {
+
+	}
+
+	// Create a new (top-most) layer and switch to that layer.
+	Martin.prototype.newLayer = function() {
+
+		var newCanvas = document.createElement('canvas');
+
+		newCanvas.width = this.canvas.width;
+		newCanvas.height = this.canvas.height;
+
+		this.container.appendChild( newCanvas );
+
+		// Don't forget to set the new context
+		this.context = newCanvas.getContext('2d');
+
+		this.layers.push({
+			canvas: newCanvas,
+			context: newCanvas.getContext('2d')
+		});
 
 		return this;
 
 	};
 
-	Martin.prototype.height = function( val ) {
+	Martin.prototype.switchToLayer = function( num ) {
 
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height );
-
-		this.canvas.height = val;
-
-		this.context.putImageData(imageData, 0, 0);
+		this.context = this.layers[num].context;
 
 		return this;
 
 	};
+
+	// Merge layers. If given an array i.e. [0, 1, 2, 3], merge those onto the lowest layer.
+	// Otherwise merge all the layers and return a single canvas.
+	Martin.prototype.mergeLayers = function( layers ) {
+
+		if ( !layers ) { 
+
+			layers = this.layers; 
+
+		}
+
+		for (var i = layers.length - 1; i > 0; i-- ) {
+
+			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
+				abovePixels = aboveImageData.data,
+				aboveLen = abovePixels.length,
+				belowImageData = layers[i - 1].context.getImageData( 0, 0, this.canvas.width, this.canvas.height )
+				belowPixels = belowImageData.data;
+
+			for ( var j = 0; j < aboveLen; j+= 4 ) {
+
+				// TODO: transparency
+				if ( abovePixels[j + 3] > 0 ) {
+
+					belowPixels[j]		= abovePixels[j];
+					belowPixels[j + 1]	= abovePixels[j + 1];
+					belowPixels[j + 2]	= abovePixels[j + 2];
+				
+				}
+			
+			}
+
+			// put the new data onto the target layer
+			layers[i - 1].context.putImageData( belowImageData, 0, 0 );
+
+			// Remove the old layer from the DOM and update the this.layers array
+			this.container.removeChild( this.layers[i].canvas );
+			this.layers = this.layers.slice( 0, -1 );
+
+		}
+
+		return this;
+
+	}
 
     // Functions to normalize X and Y values from percentages (Cartesian-style)
     // and return pixel values that work within the canvas
@@ -124,8 +258,12 @@
 			b = hex.slice(2, 3) + hex.slice(2, 3);
 
 		}
-		console.log(r, g, b);
-		return { r: parseInt(r, 16), g: parseInt(g, 16), b: parseInt(b, 16) };
+
+		return { 
+			r: parseInt(r, 16),
+			g: parseInt(g, 16),
+			b: parseInt(b, 16) 
+		};
 
 	}
 
@@ -344,15 +482,16 @@
 		return this;
 	};
 
-	// "Replace" a canvas with an image by hiding the canvas and inserting
-	// an image with a src of its data URL
+	// Replace a canvas with an image with a src of its data URL
 	Martin.prototype.convertToImage = function() {
+
+		this.mergeLayers();
 
 		var img = new Image();
 		img.src = this.canvas.toDataURL();
 
-		this.canvas.style.display = 'none';
-		this.canvas.parentNode.insertBefore( img, this.canvas );
+		this.container.removeChild( this.canvas );
+		this.container.appendChild( img );
 
 	};
 
