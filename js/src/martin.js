@@ -221,6 +221,51 @@
 
     };
 
+    // Make an ellipse -- same as circle but radius is first X, then Y
+    Martin.prototype.ellipse = function( offsetX, offsetY, radiusX, radiusY, color, alpha ) {
+
+    	if ( radiusX === radiusY ) {
+    		return this.circle( offsetX, offsetY, radiusX, color, alpha );
+    	}
+
+    	var centerX = typeof offsetX === 'string' && offsetX.slice(-1) === '%' ? this.normalizePercentX( +offsetX.slice(0, -1) ) : offsetX,
+			centerY = typeof offsetY === 'string' && offsetY.slice(-1) === '%' ? this.normalizePercentY( +offsetY.slice(0, -1) ) : offsetY;
+
+		this.context.beginPath();
+
+		this.context.fillStyle = color || '#000';
+		this.context.globalAlpha = alpha || 1;
+
+		this.context.save();
+
+		var scale;
+
+		if ( radiusX > radiusY ) {
+
+			scale = radiusX / radiusY;
+
+			this.context.scale( scale, 1 );
+
+			this.context.arc( centerX / scale, this.canvas.height - centerY, radiusX / 2, 0, 2 * Math.PI, false);
+		
+		} else {
+
+			scale = radiusY / radiusX;
+
+			this.context.scale( 1, scale );
+
+			this.context.arc( centerX, ( this.canvas.height - centerY ) / scale, radiusY / 2, 0, 2 * Math.PI, false);
+		
+		}
+		
+		this.context.fill();
+
+		this.context.restore();
+
+		return this;
+
+    };
+
     // Given an array of points i.e. [ [0, 10], [5, 20], [0, 15] ], draw a polygon.
     // Points are parsed as pixels if integers or percentage if of the form '10%'
     Martin.prototype.polygon = function( arr, color, alpha ) {
