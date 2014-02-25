@@ -5,7 +5,14 @@
 
     <title>Martin</title>
 
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    <style>
+    @font-face {
+        font-family: 'Sentinel-Semibold';
+        src: url(//d13ja4ud2claol.cloudfront.net/fonts/Sentinel/Sentinel-Semibold.otf);
+    }
+    </style>
+
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js"></script>
     
 </head>
 
@@ -17,22 +24,41 @@
 
     <script>
 
-    var canvas = new Martin('canvas').background('#ddd');
+    // Load fonts
+    WebFont.load({
+        google: {
+            families: ['Revalia']
+        },
+        custom: {
+            families: ['Sentinel', 'Sentinel-Semibold']
+        }
+    });
 
-    var units = 15;
+    function draw() {
+        var canvas = new Martin('canvas').background('#ddd');
 
-    for (var i = 0; i < Math.floor(canvas.canvas.width / units) - 1; i++ ) {
+        for (var i = 15; i >= 0; i-- ) {
 
-        canvas.rect( 
-            Math.floor( canvas.canvas.width / units ) * i, 
-            0, 
-            ( Math.floor( canvas.canvas.width / units ) / ( units ) ) + '%', 
-            Math.random() * 500 
-        );
+            canvas.rect(
+                0, 
+                0, 
+                10 * i, 
+                10 * i, 
+                '#' + i.toString(16) + i.toString(16) + i.toString(16)
+            );
 
+        }
+
+        canvas.write('Hello', 'Sentinel-Semibold', 32, '#ff0', 50, 50);
+
+        // canvas.convertToImage();
     }
 
-    canvas.convertToImage();
+    if (document.documentElement.classList.contains('wf-active')) {
+        draw();
+    } else {
+        setTimeout(draw, 100);
+    }
 
     </script>
 

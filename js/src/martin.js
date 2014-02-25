@@ -131,7 +131,7 @@
 			// and update their contexts
 			for ( var i = 0; i < this.layers.length; i++ ) {
 
-				var imageData = this.layers[i].context.getImageData(
+				imageData = this.layers[i].context.getImageData(
 					0,
 					which === 'height' ? this.canvas[which] - val : 0,
 					this.canvas.width,
@@ -140,6 +140,14 @@
 
 				this.layers[i].canvas[which] = val;
 				this.layers[i].context.putImageData( imageData, 0, which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0 );
+
+			}
+
+			// Since we might have increased dimensions, if a background
+			// was already set, make sure that the new size receives that background
+			if ( this.background ) {
+
+				// TODO
 
 			}
 
@@ -152,7 +160,7 @@
 	// TODO: crop
 	Martin.prototype.crop = function( offsetX, offsetY, x, y ) {
 
-	}
+	};
 
 	// Create a new (top-most) layer and switch to that layer.
 	Martin.prototype.newLayer = function() {
@@ -199,7 +207,7 @@
 			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 				abovePixels = aboveImageData.data,
 				aboveLen = abovePixels.length,
-				belowImageData = layers[i - 1].context.getImageData( 0, 0, this.canvas.width, this.canvas.height )
+				belowImageData = layers[i - 1].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 				belowPixels = belowImageData.data;
 
 			for ( var j = 0; j < aboveLen; j+= 4 ) {
@@ -226,7 +234,21 @@
 
 		return this;
 
-	}
+	};
+
+	Martin.prototype.write = function( text, font, size, color, offsetX, offsetY ) {
+
+		var fontString = size ? size + 'px ' : '16px ';
+		fontString += font ? '"' + font + '"' : 'sans-serif';
+
+		this.context.font = fontString;
+		//this.context.font = '20px Times';
+		console.log(this.context.font);
+		this.context.fillStyle = color || '#000';
+		this.context.textBaseline = 'top';
+		this.context.fillText( text, offsetX || 0, this.canvas.height - offsetY || 0 );
+
+	};
 
     // Functions to normalize X and Y values from percentages (Cartesian-style)
     // and return pixel values that work within the canvas
@@ -272,6 +294,9 @@
 	// average to calculate the outcome.
 	Martin.prototype.background = function( color ) {
 
+		// remember the background for future use
+		this.background = color;
+
 		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 			pixels = imageData.data,
 			len = pixels.length;
@@ -302,20 +327,35 @@
 
 	};
 
-	// Create a rectangle with position, dimensions, determined percentage-wise.
-	// Takes five inputs -- the x offset, y offset, width, and height (all normalized 
-	// relative to the canvas), and the color of the rectangle.
-	Martin.prototype.rect = function( offsetX, offsetY, width, height, color, alpha ) {
+	// Set the fill, stroke, alpha for a new shape
+	Martin.prototype.setContext = function( obj ) {
+
+		var c = this.context;
+
+		c.fillStyle = obj.color || '#000';
+        c.fill();
+
+		c.globalAlpha = obj.alpha || 1;
+		
+		c.lineWidth = obj.strokeWidth || 0;
+        c.strokeStyle = obj.stroke || '';
+		c.stroke();
+
+	}
+
+	// Create a rectangle
+	Martin.prototype.rect = function( obj ) {
 
 		var _this = this,
 			attributes = {
-				offsetX: offsetX,
-				offsetY: offsetY,
-				width: width,
-				height: height
+				offsetX: obj.offsetX,
+				offsetY: obj.offsetY,
+				width: obj.width,
+				height: obj.height
 			},
 			i = 0;
 
+		// Normalize the offset and dimensions
 		for ( var attr in attributes ) {
 
 			if ( typeof attributes[attr] === 'string' && attributes[attr].slice(-1) === '%' ) {
@@ -328,75 +368,71 @@
 
 		}
 
-        this.context.fillStyle = color || '#000';
-        this.context.globalAlpha = alpha || 1;
+		this.context.beginPath();
 
-        this.context.fillRect(
+		this.setContext( obj );
+
+		this.context.rect(
 			attributes.offsetX,
 			this.canvas.height - attributes.offsetY - attributes.height,
 			attributes.width,
 			attributes.height
         );
-
+        
         return this;
     };
 
     // Make a circle -- center X, center Y, radius, color
-    Martin.prototype.circle = function( offsetX, offsetY, radius, color, alpha ) {
+    Martin.prototype.circle = function( obj ) {
 
-		var centerX = typeof offsetX === 'string' && offsetX.slice(-1) === '%' ? this.normalizePercentX( +offsetX.slice(0, -1) ) : offsetX,
-			centerY = typeof offsetY === 'string' && offsetY.slice(-1) === '%' ? this.normalizePercentY( +offsetY.slice(0, -1) ) : offsetY;
+		var centerX = typeof obj.offsetX === 'string' && obj.offsetX.slice(-1) === '%' ? this.normalizePercentX( +obj.offsetX.slice(0, -1) ) : obj.offsetX,
+			centerY = typeof obj.offsetY === 'string' && obj.offsetY.slice(-1) === '%' ? this.normalizePercentY( +obj.offsetY.slice(0, -1) ) : obj.offsetY;
 
 		this.context.beginPath();
 
-		this.context.fillStyle = color || '#000';
-		this.context.globalAlpha = alpha || 1;
+		this.context.arc( centerX, this.canvas.height - centerY, obj.radius, 0, 2 * Math.PI, false);		
 
-		this.context.arc( centerX, this.canvas.height - centerY, radius, 0, 2 * Math.PI, false);
-		this.context.fill();
+		this.setContext( obj );
 
 		return this;
 
     };
 
-    // Make an ellipse -- same as circle but radius is first X, then Y
-    Martin.prototype.ellipse = function( offsetX, offsetY, radiusX, radiusY, color, alpha ) {
+    // Make an ellipse -- same as circle but with radii for both X and Y
+    Martin.prototype.ellipse = function( obj ) {
 
-    	if ( radiusX === radiusY ) {
-    		return this.circle( offsetX, offsetY, radiusX, color, alpha );
-    	}
+		if ( obj.radiusX === obj.radiusY ) {
+			return this.circle( obj );
+		}
 
-    	var centerX = typeof offsetX === 'string' && offsetX.slice(-1) === '%' ? this.normalizePercentX( +offsetX.slice(0, -1) ) : offsetX,
-			centerY = typeof offsetY === 'string' && offsetY.slice(-1) === '%' ? this.normalizePercentY( +offsetY.slice(0, -1) ) : offsetY;
-
-		this.context.beginPath();
-
-		this.context.fillStyle = color || '#000';
-		this.context.globalAlpha = alpha || 1;
+		var centerX = typeof obj.offsetX === 'string' && obj.offsetX.slice(-1) === '%' ? this.normalizePercentX( +obj.offsetX.slice(0, -1) ) : obj.offsetX,
+			centerY = typeof obj.offsetY === 'string' && obj.offsetY.slice(-1) === '%' ? this.normalizePercentY( +obj.offsetY.slice(0, -1) ) : obj.offsetY;
 
 		this.context.save();
 
+		this.context.beginPath();
+
 		var scale;
 
-		if ( radiusX > radiusY ) {
+		if ( obj.radiusX > obj.radiusY ) {
 
-			scale = radiusX / radiusY;
+			scale = obj.radiusX / obj.radiusY;
 
 			this.context.scale( scale, 1 );
 
-			this.context.arc( centerX / scale, this.canvas.height - centerY, radiusX / 2, 0, 2 * Math.PI, false);
+			this.context.arc( centerX / scale, this.canvas.height - centerY, obj.radiusX / 2, 0, 2 * Math.PI, false);
 		
 		} else {
 
-			scale = radiusY / radiusX;
+			scale = obj.radiusY / obj.radiusX;
 
 			this.context.scale( 1, scale );
 
-			this.context.arc( centerX, ( this.canvas.height - centerY ) / scale, radiusY / 2, 0, 2 * Math.PI, false);
+			this.context.arc( centerX, ( this.canvas.height - centerY ) / scale, obj.radiusY / 2, 0, 2 * Math.PI, false);
 		
 		}
-		
-		this.context.fill();
+
+		this.setContext( obj );
 
 		this.context.restore();
 
@@ -406,12 +442,11 @@
 
     // Given an array of points i.e. [ [0, 10], [5, 20], [0, 15] ], draw a polygon.
     // Points are parsed as pixels if integers or percentage if of the form '10%'
-    Martin.prototype.polygon = function( arr, color, alpha ) {
+    Martin.prototype.polygon = function( arr, obj ) {
 
-		this.context.fillStyle = color || '#000';
-		this.context.globalAlpha = alpha || 1;
+    	this.context.beginPath();
 
-		this.context.beginPath();
+		this.setContext( obj );
 
 		for (var i = 0; i < arr.length; i++) {
 
@@ -419,7 +454,9 @@
 				toY = typeof arr[i][1] === 'string' && arr[i][1].slice(-1) === '%' ? this.normalizePercentY( arr[i][1].slice(0, -1) ) : arr[i][1];
 
 			if ( i === 0 ) {
+
 				this.context.moveTo( toX, this.canvas.height - toY );
+
 			}
 
 			this.context.lineTo( toX, this.canvas.height - toY );
@@ -427,7 +464,6 @@
 		}
 
 		this.context.closePath();
-		this.context.fill();
 
 		return this;
 

@@ -27,28 +27,42 @@
             [x, y + 40],
             [x - 20, y + 80],
             [x - 40, y + 60]
-        ], '#fff');
+        ], {
+            stroke: '#222',
+            strokeWidth: 2,
+            color: '#fff'
+        });
         // right face
         canvas.polygon([
             [x, y],
             [x + 40, y + 20],
             [x + 40, y + 60],
             [x, y + 40]
-        ], '#bbb');
+        ], {
+            stroke: '#222',
+            strokeWidth: 2,
+            color: '#bbb'
+        });
         // roof
         canvas.polygon([
             [x, y + 40],
             [x + 40, y + 60],
             [x + 20, y + 100],
             [x - 20, y + 80]
-        ], '#ddd');
+        ], {
+            stroke: '#222',
+            strokeWidth: 2,
+            color: '#ddd'
+        });
         // door
         canvas.polygon([
             [x - 30, y + 15],
             [x - 20, y + 10],
             [x - 20, y + 35],
             [x - 30, y + 40]
-        ], '#777');
+        ], {
+            color: '#777'
+        });
     }
 
     function tree(x, y) {
@@ -57,8 +71,15 @@
             [x + 5, y - 5],
             [x + 5, y + 40],
             [x - 5, y + 40]
-        ], '#865');
-        canvas.circle(x, y + 60, 25, '#8f8');
+        ], {
+            color: '#865'
+        });
+        canvas.circle({
+            offsetX: x, 
+            offsetY: y + 60, 
+            radius: 25, 
+            color: '#8f8'
+        });
     }
 
     // road
@@ -67,7 +88,9 @@
         [280, 00],
         [1080, 400],
         [1000, 400]
-    ], '#888');
+    ], {
+        color: '#888'
+    });
     // stripes
     for (var i = 0; i < 10; i++) {
         canvas.polygon([
@@ -75,7 +98,9 @@
             [244 + 80 * i, 40 * i],
             [284 + 80 * i, 20 + 40 * i],
             [276 + 80 * i, 20 + 40 * i]
-        ], '#fff');
+        ], {
+            color: '#fff'
+        });
     }
 
     house(120, 80);
@@ -83,10 +108,17 @@
 
     tree(200, 80);
 
-    canvas.newLayer().rect(0, 0, 50, 50, '#79e').switchToLayer(0);
-    canvas.rect(0, 0, 100, 100, '#234');
+    canvas.rect({
+        offsetX: 0,
+        offsetY: 0,
+        color: '#fff',
+        height: 100,
+        width: 100,
+        strokeWidth: 5,
+        stroke: '#f00'
+    });
 
-    canvas.toBW().mergeLayers();
+    //canvas.toBW().mergeLayers();
 
     canvas.convertToImage();
 
