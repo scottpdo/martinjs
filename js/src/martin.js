@@ -236,25 +236,33 @@
 
 	};
 
-	Martin.prototype.write = function( text, font, size, color, offsetX, offsetY ) {
+	Martin.prototype.write = function( obj ) {
 
-		var fontString = size ? size + 'px ' : '16px ';
-		fontString += font ? '"' + font + '"' : 'sans-serif';
+		var fontString = obj.size ? obj.size + 'px ' : '16px ';
+		fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
 
 		this.context.font = fontString;
-		//this.context.font = '20px Times';
-		console.log(this.context.font);
-		this.context.fillStyle = color || '#000';
+		this.context.fillStyle = obj.color || '#000';
 		this.context.textBaseline = 'top';
-		this.context.fillText( text, offsetX || 0, this.canvas.height - offsetY || 0 );
+		this.context.fillText( obj.text, obj.offsetX || 0, this.canvas.height - obj.offsetY || 0 );
 
 	};
 
-    // Functions to normalize X and Y values from percentages (Cartesian-style)
-    // and return pixel values that work within the canvas
+    // Normalize X and Y values
+    Martin.prototype.normalizeX = function( val ) {
+    	return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
+    }
+
+    Martin.prototype.normalizeY = function( val ) {
+    	val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
+    	// Flip it upside down (a la Cartesian)
+    	return this.canvas.height - val;
+    }
+
 	Martin.prototype.normalizePercentX = function( val ) {
 		return ( val / 100 ) * this.canvas.width;
 	};
+
 	Martin.prototype.normalizePercentY = function( val ) { 
 		return ( val / 100 ) * this.canvas.height;
 	};
@@ -332,52 +340,52 @@
 
 		var c = this.context;
 
+		c.save();
+
 		c.fillStyle = obj.color || '#000';
         c.fill();
 
 		c.globalAlpha = obj.alpha || 1;
 		
-		c.lineWidth = obj.strokeWidth || 0;
-        c.strokeStyle = obj.stroke || '';
+		c.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
+		c.lineCap = obj.cap ? obj.cap : 'square';
+        c.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
 		c.stroke();
 
-	}
+        c.restore();
+
+	};
+
+	// Lines
+	Martin.prototype.line = function( obj ) {
+
+		this.context.beginPath();
+
+		this.context.moveTo( this.normalizeX(obj.startX), this.normalizeY(obj.startY) );
+
+		this.context.lineTo( this.normalizeX(obj.endX), this.normalizeY(obj.endY) );
+
+		this.setContext( obj );
+
+		return this;
+
+	};
 
 	// Create a rectangle
 	Martin.prototype.rect = function( obj ) {
 
-		var _this = this,
-			attributes = {
-				offsetX: obj.offsetX,
-				offsetY: obj.offsetY,
-				width: obj.width,
-				height: obj.height
-			},
-			i = 0;
-
-		// Normalize the offset and dimensions
-		for ( var attr in attributes ) {
-
-			if ( typeof attributes[attr] === 'string' && attributes[attr].slice(-1) === '%' ) {
-
-				attributes[attr] = i % 2 === 0 ? _this.normalizePercentX( +attributes[attr].slice(0, -1) ) : _this.normalizePercentY( +attributes[attr].slice(0, -1) );
-
-			}
-
-			i++;
-
-		}
-
 		this.context.beginPath();
 
-		this.setContext( obj );
-
 		this.context.rect(
-			attributes.offsetX,
-			this.canvas.height - attributes.offsetY - attributes.height,
-			attributes.width,
-			attributes.height
+			this.normalizeX( obj.offsetX ),
+			this.normalizeY( obj.offsetY ),
+			this.normalizeX( obj.width ),
+			-this.canvas.height + this.normalizeY( obj.height ) // we don't *really* want to normalize the height here, just percentage-wise
         );
+
+        this.setContext( obj );
+
+        this.context.closePath();
         
         return this;
     };
@@ -385,12 +393,12 @@
     // Make a circle -- center X, center Y, radius, color
     Martin.prototype.circle = function( obj ) {
 
-		var centerX = typeof obj.offsetX === 'string' && obj.offsetX.slice(-1) === '%' ? this.normalizePercentX( +obj.offsetX.slice(0, -1) ) : obj.offsetX,
-			centerY = typeof obj.offsetY === 'string' && obj.offsetY.slice(-1) === '%' ? this.normalizePercentY( +obj.offsetY.slice(0, -1) ) : obj.offsetY;
+		var centerX = this.normalizeX( obj.offsetX ),
+			centerY = this.normalizeY( obj.offsetY );
 
 		this.context.beginPath();
 
-		this.context.arc( centerX, this.canvas.height - centerY, obj.radius, 0, 2 * Math.PI, false);		
+		this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);		
 
 		this.setContext( obj );
 
@@ -405,8 +413,8 @@
 			return this.circle( obj );
 		}
 
-		var centerX = typeof obj.offsetX === 'string' && obj.offsetX.slice(-1) === '%' ? this.normalizePercentX( +obj.offsetX.slice(0, -1) ) : obj.offsetX,
-			centerY = typeof obj.offsetY === 'string' && obj.offsetY.slice(-1) === '%' ? this.normalizePercentY( +obj.offsetY.slice(0, -1) ) : obj.offsetY;
+		var centerX = this.normalizeX( obj.offsetX ),
+			centerY = this.normalizeY( obj.offsetY );
 
 		this.context.save();
 
@@ -446,22 +454,22 @@
 
     	this.context.beginPath();
 
-		this.setContext( obj );
-
 		for (var i = 0; i < arr.length; i++) {
 
-			var toX = typeof arr[i][0] === 'string' && arr[i][0].slice(-1) === '%' ? this.normalizePercentX( arr[i][0].slice(0, -1) ) : arr[i][0],
-				toY = typeof arr[i][1] === 'string' && arr[i][1].slice(-1) === '%' ? this.normalizePercentY( arr[i][1].slice(0, -1) ) : arr[i][1];
+			var toX = this.normalizeX( arr[i][0] ),
+				toY = this.normalizeY( arr[i][1] );
 
 			if ( i === 0 ) {
 
-				this.context.moveTo( toX, this.canvas.height - toY );
+				this.context.moveTo( toX, toY );
 
 			}
 
-			this.context.lineTo( toX, this.canvas.height - toY );
+			this.context.lineTo( toX, toY );
 
 		}
+
+		this.setContext( obj );
 
 		this.context.closePath();
 
