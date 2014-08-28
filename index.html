@@ -29,7 +29,15 @@
         [ 80, 340]
     ], '#f34');
 
-    canvas.circle('50%', '50%', 30);
+    canvas.circle({
+        offsetX: '50%',
+        offsetY: '50%',
+        radius: 30,
+        color: '#f00',
+        stroke: '#fff',
+        strokeWidth: 5,
+        strokeStyle: 'dotted'
+    });
 
     canvas.convertToImage();
 

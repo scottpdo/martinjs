@@ -459,11 +459,7 @@
 			var toX = this.normalizeX( arr[i][0] ),
 				toY = this.normalizeY( arr[i][1] );
 
-			if ( i === 0 ) {
-
-				this.context.moveTo( toX, toY );
-
-			}
+			if ( i === 0 ) this.context.moveTo( toX, toY );
 
 			this.context.lineTo( toX, toY );
 
