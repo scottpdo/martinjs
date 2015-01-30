@@ -1,46 +1,68 @@
 (function() {
 
 	// The great initializer.
-	window.Martin = function( id ) {
-
-		// Must take an ID as a selector which has a corresponding element on the page.
-
-		// TODO: allow no selector to be passed, in which case
-		// create a new canvas
-		if ( !id ) {
-
-			return false;
-
-		}
+	window.Martin = function( id, init ) {
 
 		// Set the original element.
 		this.original = document.getElementById( id );
 
-		if ( !this.original ) {
+		if ( !this.original || !id ) {
 
 			throw new Error('Must provide a <canvas> or <img> element.');
-
 		}
 
-		// In case the element selected is an image,
-		// wait for it to load before initializing
-		this.startLoad();
+		// Now prepare yourself...
+		var callback = this.handleLoad;
+		this.makeCanvas(callback.bind(this), init);
 
 	};
 
-	// The loading process:
-	// Make a canvas and send a callback (determine whether it is a <canvas> or <img>)
-	Martin.prototype.startLoad = function() {
+	// Convert an image to a canvas or just return the canvas.
+	Martin.prototype.makeCanvas = function(callback, init) {
 
-		var callback = this.handleLoad;
+		if ( this.original.tagName === 'IMG' ) {
 
-		// have to bind to the current object, otherwise it thinks `this` is the window
-		this.canvas = this.makeCanvas(callback.bind(this));
-	}
+			var _this = this,
+				pixelData;
+
+			// run this once we are sure the image has loaded
+			var d = function() {
+
+				var canvas = document.createElement('canvas');
+
+				canvas.width = +_this.original.getAttribute('width');
+				canvas.height = +_this.original.getAttribute('height');
+
+				canvas.getContext('2d').drawImage( _this.original, 0, 0 );
+
+				_this.original.parentNode.insertBefore( canvas, _this.original );
+				_this.original.parentNode.removeChild( _this.original );
+				_this.canvas = canvas;
+				_this.context = canvas.getContext('2d');
+
+				return callback(init);
+			};
+
+			// if loaded, return
+			if ( this.original.complete ) return d();
+
+			// if it hasn't loaded, wait for that event
+			this.original.onload = d;
+
+
+
+		} else if ( this.original.tagName === 'CANVAS' ) {
+
+			this.canvas = this.original;
+			this.context = this.original.getContext('2d');
+			return callback(init);
+
+		}
+	};
 
 	// Function to handle the element's load.
 	// Will only be fired once the <img> is ready (or right away for <canvas>).
-	Martin.prototype.handleLoad = function() {
+	Martin.prototype.handleLoad = function(init) {
 
 		// Refer to the original parent container
 		var originalContainer = this.canvas.parentNode;
@@ -73,40 +95,8 @@
 			context: this.context
 		}];
 
-		return this;
-
-	};
-
-	// Convert an image to a canvas or just return the canvas.
-	Martin.prototype.makeCanvas = function(callback) {
-
-		if ( this.original.tagName === 'IMG' ) {
-
-			var _this = this,
-				pixelData;
-
-			this.original.onload = function() {
-				var canvas = document.createElement('canvas');
-
-				canvas.width = +_this.original.getAttribute('width');
-				canvas.height = +_this.original.getAttribute('height');
-
-				canvas.getContext('2d').drawImage( _this.original, 0, 0 );
-
-				_this.original.parentNode.insertBefore( canvas, _this.original );
-				_this.original.parentNode.removeChild( _this.original );
-				_this.canvas = canvas;
-				_this.context = canvas.getContext('2d');
-
-				return callback();
-			}
-
-		} else if ( this.original.tagName === 'CANVAS' ) {
-
-			this.context = this.getContext('2d');
-			return callback();
-
-		}
+		// Now we are ready and can initialize
+		return init(this);
 
 	};
 
