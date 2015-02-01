@@ -23,49 +23,30 @@
 
     function init(canvas) {
 
-        console.log('initializing');
-
-        canvas.polygon([
-            [ 80, 380],
-            [100, 380],
-            [140, 300],
-            [100, 300],
-            [ 80, 340]
-        ], '#f34');
-
-        canvas.circle({
-            offsetX: '50%',
-            offsetY: '50%',
-            radius: 30,
-            color: '#f00',
-            stroke: '#fff',
-            strokeWidth: 5,
-            strokeStyle: 'dotted'
+        // .background() creates new layer
+        canvas.background('#579');
+        // switch to layer 1 since background is now 0
+        canvas.switchToLayer(1).opacity(0.5);
+        // hit "m" to make an image
+        window.addEventListener('keydown', function(e) {
+            if ( e.keyCode === 77 ) canvas.convertToImage();
         });
-
-        //canvas.convertToImage();
     }
 
-    var drawing = new Martin('canvas', canvasInit).background('#ddd');
+    var drawing = new Martin('canvas', canvasInit);
 
     function canvasInit(drawing) {
 
-        for (var i = 0; i < 10; i++) {
-        //    drawing.rect((i * 10 + 4) + '%', 0, '2%', '50%', '#345');
-        }
-
         drawing
-            //.rect(10, 0, '50%', 50, '#f95') // orange
+            .background('#ccc').background('#936')
             .rect({
                 offsetX: 0,
                 offsetY: 240,
                 width: 200,
                 height: 120,
                 color: '#59c'
-            }); // blue
-
-
-        drawing.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
+            })
+            .polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
 
         //drawing.convertToImage();
     }

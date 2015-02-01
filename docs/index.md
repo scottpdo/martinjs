@@ -1,3 +1,3 @@
-# Test
+# Martin.js
 
-Test test test.
+* Martin * is a JavaScript microlibrary for working with HTML5 canvas.

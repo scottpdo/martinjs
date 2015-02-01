@@ -194,13 +194,11 @@
 	// Otherwise merge all the layers and return a single canvas.
 	Martin.prototype.mergeLayers = function( layers ) {
 
-		if ( !layers ) {
+		if ( !layers ) layers = this.layers;
 
-			layers = this.layers;
+		for ( var i = layers.length - 1; i > 0; i-- ) {
 
-		}
-
-		for (var i = layers.length - 1; i > 0; i-- ) {
+			console.warn('MERGING layer ' + i + ' down')
 
 			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 				abovePixels = aboveImageData.data,
@@ -210,14 +208,16 @@
 
 			for ( var j = 0; j < aboveLen; j+= 4 ) {
 
-				// TODO: transparency
-				if ( abovePixels[j + 3] > 0 ) {
+				// solid: pixel 255, alpha 1
+				// transparent: pixel 0, alpha 0
+				var alpha = abovePixels[j + 3] / 255;
 
-					belowPixels[j]		= abovePixels[j];
-					belowPixels[j + 1]	= abovePixels[j + 1];
-					belowPixels[j + 2]	= abovePixels[j + 2];
+				if ( j < 10 ) console.log('alpha is', alpha, '... above is', abovePixels[j], '... below was', belowPixels[j], '... changin by', ( ( 1 + alpha ) * (belowPixels[j] + abovePixels[j]) ) / ( 1 + alpha ))
 
-				}
+				belowPixels[j]		+= alpha * (abovePixels[j] - belowPixels[j]);
+				belowPixels[j + 1]	+= alpha * (abovePixels[j + 1] - belowPixels[j + 1]);
+				belowPixels[j + 2]	+= alpha * (abovePixels[j + 2] - belowPixels[j + 2]);
+				belowPixels[j + 3]	+= abovePixels[j + 3];
 
 			}
 
@@ -226,7 +226,7 @@
 
 			// Remove the old layer from the DOM and update the this.layers array
 			this.container.removeChild( this.layers[i].canvas );
-			this.layers = this.layers.slice( 0, -1 );
+			this.layers.pop();
 
 		}
 
@@ -305,9 +305,11 @@
 
 			this.newLayer('background');
 
+			// now get that background we just created
 			var background = this.layers.pop(),
 				bottom = this.container.firstChild;
 
+			// reassign our layers
 			for ( var l = this.layers.length; l >= 0; l-- ) {
 
 				this.layers[l] = this.layers[l - 1] || background;
@@ -317,6 +319,8 @@
 			this.switchToLayer(0);
 			this.container.insertBefore(background.canvas, bottom);
 
+		// if we're redoing the background, just switch to that
+		// background layer and work it
 		} else {
 			this.switchToLayer(0);
 		}
@@ -568,9 +572,9 @@
 		this.mergeLayers();
 
 		var img = new Image();
-		img.src = this.canvas.toDataURL();
+		img.src = this.layers[0].canvas.toDataURL();
 
-		this.container.removeChild( this.canvas );
+		this.container.removeChild( this.layers[0].canvas );
 		this.container.appendChild( img );
 
 	};
