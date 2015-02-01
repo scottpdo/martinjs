@@ -24,23 +24,30 @@
     function init(canvas) {
 
         // .background() creates new layer
-        canvas.rect({
+        /* canvas.rect({
             offsetX: 0,
             offsetY: 240,
             width: 200,
             height: 120,
             color: '#59c'
-        }).background('#a5a');
+        }).background('#a5a'); */
 
-        // switch to layer 1 since background is now 0
-        canvas.switchToLayer(1).fade();
-
-        canvas.background('#00f').switchToLayer(1).height(500);
-        console.log(canvas.layers[0].fill)
-
-        // hit "m" to make an image
+        canvas.newLayer().rect({
+            offsetX: 0,
+            offsetY: 0,
+            width: '100%',
+            height: '100%',
+            color: '#59c'
+        }).gradient({
+            angle: 45
+        });
+        // hit "m" to increase gradient
+        var opacity = 1;
         window.addEventListener('keydown', function(e) {
-            if ( e.keyCode === 77 ) canvas.convertToImage();
+            if ( e.keyCode === 77 ) {
+                canvas.opacity(opacity);
+                opacity -= opacity !== 0 ? 0.1 : 0;
+            }
         });
     }
 

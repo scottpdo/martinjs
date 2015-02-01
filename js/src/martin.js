@@ -268,6 +268,14 @@
 		return ( val / 100 ) * this.canvas.height;
 	};
 
+	function degToRad(deg) {
+		return deg * ( Math.PI / 180 );
+	}
+
+	function radToDeg(rad) {
+		return rad * ( 180 / Math.PI );
+	}
+
 	function hexToRGB( hex ) {
 
 		if ( !hex ) { return false; }
@@ -550,16 +558,88 @@
 			pixels = imageData.data,
 			len = pixels.length;
 
-		for ( var i = 0; i < len; i += 4 ) {
-
-			pixels[i + 3] = Math.floor( 255 * amt );
-
-		}
+		for ( var i = 0; i < len; i += 4 ) pixels[i + 3] *= amt;
 
 		this.context.putImageData( imageData, 0, 0 );
 
 		return this;
 
+	};
+
+	// Gradients.
+	// {
+	//	0: '#000'
+	//  25: '#000',
+	//  100: '#fff',
+	//	angle: 45
+	// }
+	Martin.prototype.gradient = function( obj ) {
+
+		// first find out the slope
+		var slope = Math.tan(degToRad(obj.angle || 0));
+		// if the absolute value of the slope is very very high (that is, a vertical line)
+		// set it to false and check against this later
+		if ( Math.abs(slope) > 10000 ) slope = false;
+
+		var center = {
+				x: Math.floor(this.canvas.width / 2) || obj.centerX,
+				y: Math.floor(this.canvas.height / 2) || obj.centerY
+			},
+			yInt = Math.round(-slope * center.x + center.y),
+			perpDistance = function(x, y) {
+				var c, dis;
+
+				if ( !!slope ) {
+					c = ( x + slope * y - slope * yInt  ) / ( slope * slope + 1);
+					dis = ( c - x ) * ( c - x ) + ( slope * c + yInt - y ) * ( slope * c + yInt - y );
+					dis = Math.sqrt(dis);
+				} else {
+					dis = Math.abs(center.x - x);
+				}
+				return dis;
+			},
+			index,
+			maxDistance = 0,
+			maxRatio = 1,
+			// given index, find x, y, distance, and angle
+			x, y, dx, dy, d, a,
+			imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
+			pixels = imageData.data,
+			len = pixels.length;
+
+		// max distance must be in one of the four corners
+		var corners = [
+			{ x: 0, y: 0 },
+			{ x: 0, y: this.canvas.height },
+			{ x: this.canvas.width, y: 0 },
+			{ x: this.canvas.width, y: this.canvas.height }
+		];
+
+		corners.forEach(function(corner) {
+			var dis = perpDistance(corner.x, corner.y);
+
+			if ( dis > maxDistance ) maxDistance = dis;
+		});
+
+		maxRatio = 255 / maxDistance;
+
+		for ( var i = 0; i < len; i += 4 ) {
+			index = i / 4;
+
+			x = Math.floor(index % this.canvas.width);
+			y = this.canvas.height - Math.floor(index / this.canvas.width);
+
+			d = perpDistance(x, y);
+			//if ( index < 400 ) console.log( 'angle', obj.angle, 'x', x, 'y', y, 'distance', d );
+			pixels[i] += 0;
+			pixels[i + 1] += 0;
+			pixels[i + 2] += 0;
+			pixels[i + 3] = d * maxRatio;
+		}
+
+		this.context.putImageData( imageData, 0, 0 );
+
+		return this;
 	};
 
 	// Fade direction
