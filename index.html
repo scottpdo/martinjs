@@ -24,9 +24,28 @@
     function init(canvas) {
 
         // .background() creates new layer
-        canvas.background('#579');
+        canvas.rect({
+            offsetX: 0,
+            offsetY: 240,
+            width: 200,
+            height: 120,
+            color: '#59c'
+        }).background('#a5a');
         // switch to layer 1 since background is now 0
-        canvas.switchToLayer(1).opacity(0.5);
+        canvas.switchToLayer(1).fade();
+        canvas.newLayer().write({
+            size: 28,
+            offsetX: 23,
+            offsetY: 97,
+            text: 'This is Humphrey',
+            color: '#000'
+        }).write({
+            size: 28,
+            offsetX: 20,
+            offsetY: 100,
+            text: 'This is Humphrey',
+            color: '#fff'
+        })
         // hit "m" to make an image
         window.addEventListener('keydown', function(e) {
             if ( e.keyCode === 77 ) canvas.convertToImage();

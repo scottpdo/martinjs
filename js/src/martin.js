@@ -198,8 +198,6 @@
 
 		for ( var i = layers.length - 1; i > 0; i-- ) {
 
-			console.warn('MERGING layer ' + i + ' down')
-
 			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 				abovePixels = aboveImageData.data,
 				aboveLen = abovePixels.length,
@@ -211,8 +209,6 @@
 				// solid: pixel 255, alpha 1
 				// transparent: pixel 0, alpha 0
 				var alpha = abovePixels[j + 3] / 255;
-
-				if ( j < 10 ) console.log('alpha is', alpha, '... above is', abovePixels[j], '... below was', belowPixels[j], '... changin by', ( ( 1 + alpha ) * (belowPixels[j] + abovePixels[j]) ) / ( 1 + alpha ))
 
 				belowPixels[j]		+= alpha * (abovePixels[j] - belowPixels[j]);
 				belowPixels[j + 1]	+= alpha * (abovePixels[j + 1] - belowPixels[j + 1]);
@@ -244,6 +240,7 @@
 		this.context.textBaseline = 'top';
 		this.context.fillText( obj.text, obj.offsetX || 0, this.canvas.height - obj.offsetY || 0 );
 
+		return this;
 	};
 
     // Normalize X and Y values
@@ -547,7 +544,7 @@
 		return this;
 	};
 
-	// Fade
+	// Fade uniform
 	Martin.prototype.opacity = function( amt ) {
 
 		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
@@ -564,6 +561,33 @@
 
 		return this;
 
+	};
+
+	// Fade direction
+	Martin.prototype.fade = function( angle ) {
+
+		// TODO: angle
+		if ( !angle ) angle = 0;
+
+		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
+			pixels = imageData.data,
+			len = pixels.length,
+			row = 0,
+			percentRow = 0,
+			rows = this.canvas.height;
+
+		for ( var i = 0; i < len; i += 4 ) {
+
+			// i is not the actual pixel # -- contains rgba, so use 0.25 * i to get pixel #
+			row = Math.floor(0.25 * i / this.canvas.width);
+			percentRow = 1 - row / rows;
+			pixels[i + 3] = percentRow * 255;
+
+		}
+
+		this.context.putImageData( imageData, 0, 0 );
+
+		return this;
 	};
 
 	// Replace a canvas with an image with a src of its data URL
