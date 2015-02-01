@@ -138,9 +138,9 @@
 
 			// Since we might have increased dimensions, if a background
 			// was already set, make sure that the new size receives that background
-			if ( this.theBackground ) {
+			if ( this.layers[0].type === 'background' ) {
 
-				// TODO
+				this.background( this.layers[0].fill );
 
 			}
 
@@ -156,9 +156,10 @@
 	};
 
 	// Create a new (top-most) layer and switch to that layer.
-	Martin.prototype.newLayer = function(type) {
+	Martin.prototype.newLayer = function(arg) {
 
-		var newCanvas = document.createElement('canvas');
+		var newCanvas = document.createElement('canvas'),
+			layerObject = {};
 
 		newCanvas.width = this.canvas.width;
 		newCanvas.height = this.canvas.height;
@@ -168,11 +169,16 @@
 		// Don't forget to set the new context
 		this.context = newCanvas.getContext('2d');
 
-		this.layers.push({
-			canvas: newCanvas,
-			context: newCanvas.getContext('2d'),
-			type: type
-		});
+		layerObject.canvas = newCanvas;
+		layerObject.context = newCanvas.getContext('2d');
+
+		if ( typeof arg === 'string' ) {
+			layerObject.type = arg;
+		} else {
+			for ( var i in arg ) layerObject[i] = arg[i];
+		}
+
+		this.layers.push(layerObject);
 
 		return this;
 
@@ -300,7 +306,10 @@
 		// first time background
 		if ( this.layers[0].type !== 'background' ) {
 
-			this.newLayer('background');
+			this.newLayer({
+				type: 'background',
+				fill: color
+			});
 
 			// now get that background we just created
 			var background = this.layers.pop(),
@@ -319,35 +328,25 @@
 		// if we're redoing the background, just switch to that
 		// background layer and work it
 		} else {
+			this.layers[0].fill = color;
 			this.switchToLayer(0);
 		}
-
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-			pixels = imageData.data,
-			len = pixels.length;
 
 		var rgb = hexToRGB( color ),
 			r = rgb.r,
 			g = rgb.g,
 			b = rgb.b;
 
+		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
+			pixels = imageData.data,
+			len = pixels.length;
+
 		for ( var i = 0; i < len; i += 4 ) {
 
-			if ( pixels[i + 3] <= 255 ) {
-
-				pixels[i] = r;
-				pixels[i + 1] = g;
-				pixels[i + 2] = b;
-				pixels[i + 3] = 255;
-
-				/* var alpha = pixels[i + 3] / 255;
-
-				pixels[i]		= ( ( 1 + alpha) * pixels[i] + r ) / ( 1 + alpha );
-				pixels[i + 1]	= ( ( 1 + alpha) * pixels[i + 1] + g ) / ( 1 + alpha );
-				pixels[i + 2]	= ( ( 1 + alpha) * pixels[i + 2] + b ) / ( 1 + alpha );
-				pixels[i + 3]	= 100 //255; */
-
-			}
+			pixels[i]	  = r;
+			pixels[i + 1] = g;
+			pixels[i + 2] = b;
+			pixels[i + 3] = 255;
 
 		}
 
