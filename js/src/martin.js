@@ -174,7 +174,7 @@
 		if ( data ) this.context.putImageData(data, 0, 0);
 
 		layerObject.canvas = newCanvas;
-		layerObject.context = newCanvas.getContext('2d');
+		layerObject.context = this.context;
 
 		if ( typeof arg === 'string' ) {
 			layerObject.type = arg;
@@ -211,7 +211,7 @@
 
 		if ( !layers ) layers = this.layers;
 
-		for ( var i = layers.length - 1; i > 0; i-- ) {
+		for ( var i = layers.length - 1; i > 0; i-- ) {	
 
 			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 				abovePixels = aboveImageData.data,
