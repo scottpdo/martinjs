@@ -156,7 +156,8 @@
 	};
 
 	// Create a new (top-most) layer and switch to that layer.
-	Martin.prototype.newLayer = function(arg) {
+	// Optional: include pixel data for the new layer
+	Martin.prototype.newLayer = function(arg, data) {
 
 		var newCanvas = document.createElement('canvas'),
 			layerObject = {};
@@ -168,6 +169,9 @@
 
 		// Don't forget to set the new context
 		this.context = newCanvas.getContext('2d');
+
+		// if there is data for the new layer, put it now
+		if ( data ) this.context.putImageData(data, 0, 0);
 
 		layerObject.canvas = newCanvas;
 		layerObject.context = newCanvas.getContext('2d');
@@ -182,6 +186,11 @@
 
 		return this;
 
+	};
+
+	Martin.prototype.duplicateLayer = function() {
+		this.newLayer( '', this.context.imageData );
+		return this;
 	};
 
 	Martin.prototype.switchToLayer = function( num ) {
@@ -575,8 +584,11 @@
 	// }
 	Martin.prototype.gradient = function( obj ) {
 
-		// first find out the slope
-		var slope = Math.tan(degToRad(obj.angle || 0));
+		// angle += 90 because we refer to the perpendicular to the line
+		// formed by the original angle to determine our gradient
+		var angle = obj.angle ? obj.angle + 90 : 90,
+			radians = degToRad(angle),
+			slope = Math.tan(radians);
 		// if the absolute value of the slope is very very high (that is, a vertical line)
 		// set it to false and check against this later
 		if ( Math.abs(slope) > 10000 ) slope = false;
@@ -587,16 +599,53 @@
 			},
 			yInt = Math.round(-slope * center.x + center.y),
 			perpDistance = function(x, y) {
+
 				var c, dis;
 
-				if ( !!slope ) {
+				// special case for 0 deg
+				if ( slope === 0 ) {
+
+					dis = Math.abs(center.y - y);
+
+				// special case for 90 deg
+				} else if ( !slope ) {
+
+					dis = Math.abs(center.x - x);
+
+				} else {
+
 					c = ( x + slope * y - slope * yInt  ) / ( slope * slope + 1);
 					dis = ( c - x ) * ( c - x ) + ( slope * c + yInt - y ) * ( slope * c + yInt - y );
 					dis = Math.sqrt(dis);
-				} else {
-					dis = Math.abs(center.x - x);
 				}
+
+				// is it at the start (positive) or end (negative) of the gradient
+				if ( rotate(x, y).x < 0 ) {
+					dis *= -1;
+				}
+
 				return dis;
+			},
+			rotate = function(x, y, log) {
+
+				// recenter
+				x -= center.x;
+				y -= center.y;
+
+				// rotate by 90 deg
+				var temp = {
+					x: y,
+					y: -x
+				};
+
+				var c = Math.cos(-radians),
+					s = Math.sin(-radians);
+
+				var pt = {
+					x: temp.x * c - temp.y * s,
+					y: temp.x * c + temp.y * s
+				};
+				return pt;
 			},
 			index,
 			maxDistance = 0,
@@ -630,11 +679,11 @@
 			y = this.canvas.height - Math.floor(index / this.canvas.width);
 
 			d = perpDistance(x, y);
-			//if ( index < 400 ) console.log( 'angle', obj.angle, 'x', x, 'y', y, 'distance', d );
+
 			pixels[i] += 0;
 			pixels[i + 1] += 0;
 			pixels[i + 2] += 0;
-			pixels[i + 3] = d * maxRatio;
+			pixels[i + 3] = 0.5 * ( d + maxDistance ) * maxRatio;
 		}
 
 		this.context.putImageData( imageData, 0, 0 );

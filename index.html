@@ -31,22 +31,23 @@
             height: 120,
             color: '#59c'
         }).background('#a5a'); */
-
-        canvas.newLayer().rect({
-            offsetX: 0,
-            offsetY: 0,
-            width: '100%',
-            height: '100%',
-            color: '#59c'
-        }).gradient({
-            angle: 45
+        var angle = 110;
+        canvas.duplicateLayer().background('#000').switchToLayer(1).gradient({
+            angle: 0
+        }).switchToLayer(2).gradient({
+            angle: 90
         });
         // hit "m" to increase gradient
         var opacity = 1;
         window.addEventListener('keydown', function(e) {
+            if ( e.keyCode === 78 ) {
+                canvas.convertToImage();
+            }
             if ( e.keyCode === 77 ) {
-                canvas.opacity(opacity);
-                opacity -= opacity !== 0 ? 0.1 : 0;
+                angle++;
+                canvas.gradient({
+                    angle: angle
+                });
             }
         });
     }
