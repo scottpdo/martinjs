@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>martin</title>
+  <title>Martin.js</title>
   
 
   
@@ -19,6 +19,8 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
   <script type="text/javascript" src="./js/highlight.pack.js"></script>
   <script src="./js/theme.js"></script>
+  <script src="./js/index.js"></script>
+  <script src="./js/martin.min.js"></script>
 
   <style>
     body {font-size: 90%;}
@@ -34,12 +36,33 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
       <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> martin</a>
+        <a href="." class="icon icon-home"> Martin.js</a>
         
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
       <ul class="current">
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="utilities/">Utilities</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="photos/">Photo Manipulation</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="drawing/">Drawing</a>
+            </li>
+        
+
     
 </ul>
 
@@ -70,12 +93,47 @@
 </div>
           <div role="main">
             <div class="section">
-              <h1 id="test">Test</h1>
-<p>Test test test.</p>
+              <script src="./js/martin.min.js"></script>
+
+<h1 id="martinjs">Martin.js</h1>
+<p>Martin is a JavaScript library for working with HTML5 canvas.</p>
+<h2 id="loading-martin">Loading Martin</h2>
+<p>Given an <code>&lt;img&gt;</code> or <code>&lt;canvas&gt;</code> element with <code>id="id"</code> , Martin is called with: <code>Martin('id', init)</code></p>
+<p>In your callback function <code>init</code> , the first argument refers to the instance of Martin, on which you can call the available methods.</p>
+<pre><code>&lt;img id=&quot;image&quot; src=&quot;martin.jpg&quot;&gt;
+</code></pre>
+
+<p><img src="./images/martin.jpg"></p>
+<pre><code>function init(canvas) {
+
+    canvas.rect({
+        offsetX: 130,
+        offsetY: 20,
+        width: 100,
+        height: 100,
+        color: '#000'
+    }).opacity(0.75);
+
+    canvas.toBW().convertToImage();
+
+}
+
+new Martin('image', init);
+</code></pre>
+
+<p><img id="image" src="./images/martin.jpg" width="250" height="250">
+<script src="./js/index.js"></script></p>
 
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="utilities/" class="btn btn-neutral float-right" title="Utilities"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
   
 
   <hr/>
@@ -100,7 +158,7 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
         
       <span><a href="" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      <span style="margin-left: 15px"><a href="" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span style="margin-left: 15px"><a href="utilities/" style="color: #fcfcfc">Next &raquo;</a></span>
     </span>
 </div>
 </body>

@@ -511,8 +511,8 @@
 
     };
 
-    // Convert the canvas to black and white
-    Martin.prototype.toBW = function() {
+    // Convert the canvas to black and white TODO: all or just one layer
+    Martin.prototype.toBW = function(all) {
 
 		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 			pixels = imageData.data,
@@ -533,7 +533,8 @@
 
     // Lighten and darken. (Darken just returns the opposite of lighten).
     // Takes an input from 1 to 100. Higher values return pure white or black.
-    Martin.prototype.lighten = function( amt ) {
+	// TODO all or just one layer
+    Martin.prototype.lighten = function( amt, all ) {
 
 		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 			pixels = imageData.data,
@@ -541,9 +542,9 @@
 
 		for (var i = 0; i < len; i += 4) {
 
-			pixels[i] += Math.round(amt * 256 / 100);
-			pixels[i + 1] += Math.round(amt * 256 / 100);
-			pixels[i + 2] += Math.round(amt * 256 / 100);
+			pixels[i] += Math.round(amt * 255 / 100);
+			pixels[i + 1] += Math.round(amt * 255 / 100);
+			pixels[i + 2] += Math.round(amt * 255 / 100);
 
 		}
 

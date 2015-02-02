@@ -1,5 +1,7 @@
 site_name: Martin.js
 pages:
 - [index.md, Home]
-- [about.md, About]
+- [utilities.md, Utilities]
+- [photos.md, Photo Manipulation]
+- [drawing.md, Drawing]
 theme: readthedocs
