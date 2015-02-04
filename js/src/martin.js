@@ -102,6 +102,12 @@
 
 	};
 
+	Martin.extend = function( obj ) {
+		for ( var method in obj ) {
+			Martin.prototype[method] = obj[method];
+		}
+	};
+
 	// Set or change dimensions.
 	[ 'width', 'height' ].forEach(function( which ) {
 

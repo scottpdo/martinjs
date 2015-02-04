@@ -16,6 +16,7 @@
     <canvas id="canvas" width="400" height="400"></canvas>
 
     <script src="js/src/martin.js"></script>
+    <script src="js/src/martin-watermark.js"></script>
 
     <script>
 
@@ -46,14 +47,8 @@
             endX: '50%',
             endY: '50%'
         })
-        .write('Humphrey', {
-            color: '#f00',
-            offsetX: '100%',
-            offsetY: '0%',
-            align: 'right',
-            size: 40
-        })
-        .width('75%', true)
+        .watermark('Photo Credit: Scott Donaldson')
+        //.convertToImage();
 
         //.height(200, true)
         // hit "m" to increase gradient
