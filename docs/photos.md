@@ -1,5 +1,7 @@
 # Photo Manipulation
 
+**Important: As of v0.1.0, none of these operations are reversible. As always, it's safest to create new layers and edit those if you may later want to retrieve old pixel data.**
+
 ### .toBW(`all = false`)
 
 Converts the current layer to black and white. If `all` is set to `true`, will convert all layers to black and white.

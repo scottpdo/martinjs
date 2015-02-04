@@ -55,5 +55,3 @@ Same options and defaults as `.rect()` .
 Requires `offsetX`, `offsetY`, `radiusX`, `radiusY` (the two radii may only be numbers).
 
 Same options and defaults as `.rect()` .
-
-### ** --EXPERIMENTAL-- ** .gradient()

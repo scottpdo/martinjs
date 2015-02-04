@@ -1,13 +1,13 @@
-<script src="js/martin.min.js"></script>
-
 # Martin.js
 
-Martin is a JavaScript library for working with HTML5 canvas. Martin is still in pre-release alpha, but if you're interested, read through the docs here and let me know if you have any questions.
+Martin is a JavaScript library for working with HTML5 canvas. Martin supports jQuery-like chained methods, and makes photo manipulation and drawing in browser easy for developers and users.
+
+**Martin is in pre-release beta, so features are subject to change.**
 
 You can download Martin here:
 
-- [Full version (19 kb)](js/martin.js)
-- [Minified (9 kb)](js/martin.min.js)
+- [Full version (19 kb)](js/src/martin.js)
+- [Minified (9 kb)](js/src/martin.min.js)
 
 \- Scottland / [@scottpdonaldson](https://twitter.com/scottpdonaldson)
 
@@ -39,7 +39,7 @@ function init(canvas) {
     canvas.write({
         text: 'Hi Martin',
         offsetX: 145,
-        offsetY: 50
+        offsetY: 35
     });
 
     canvas.toBW().convertToImage();
@@ -49,6 +49,5 @@ function init(canvas) {
 new Martin('image', init);
 ```
 <img id="image" src="images/martin.jpg" width="250" height="250">
-<script src="js/index.js"></script>
 
 It's an image! Go ahead - drag it to your desktop.

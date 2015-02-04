@@ -1,3 +1,5 @@
+$(document).ready(function(){
+
 function init(canvas) {
 
     canvas.rect({
@@ -11,11 +13,13 @@ function init(canvas) {
     canvas.write({
         text: 'Hi Martin',
         offsetX: 145,
-        offsetY: 50
+        offsetY: 35
     });
 
     canvas.toBW().convertToImage();
 
 }
 
-new Martin('image', init);
+if ( document.getElementById('image') ) new Martin('image', init);
+
+});
