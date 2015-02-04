@@ -266,15 +266,32 @@
 
 	};
 
-	Martin.prototype.write = function( obj ) {
+	Martin.prototype.write = function( arg1, arg2 ) {
 
-		var fontString = obj.size ? obj.size + 'px ' : '16px ';
+		var text, obj;
+
+		if ( typeof arg1 === 'string' ) {
+			text = arg1;
+			obj = arg2;
+		} else {
+			obj = arg1;
+			text = obj.text || '';
+		}
+
+		var size = obj.size || 16;
+
+		var fontString = size + 'px ';
 		fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
 
 		this.context.font = fontString;
 		this.context.fillStyle = obj.color || '#000';
 		this.context.textBaseline = 'top';
-		this.context.fillText( obj.text, obj.offsetX || 0, this.canvas.height - obj.offsetY || 0 );
+		this.context.textAlign = obj.align || 'left';
+		this.context.fillText(
+			text,
+			this.normalizeX(obj.offsetX || 0),
+			obj.offsetY ? this.normalizeY(obj.offsetY) - size : this.canvas.height - size
+		);
 
 		return this;
 	};
