@@ -4,6 +4,11 @@
 
 Martin is a JavaScript library for working with HTML5 canvas. Martin is still in pre-release alpha, but if you're interested, read through the docs here and let me know if you have any questions.
 
+You can download Martin here:
+
+- [Full version (19 kb)](js/martin.js)
+- [Minified (9 kb)](js/martin.min.js)
+
 \- Scottland / [@scottpdonaldson](https://twitter.com/scottpdonaldson)
 
 ## Loading Martin
