@@ -542,44 +542,68 @@
 
     };
 
-    // Convert the canvas to black and white TODO: all or just one layer
+    // Convert the canvas to black and white
     Martin.prototype.toBW = function(all) {
 
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-			pixels = imageData.data,
-			len = pixels.length;
+		var _this = this;
 
-		for (var i = 0; i < len; i += 4) {
+		function makeBW(context) {
+			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
+				pixels = imageData.data,
+				len = pixels.length;
 
-			var grayscale = pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
-				pixels[i]     = grayscale;        // red
-				pixels[i + 1] = grayscale;        // green
-				pixels[i + 2] = grayscale;        // blue
+			for (var i = 0; i < len; i += 4) {
+
+				var grayscale = pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
+					pixels[i]     = grayscale;        // red
+					pixels[i + 1] = grayscale;        // green
+					pixels[i + 2] = grayscale;        // blue
+			}
+
+			context.putImageData( imageData, 0, 0 );
 		}
 
-		this.context.putImageData( imageData, 0, 0 );
+		// if not all, just current layer, otherwise all layers
+		if ( !all ) {
+			makeBW(this.context);
+		} else {
+			this.layers.forEach(function(layer) {
+				makeBW(layer.context);
+			});
+		}
 
 		return this;
 	};
 
     // Lighten and darken. (Darken just returns the opposite of lighten).
-    // Takes an input from 1 to 100. Higher values return pure white or black.
-	// TODO all or just one layer
+    // Takes an input from 0 to 100. Higher values return pure white or black.
     Martin.prototype.lighten = function( amt, all ) {
 
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-			pixels = imageData.data,
-			len = pixels.length;
+		var _this = this;
 
-		for (var i = 0; i < len; i += 4) {
+		function makeLighten(context) {
+			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
+				pixels = imageData.data,
+				len = pixels.length;
 
-			pixels[i] += Math.round(amt * 255 / 100);
-			pixels[i + 1] += Math.round(amt * 255 / 100);
-			pixels[i + 2] += Math.round(amt * 255 / 100);
+			for (var i = 0; i < len; i += 4) {
 
+				pixels[i] += Math.round(amt * 255 / 100);
+				pixels[i + 1] += Math.round(amt * 255 / 100);
+				pixels[i + 2] += Math.round(amt * 255 / 100);
+
+			}
+
+			context.putImageData( imageData, 0, 0 );
 		}
 
-		this.context.putImageData( imageData, 0, 0 );
+		if ( !all ) {
+			makeLighten(this.context);
+		} else {
+			this.layers.forEach(function(layer) {
+				makeLighten(layer.context);
+			})
+		}
 
 		return this;
 
@@ -593,15 +617,27 @@
 	};
 
 	// Fade uniform
-	Martin.prototype.opacity = function( amt ) {
+	Martin.prototype.opacity = function( amt, all ) {
 
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-			pixels = imageData.data,
-			len = pixels.length;
+		var _this = this;
 
-		for ( var i = 0; i < len; i += 4 ) pixels[i + 3] *= amt;
+		function makeOpacity(context) {
+			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
+				pixels = imageData.data,
+				len = pixels.length;
 
-		this.context.putImageData( imageData, 0, 0 );
+			for ( var i = 0; i < len; i += 4 ) pixels[i + 3] *= amt;
+
+			context.putImageData( imageData, 0, 0 );
+		}
+
+		if ( !all ) {
+			makeOpacity(this.context)
+		} else {
+			this.layers.forEach(function(layer) {
+				makeOpacity(layer.context);
+			});
+		}
 
 		return this;
 
@@ -716,33 +752,6 @@
 			pixels[i + 1] += 0;
 			pixels[i + 2] += 0;
 			pixels[i + 3] = 0.5 * ( d + maxDistance ) * maxRatio;
-		}
-
-		this.context.putImageData( imageData, 0, 0 );
-
-		return this;
-	};
-
-	// Fade direction
-	Martin.prototype.fade = function( angle ) {
-
-		// TODO: angle
-		if ( !angle ) angle = 0;
-
-		var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-			pixels = imageData.data,
-			len = pixels.length,
-			row = 0,
-			percentRow = 0,
-			rows = this.canvas.height;
-
-		for ( var i = 0; i < len; i += 4 ) {
-
-			// i is not the actual pixel # -- contains rgba, so use 0.25 * i to get pixel #
-			row = Math.floor(0.25 * i / this.canvas.width);
-			percentRow = 1 - row / rows;
-			pixels[i + 3] = percentRow * 255;
-
 		}
 
 		this.context.putImageData( imageData, 0, 0 );
