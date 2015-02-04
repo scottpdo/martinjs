@@ -4,4 +4,5 @@ pages:
 - [utilities.md, Utilities]
 - [photos.md, Photo Manipulation]
 - [drawing.md, Drawing]
+- [text.md, Text]
 theme: readthedocs

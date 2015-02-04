@@ -23,22 +23,32 @@
 
     function init(canvas) {
 
-        // .background() creates new layer
-        /* canvas.rect({
-            offsetX: 0,
-            offsetY: 240,
-            width: 200,
-            height: 120,
-            color: '#59c'
-        }).background('#a5a'); */
         var angle = 110;
-        canvas.duplicateLayer().background('#000').switchToLayer(1).gradient({
-            angle: 0
-        }).switchToLayer(2).gradient({
+        canvas.background('#000').gradient({
             angle: 90
-        });
+        }).newLayer().circle({
+            offsetX: 50,
+            offsetY: 50,
+            radius: '5%',
+            color: '#f00'
+        })
+        .newLayer().rect({
+            offsetX: 300,
+            offsetY: 0,
+            width: 20,
+            height: 400,
+            color: '#ff0'
+        }).toBW(true)
+        .newLayer().line({
+            startX: 0,
+            startY: 0,
+            endX: '50%',
+            endY: '50%'
+        })
+        .width('75%', true)
+        //.height(200, true)
         // hit "m" to increase gradient
-        var opacity = 1;
+        /* var opacity = 1;
         window.addEventListener('keydown', function(e) {
             if ( e.keyCode === 78 ) {
                 canvas.convertToImage();
@@ -50,24 +60,28 @@
                 });
             }
         });
+
+        return canvas; */
     }
 
     var drawing = new Martin('canvas', canvasInit);
 
     function canvasInit(drawing) {
 
-        drawing
-            .background('#ccc').background('#936')
+        /* drawing
+            .background('#ccc')//.background('#936')
             .rect({
                 offsetX: 0,
                 offsetY: 240,
                 width: 200,
                 height: 120,
                 color: '#59c'
-            })
-            .polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
+            });
+            //.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff')
+            //.width(500, true);
 
-        //drawing.convertToImage();
+        //drawing.convertToImage(); */
+
     }
 
     </script>

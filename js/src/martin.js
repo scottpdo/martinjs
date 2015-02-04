@@ -95,6 +95,8 @@
 			context: this.context
 		}];
 
+		this.currentLayer = 0;
+
 		// Now we are ready and can initialize
 		return init(this);
 
@@ -103,46 +105,67 @@
 	// Set or change dimensions.
 	[ 'width', 'height' ].forEach(function( which ) {
 
-		Martin.prototype[which] = function( val ) {
+		Martin.prototype[which] = function( val, resize ) {
 
-			var imageData = this.context.getImageData(
-				0,
-				which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0, // want this to be relative to Cartesian grid, also see below 2x
-				this.canvas.width,
-				this.canvas.height
-			);
+			var imageData,
+				pixels,
+				ratio,
+				dummyCanvas,
+				dummyContext;
+
+			if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
 
 			// Update the container
 			this.container.style[which] = val + 'px';
 
-			// Update height or width of the master canvas
-			// and update the context
-			this.canvas[which] = val;
-			this.context.putImageData( imageData, 0, which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0 );
+			// get the ratio, in case we're resizing
+			ratio = val / this.canvas[which];
 
 			// Update height or width of all the layers' canvases
 			// and update their contexts
-			for ( var i = 0; i < this.layers.length; i++ ) {
+			for ( var i = this.layers.length - 1; i >= 0; i-- ) {
 
 				imageData = this.layers[i].context.getImageData(
 					0,
-					which === 'height' ? this.canvas[which] - val : 0,
+					which === 'height' && !resize ? this.canvas.height - val : 0,
 					this.canvas.width,
 					this.canvas.height
 				);
 
-				this.layers[i].canvas[which] = val;
-				this.layers[i].context.putImageData( imageData, 0, which === 'height' ? this.canvas[which] - val > 0 ? this.canvas[which] - val : 0 : 0 );
+				dummyCanvas = document.createElement('canvas');
+				dummyContext = dummyCanvas.getContext('2d');
+
+				dummyCanvas.setAttribute('width', this.canvas.width);
+				dummyCanvas.setAttribute('height', this.canvas.height);
+
+				dummyContext.putImageData(
+					this.layers[i].context.getImageData(
+						0,
+						0,
+						this.canvas.width,
+						this.canvas.height
+					),
+					0,
+					0
+				);
+
+				this.layers[i].canvas.setAttribute(which, val);
+
+				if ( resize ) {
+
+					this.layers[i].context.scale(
+						which === 'width' ? ratio : 1,
+						which === 'height' ? ratio : 1
+					);
+				}
+
+				this.layers[i].context.drawImage(dummyCanvas, 0, 0);
 
 			}
 
 			// Since we might have increased dimensions, if a background
 			// was already set, make sure that the new size receives that background
-			if ( this.layers[0].type === 'background' ) {
-
-				this.background( this.layers[0].fill );
-
-			}
+			if ( this.layers[0].type === 'background' ) this.background( this.layers[0].fill );
 
 			return this;
 
@@ -167,8 +190,9 @@
 
 		this.container.appendChild( newCanvas );
 
-		// Don't forget to set the new context
+		// Don't forget to set the new context and currentlayer
 		this.context = newCanvas.getContext('2d');
+		this.currentLayer = this.layers.length;
 
 		// if there is data for the new layer, put it now
 		if ( data ) this.context.putImageData(data, 0, 0);
@@ -195,11 +219,8 @@
 
 	Martin.prototype.switchToLayer = function( num ) {
 
-		if ( num ) {
-			this.context = this.layers[num].context;
-		} else {
-			this.context = this.layers[0].context;
-		}
+		this.context = this.layers[num || 0].context;
+		this.currentLayer = num || 0;
 
 		return this;
 
@@ -211,7 +232,7 @@
 
 		if ( !layers ) layers = this.layers;
 
-		for ( var i = layers.length - 1; i > 0; i-- ) {	
+		for ( var i = layers.length - 1; i > 0; i-- ) {
 
 			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
 				abovePixels = aboveImageData.data,
@@ -320,8 +341,13 @@
 	// average to calculate the outcome.
 	Martin.prototype.background = function( color ) {
 
+		var originalLayer = this.currentLayer,
+			bump = 0;
+
 		// first time background
 		if ( this.layers[0].type !== 'background' ) {
+
+			bump = 1; // we bump all other layers
 
 			this.newLayer({
 				type: 'background',
@@ -369,6 +395,8 @@
 
 		this.context.putImageData( imageData, 0, 0 );
 
+		this.switchToLayer(originalLayer + bump);
+
 		return this;
 
 	};
@@ -402,6 +430,9 @@
 		this.context.moveTo( this.normalizeX(obj.startX), this.normalizeY(obj.startY) );
 
 		this.context.lineTo( this.normalizeX(obj.endX), this.normalizeY(obj.endY) );
+
+		if ( !obj.strokeWidth ) obj.strokeWidth = 1;
+		obj.stroke = obj.color ? obj.color : '#000';
 
 		this.setContext( obj );
 
