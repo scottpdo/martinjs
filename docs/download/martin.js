@@ -115,17 +115,20 @@
 
 			var imageData,
 				pixels,
+				oldHeight,
 				ratio,
 				dummyCanvas,
 				dummyContext;
 
 			if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
 
+			oldHeight = this.canvas.height;
+
 			// Update the container
 			this.container.style[which] = val + 'px';
 
 			// get the ratio, in case we're resizing
-			ratio = val / this.canvas[which];
+			ratio = val / this.canvas.height;
 
 			// Update height or width of all the layers' canvases
 			// and update their contexts
@@ -165,7 +168,7 @@
 					);
 				}
 
-				this.layers[i].context.drawImage(dummyCanvas, 0, 0);
+				this.layers[i].context.drawImage(dummyCanvas, 0, which === 'height' && !resize ? val - oldHeight : 0);
 
 			}
 
@@ -238,35 +241,28 @@
 
 		if ( !layers ) layers = this.layers;
 
-		for ( var i = layers.length - 1; i > 0; i-- ) {
+		var _this = this;
 
-			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-				abovePixels = aboveImageData.data,
-				aboveLen = abovePixels.length,
-				belowImageData = layers[i - 1].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-				belowPixels = belowImageData.data;
+		function mergeDown(index) {
 
-			for ( var j = 0; j < aboveLen; j+= 4 ) {
+			if ( index > 0 ) {
 
-				// solid: pixel 255, alpha 1
-				// transparent: pixel 0, alpha 0
-				var alpha = abovePixels[j + 3] / 255;
+				var aboveLayer = layers[index],
+					belowLayer = layers[index - 1],
+					aboveCanvas = layers[index].canvas;
 
-				belowPixels[j]		+= alpha * (abovePixels[j] - belowPixels[j]);
-				belowPixels[j + 1]	+= alpha * (abovePixels[j + 1] - belowPixels[j + 1]);
-				belowPixels[j + 2]	+= alpha * (abovePixels[j + 2] - belowPixels[j + 2]);
-				belowPixels[j + 3]	+= abovePixels[j + 3];
+				// put the new data onto the target layer
+				belowLayer.context.drawImage( aboveCanvas, 0, 0 );
 
+				// Remove the old layer from the DOM and update the this.layers array
+				_this.container.removeChild( layers[index].canvas );
+				layers.pop();
+
+				return mergeDown( index - 1 );
 			}
-
-			// put the new data onto the target layer
-			layers[i - 1].context.putImageData( belowImageData, 0, 0 );
-
-			// Remove the old layer from the DOM and update the this.layers array
-			this.container.removeChild( this.layers[i].canvas );
-			this.layers.pop();
-
 		}
+
+		mergeDown( layers.length - 1 );
 
 		return this;
 
@@ -283,6 +279,8 @@
 			obj = arg1;
 			text = obj.text || '';
 		}
+
+		if ( !obj ) obj = {};
 
 		var size = obj.size || 16;
 
@@ -502,13 +500,12 @@
     Martin.prototype.ellipse = function( obj ) {
 
 		if ( obj.radiusX === obj.radiusY ) {
+			obj.radius = obj.radiusX;
 			return this.circle( obj );
 		}
 
 		var centerX = this.normalizeX( obj.offsetX ),
 			centerY = this.normalizeY( obj.offsetY );
-
-		this.context.save();
 
 		this.context.beginPath();
 
@@ -520,7 +517,7 @@
 
 			this.context.scale( scale, 1 );
 
-			this.context.arc( centerX / scale, this.canvas.height - centerY, obj.radiusX / 2, 0, 2 * Math.PI, false);
+			this.context.arc( centerX / scale, centerY, obj.radiusX / 2, 0, 2 * Math.PI, false);
 
 		} else {
 
@@ -528,7 +525,7 @@
 
 			this.context.scale( 1, scale );
 
-			this.context.arc( centerX, ( this.canvas.height - centerY ) / scale, obj.radiusY / 2, 0, 2 * Math.PI, false);
+			this.context.arc( centerX, centerY / scale, obj.radiusY / 2, 0, 2 * Math.PI, false);
 
 		}
 
@@ -544,6 +541,8 @@
     // Points are parsed as pixels if integers or percentage if of the form '10%'
     Martin.prototype.polygon = function( arr, obj ) {
 
+		if ( typeof obj === 'string' ) obj = { color: obj };
+
     	this.context.beginPath();
 
 		for (var i = 0; i < arr.length; i++) {
@@ -556,6 +555,9 @@
 			this.context.lineTo( toX, toY );
 
 		}
+
+		// close the path
+		this.context.lineTo( this.normalizeX(arr[0][0]), this.normalizeY(arr[0][1]) );
 
 		this.setContext( obj );
 

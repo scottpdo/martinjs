@@ -25,29 +25,14 @@
     function init(canvas) {
 
         var angle = 110;
-        canvas.background('#000')
-        .newLayer().circle({
-            offsetX: 150,
-            offsetY: 150,
-            radius: 50,
-            color: '#f00'
-        })
-        .newLayer().rect({
+        canvas.write('Hello World!');
+        canvas.background('#000').ellipse({
             offsetX: 300,
-            offsetY: 0,
-            width: 20,
-            height: 400,
-            color: '#ff0'
-        })
-        .newLayer().line({
-            startX: 0,
-            startY: 0,
-            endX: '50%',
-            endY: '50%'
-        })
-        .watermark('Photo Credit: Scott Donaldson')
-        .opacity(0.5, true)
-        //.convertToImage();
+            offsetY: 350,
+            radiusX: 100,
+            radiusY: 100,
+            color: '#ef3'
+        });
 
         //.height(200, true)
         // hit "m" to increase gradient

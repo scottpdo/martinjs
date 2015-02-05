@@ -3,11 +3,11 @@ $(document).ready(function(){
 function init(canvas) {
 
     canvas.rect({
-        offsetX: 25,
+        offsetX: 50,
         offsetY: 25,
-        width: 90,
-        height: 50,
-        color: '#33e'
+        width: 200,
+        height: 250,
+        color: '#33e' // blue
     });
 
 }

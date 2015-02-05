@@ -19,11 +19,13 @@ In your callback function `init` , the first argument refers to the instance of 
 
 ## Example
 
+**Note:** For now, `height` and `width` attributes must be explicitly declared.
+
 ```
-<img id="image" src="martin.jpg">
+<img id="image" src="bunny.jpg" width="400" height="300">
 ```
 
-<img src="images/martin.jpg">
+<img src="images/bunny.jpg">
 
 ```
 function init(canvas) {
@@ -37,7 +39,8 @@ function init(canvas) {
     });
 
     canvas.write({
-        text: 'Hi Martin',
+        text: 'Hello!',
+        size: 18,
         offsetX: 145,
         offsetY: 35
     });
@@ -48,6 +51,6 @@ function init(canvas) {
 
 new Martin('image', init);
 ```
-<img id="image" src="images/martin.jpg" width="250" height="250">
+<img id="image" src="images/bunny.jpg" width="400" height="300">
 
 It's an image! Go ahead - drag it to your desktop.

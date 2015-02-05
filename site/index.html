@@ -25,7 +25,6 @@
   <script src="./download/martin.watermark.min.js"></script>
   <script src="./js/index.js"></script>
   <script src="./js/overview.js"></script>
-  <script src="./js/plugins.js"></script>
 
   <style>
     body {font-size: 90%;}
@@ -132,10 +131,11 @@
 <p>Given an <code>&lt;img&gt;</code> or <code>&lt;canvas&gt;</code> element with <code>id="id"</code> , Martin is called with: <code>new Martin('id', init)</code></p>
 <p>In your callback function <code>init</code> , the first argument refers to the instance of Martin, on which you can call the available methods.</p>
 <h2 id="example">Example</h2>
-<pre><code>&lt;img id=&quot;image&quot; src=&quot;martin.jpg&quot;&gt;
+<p><strong>Note:</strong> For now, <code>height</code> and <code>width</code> attributes must be explicitly declared.</p>
+<pre><code>&lt;img id=&quot;image&quot; src=&quot;bunny.jpg&quot; width=&quot;400&quot; height=&quot;300&quot;&gt;
 </code></pre>
 
-<p><img src="./images/martin.jpg"></p>
+<p><img src="./images/bunny.jpg"></p>
 <pre><code>function init(canvas) {
 
     canvas.rect({
@@ -147,7 +147,8 @@
     });
 
     canvas.write({
-        text: 'Hi Martin',
+        text: 'Hello!',
+        size: 18,
         offsetX: 145,
         offsetY: 35
     });
@@ -159,7 +160,7 @@
 new Martin('image', init);
 </code></pre>
 
-<p><img id="image" src="./images/martin.jpg" width="250" height="250"></p>
+<p><img id="image" src="./images/bunny.jpg" width="400" height="300"></p>
 <p>It's an image! Go ahead - drag it to your desktop.</p>
 
             </div>

@@ -19,9 +19,7 @@ function init(canvas) {
 new Martin('image', init);
 ```
 
-<img src="images/martin.jpg" width="250" height="250">
-
-<img id="watermark" src="images/martin.jpg" width="250" height="250">
+<img id="martin-watermark" src="images/bunny.jpg" width="400" height="300">
 
 ### .extend(`obj`)
 
