@@ -16,7 +16,7 @@
     <canvas id="canvas" width="400" height="400"></canvas>
 
     <script src="js/src/martin.js"></script>
-    <script src="js/src/martin-watermark.js"></script>
+    <script src="js/src/martin.watermark.js"></script>
 
     <script>
 
@@ -25,12 +25,11 @@
     function init(canvas) {
 
         var angle = 110;
-        canvas.background('#000').gradient({
-            angle: 90
-        }).newLayer().circle({
-            offsetX: 50,
-            offsetY: 50,
-            radius: '5%',
+        canvas.background('#000')
+        .newLayer().circle({
+            offsetX: 150,
+            offsetY: 150,
+            radius: 50,
             color: '#f00'
         })
         .newLayer().rect({
@@ -40,7 +39,6 @@
             height: 400,
             color: '#ff0'
         })
-        .opacity(0.5, true)
         .newLayer().line({
             startX: 0,
             startY: 0,
@@ -48,11 +46,12 @@
             endY: '50%'
         })
         .watermark('Photo Credit: Scott Donaldson')
+        .opacity(0.5, true)
         //.convertToImage();
 
         //.height(200, true)
         // hit "m" to increase gradient
-        /* var opacity = 1;
+        var opacity = 1;
         window.addEventListener('keydown', function(e) {
             if ( e.keyCode === 78 ) {
                 canvas.convertToImage();
@@ -65,7 +64,7 @@
             }
         });
 
-        return canvas; */
+        return canvas;
     }
 
     var drawing = new Martin('canvas', canvasInit);

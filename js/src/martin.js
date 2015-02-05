@@ -238,35 +238,28 @@
 
 		if ( !layers ) layers = this.layers;
 
-		for ( var i = layers.length - 1; i > 0; i-- ) {
+		var _this = this;
 
-			var aboveImageData = layers[i].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-				abovePixels = aboveImageData.data,
-				aboveLen = abovePixels.length,
-				belowImageData = layers[i - 1].context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-				belowPixels = belowImageData.data;
+		function mergeDown(index) {
 
-			for ( var j = 0; j < aboveLen; j+= 4 ) {
+			if ( index > 0 ) {
 
-				// solid: pixel 255, alpha 1
-				// transparent: pixel 0, alpha 0
-				var alpha = abovePixels[j + 3] / 255;
+				var aboveLayer = layers[index],
+					belowLayer = layers[index - 1],
+					aboveCanvas = layers[index].canvas;
 
-				belowPixels[j]		+= alpha * (abovePixels[j] - belowPixels[j]);
-				belowPixels[j + 1]	+= alpha * (abovePixels[j + 1] - belowPixels[j + 1]);
-				belowPixels[j + 2]	+= alpha * (abovePixels[j + 2] - belowPixels[j + 2]);
-				belowPixels[j + 3]	+= abovePixels[j + 3];
+				// put the new data onto the target layer
+				belowLayer.context.drawImage( aboveCanvas, 0, 0 );
 
+				// Remove the old layer from the DOM and update the this.layers array
+				_this.container.removeChild( layers[index].canvas );
+				layers.pop();
+
+				return mergeDown( index - 1 );
 			}
-
-			// put the new data onto the target layer
-			layers[i - 1].context.putImageData( belowImageData, 0, 0 );
-
-			// Remove the old layer from the DOM and update the this.layers array
-			this.container.removeChild( this.layers[i].canvas );
-			this.layers.pop();
-
 		}
+
+		mergeDown( layers.length - 1 );
 
 		return this;
 
