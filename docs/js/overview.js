@@ -3,7 +3,7 @@ $(document).ready(function(){
 function init(canvas) {
 
     canvas.rect({
-        offsetX: 50,
+        offsetX: 150,
         offsetY: 25,
         width: 200,
         height: 250,
