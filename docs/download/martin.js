@@ -517,7 +517,7 @@
 
 			this.context.scale( scale, 1 );
 
-			this.context.arc( centerX / scale, centerY, obj.radiusX / 2, 0, 2 * Math.PI, false);
+			this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
 
 		} else {
 
@@ -525,7 +525,7 @@
 
 			this.context.scale( 1, scale );
 
-			this.context.arc( centerX, centerY / scale, obj.radiusY / 2, 0, 2 * Math.PI, false);
+			this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
 
 		}
 
