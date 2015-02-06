@@ -23,6 +23,20 @@ function init(canvas) {
 
 if ( document.getElementById('image') ) new Martin('image', init);
 
+function overview(canvas) {
+
+    canvas.rect({
+        offsetX: 150,
+        offsetY: 25,
+        width: 200,
+        height: 250,
+        color: '#33e' // blue
+    });
+
+}
+
+if ( document.getElementById('martin-overview') ) new Martin('martin-overview', overview);
+
 function cropHeight200(canvas) {
     canvas.height(200);
 }

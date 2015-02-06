@@ -11,7 +11,7 @@
 
 <body>
 
-    <img id="humph" height="400" width="400" src="images/humphrey.jpg">
+    <img id="humph" height="300" width="400" src="docs/images/bunny.jpg">
 
     <canvas id="canvas" width="400" height="400"></canvas>
 
@@ -32,9 +32,8 @@
             radiusX: 100,
             radiusY: 100,
             color: '#ef3'
-        });
-
-        //.height(200, true)
+        })
+        .width(200, true)
         // hit "m" to increase gradient
         var opacity = 1;
         window.addEventListener('keydown', function(e) {

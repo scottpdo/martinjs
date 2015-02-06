@@ -128,7 +128,7 @@
 			this.container.style[which] = val + 'px';
 
 			// get the ratio, in case we're resizing
-			ratio = val / this.canvas.height;
+			ratio = val / this.canvas[which];
 
 			// Update height or width of all the layers' canvases
 			// and update their contexts
