@@ -7,4 +7,5 @@ pages:
 - [drawing.md, Drawing]
 - [text.md, Text]
 - [plugins.md, Plugins]
+- [demos.md, Demos]
 theme: readthedocs
