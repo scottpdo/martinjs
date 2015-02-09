@@ -1,5 +1,29 @@
 $(document).ready(function(){
 
+function sepia(canvas) {
+
+    canvas.darken(10).opacity(0.6).toBW().background('#ea0');
+
+    canvas.newLayer().rect({
+        offsetX: 0,
+        offsetY: 0,
+        width: '100%',
+        height: '15%'
+    }).opacity(0.5);
+
+    canvas.newLayer().write({
+        text: 'The loneliest bunny in the west.',
+        offsetX: '50%',
+        offsetY: 13,
+        align: 'center',
+        color: '#fff'
+    });
+
+    canvas.convertToImage();
+}
+
+if ( document.getElementById('demo-sepia') ) new Martin('demo-sepia', sepia);
+
 function checkerboard(canvas) {
 
     // .canvas refers to the actual <canvas> element
