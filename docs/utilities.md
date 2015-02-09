@@ -22,9 +22,11 @@ Duplicates the current layer and adds it to the top of the layer stack.
 
 Deletes a given layer (by number), or the current layer, if no layer number is given.
 
-### .height(`value`, `resize = false`)
+### .height(`null` or `value`, `resize = false`)
 
-Adjusts the height to be `value` pixels high, or by `value` percent (if given as a string, ex. '150%'). If `resize` is left empty or set to `false`, the image will be enlarged or cropped but not resized. This happens relative to the lower-left corner of the image. If `true`, the existing pixel data will be stretched or shrunk to the new height.
+If no argument is passed, returns the height as a number.
+
+If a value is given, adjusts the height to be `value` pixels high, or by `value` percent (if given as a string, ex. '150%'). If `resize` is left empty or set to `false`, the image will be enlarged or cropped but not resized. This happens relative to the lower-left corner of the image. If `true`, the existing pixel data will be stretched or shrunk to the new height.
 
 ```
 canvas.height(200); // crop
@@ -44,9 +46,11 @@ canvas.height(400, true); // resize
 
 <img id="martin-height-400-resize" src="images/bunny.jpg" height="300" width="400">
 
-### .width(`value`, `resize = false`)
+### .width(`null` or `value`, `resize = false`)
 
-Adjusts the width to be `value` pixels wide, or by `value` percent (if given as a string, ex. '150%'). If `resize` is left empty or set to `false`, the image will be enlarged or cropped but not resized. This happens relative to the lower-left corner of the image. If `true`, the existing pixel data will be stretched or shrunk to the new width.
+If no argument is passed, returns the width as a number.
+
+If a value is given, adjusts the width to be `value` pixels wide, or by `value` percent (if given as a string, ex. '150%'). If `resize` is left empty or set to `false`, the image will be enlarged or cropped but not resized. This happens relative to the lower-left corner of the image. If `true`, the existing pixel data will be stretched or shrunk to the new width.
 
 ```
 canvas.width(200); // crop

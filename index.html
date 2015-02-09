@@ -26,13 +26,8 @@
 
         var angle = 110;
         canvas.write('Hello World!');
-        canvas.newLayer().rect({
-            offsetX: 0,
-            offsetY: 0,
-            width: 100,
-            height: 100,
-            color: '#fff'
-        }).deleteLayer();
+        var area = canvas.height() * canvas.width();
+        console.log(area);
 
         // hit "m" to increase gradient
         var opacity = 1;

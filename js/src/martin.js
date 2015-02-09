@@ -113,6 +113,9 @@
 
 		Martin.prototype[which] = function( val, resize ) {
 
+			// if no value given, return the corresponding value
+			if ( !val ) return this.canvas[which];
+
 			var imageData,
 				pixels,
 				oldHeight,
