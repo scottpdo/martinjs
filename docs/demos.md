@@ -1,6 +1,6 @@
 # Demos
 
-By running .convertToImage() at the end of all of these, all of the canvas elements are made into images, ready to be downloaded or shared.
+By running `.convertToImage()` at the end of all of these, all of the canvas elements are made into images, ready to be downloaded or shared.
 
 ### Sepia photo with caption
 
