@@ -18,6 +18,10 @@ Switches the drawing context to a given layer (ordered from 0 up).
 
 Duplicates the current layer and adds it to the top of the layer stack.
 
+### .deleteLayer(`null` or `number`)
+
+Deletes a given layer (by number), or the current layer, if no layer number is given.
+
 ### .height(`value`, `resize = false`)
 
 Adjusts the height to be `value` pixels high, or by `value` percent (if given as a string, ex. '150%'). If `resize` is left empty or set to `false`, the image will be enlarged or cropped but not resized. This happens relative to the lower-left corner of the image. If `true`, the existing pixel data will be stretched or shrunk to the new height.

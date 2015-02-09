@@ -26,13 +26,13 @@
 
         var angle = 110;
         canvas.write('Hello World!');
-        canvas.background('#000').ellipse({
-            offsetX: '50%',
-            offsetY: '50%',
-            radiusX: 50,
-            radiusY: 150,
-            color: '#ef3'
-        })
+        canvas.newLayer().rect({
+            offsetX: 0,
+            offsetY: 0,
+            width: 100,
+            height: 100,
+            color: '#fff'
+        }).deleteLayer();
 
         // hit "m" to increase gradient
         var opacity = 1;

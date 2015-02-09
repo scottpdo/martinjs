@@ -226,6 +226,24 @@
 		return this;
 	};
 
+	Martin.prototype.deleteLayer = function( num ) {
+
+		// don't delete if
+		if ( this.layers.length > 1 ) {
+
+			num = num || this.currentLayer;
+
+			this.container.removeChild(this.layers[num].canvas);
+			this.layers.splice(num, 1);
+
+		} else {
+			throw new Error("Can't delete the only layer.");
+		}
+
+		return this;
+
+	};
+
 	Martin.prototype.switchToLayer = function( num ) {
 
 		this.context = this.layers[num || 0].context;
