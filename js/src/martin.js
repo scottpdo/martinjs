@@ -30,8 +30,8 @@
 
 				var canvas = document.createElement('canvas');
 
-				canvas.width = +_this.original.getAttribute('width');
-				canvas.height = +_this.original.getAttribute('height');
+				canvas.width = _this.original.width;
+				canvas.height = _this.original.height;
 
 				canvas.getContext('2d').drawImage( _this.original, 0, 0 );
 
@@ -323,14 +323,14 @@
 
     // Normalize X and Y values
     Martin.prototype.normalizeX = function( val ) {
-    	return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
-    }
+		return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
+    };
 
     Martin.prototype.normalizeY = function( val ) {
-    	val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-    	// Flip it upside down (a la Cartesian)
-    	return this.canvas.height - val;
-    }
+		val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
+		// Flip it upside down (a la Cartesian)
+		return this.canvas.height - val;
+    };
 
 	Martin.prototype.normalizePercentX = function( val ) {
 		return ( val / 100 ) * this.canvas.width;
@@ -428,10 +428,10 @@
 
 		for ( var i = 0; i < len; i += 4 ) {
 
-			pixels[i]	  = r;
-			pixels[i + 1] = g;
-			pixels[i + 2] = b;
-			pixels[i + 3] = 255;
+			pixels[i]		= r;
+			pixels[i + 1]	= g;
+			pixels[i + 2]	= b;
+			pixels[i + 3]	= 255;
 
 		}
 
@@ -564,7 +564,7 @@
 
 		if ( typeof obj === 'string' ) obj = { color: obj };
 
-    	this.context.beginPath();
+		this.context.beginPath();
 
 		for (var i = 0; i < arr.length; i++) {
 
@@ -654,7 +654,7 @@
 		} else {
 			this.layers.forEach(function(layer) {
 				makeLighten(layer.context);
-			})
+			});
 		}
 
 		return this;
@@ -684,7 +684,7 @@
 		}
 
 		if ( !all ) {
-			makeOpacity(this.context)
+			makeOpacity(this.context);
 		} else {
 			this.layers.forEach(function(layer) {
 				makeOpacity(layer.context);

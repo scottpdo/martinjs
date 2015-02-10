@@ -21,10 +21,8 @@ In your callback function `init` , the first argument refers to the instance of 
 
 ## Example
 
-**Note:** For now, `height` and `width` attributes must be explicitly declared.
-
 ```
-<img id="image" src="bunny.jpg" width="400" height="300">
+<img id="image" src="bunny.jpg">
 ```
 
 <img src="images/bunny.jpg">
