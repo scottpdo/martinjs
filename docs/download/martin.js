@@ -113,6 +113,9 @@
 
 		Martin.prototype[which] = function( val, resize ) {
 
+			// if no value given, return the corresponding value
+			if ( !val ) return this.canvas[which];
+
 			var imageData,
 				pixels,
 				oldHeight,
@@ -585,12 +588,14 @@
 
     };
 
-    // Convert the canvas to black and white
-    Martin.prototype.toBW = function(all) {
-
+	// Desaturate
+	Martin.prototype.desaturate = function(amt, all) {
 		var _this = this;
 
-		function makeBW(context) {
+		amt = amt / 100;
+		if ( amt > 1 ) amt = 1;
+
+		function desaturate(context) {
 			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
 				pixels = imageData.data,
 				len = pixels.length;
@@ -598,9 +603,9 @@
 			for (var i = 0; i < len; i += 4) {
 
 				var grayscale = pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
-					pixels[i]     = grayscale;        // red
-					pixels[i + 1] = grayscale;        // green
-					pixels[i + 2] = grayscale;        // blue
+					pixels[i]     = (1 - amt) * pixels[i] + amt * grayscale;        // red
+					pixels[i + 1] = (1 - amt) * pixels[i + 1] + amt * grayscale;        // green
+					pixels[i + 2] = (1 - amt) * pixels[i + 2] + amt * grayscale;        // blue
 			}
 
 			context.putImageData( imageData, 0, 0 );
@@ -608,14 +613,18 @@
 
 		// if not all, just current layer, otherwise all layers
 		if ( !all ) {
-			makeBW(this.context);
+			desaturate(this.context);
 		} else {
 			this.layers.forEach(function(layer) {
-				makeBW(layer.context);
+				desaturate(layer.context);
 			});
 		}
 
 		return this;
+	};
+
+	Martin.prototype.saturate = function( amt, all ) {
+		return this.desaturate( -amt, all );
 	};
 
     // Lighten and darken. (Darken just returns the opposite of lighten).

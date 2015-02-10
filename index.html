@@ -11,7 +11,7 @@
 
 <body>
 
-    <img id="humph" height="300" width="400" src="docs/images/bunny.jpg">
+    <img id="humph" height="640" width="640" src="docs/images/marty-full.jpg">
 
     <canvas id="canvas" width="400" height="400"></canvas>
 
@@ -24,24 +24,28 @@
 
     function init(canvas) {
 
-        var angle = 110;
-        canvas.write('Hello World!');
-        var area = canvas.height() * canvas.width();
-        console.log(area);
+        //canvas.toBW().background('#00f').lighten(25).opacity(0.6);
 
-        // hit "m" to increase gradient
-        var opacity = 1;
-        window.addEventListener('keydown', function(e) {
-            if ( e.keyCode === 78 ) {
-                canvas.convertToImage();
-            }
-            if ( e.keyCode === 77 ) {
-                angle++;
-                canvas.gradient({
-                    angle: angle
-                });
-            }
+        canvas.saturate(100, true);
+        //canvas.toBW();
+
+        /*
+        canvas.newLayer().write('MARTINJS.ORG', {
+            font: 'Futura',
+            size: 84,
+            offsetX: 5,
+            offsetY: 3
         });
+
+        canvas.newLayer().write('MARTINJS.ORG', {
+            color: '#fff',
+            font: 'Futura',
+            size: 84,
+            offsetY: 3
+        });
+        */
+
+        canvas.convertToImage();
 
         return canvas;
     }

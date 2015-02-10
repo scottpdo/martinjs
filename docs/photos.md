@@ -2,15 +2,25 @@
 
 **Important: As of v0.1.0, none of these operations are reversible. As always, it's safest to create new layers and edit those if you may later want to retrieve old pixel data.**
 
-### .toBW(`all = false`)
+### .saturate(`amt`, `all = false`)
 
-Converts the current layer to black and white. If `all` is set to `true`, will convert all layers to black and white.
+Saturate the canvas, making colors appear more intense, by `amount` (number, 0-100). If `all` is set to `true`, will saturate all layers by `amount` .
 
 ```
-canvas.toBW();
+canvas.saturate(100);
 ```
 
-<img id="martin-tobw" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-saturate" src="images/bunny.jpg" height="300" width="400">
+
+### .desaturate(`amt`, `all = false`)
+
+Desaturate the canvas, making colors appear less intense, by `amount` (number, 0-100). If `amount` is 100, will convert the image to black and white. If `all` is set to `true`, will desaturate all layers by `amount` .
+
+```
+canvas.desaturate(80);
+```
+
+<img id="martin-desaturate" src="images/bunny.jpg" height="300" width="400">
 
 ### .lighten(`amount`, `all = false`)
 

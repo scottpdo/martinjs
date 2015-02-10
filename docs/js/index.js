@@ -69,11 +69,17 @@ if ( document.getElementById('martin-width-200-crop') ) new Martin('martin-width
 if ( document.getElementById('martin-width-200-resize') ) new Martin('martin-width-200-resize', resizeWidth200);
 if ( document.getElementById('martin-width-500-resize') ) new Martin('martin-width-500-resize', resizeWidth500);
 
-function toBW(canvas) {
-    canvas.toBW();
+function saturate(canvas) {
+    canvas.saturate(100);
 }
 
-if ( document.getElementById('martin-tobw') ) new Martin('martin-tobw', toBW);
+if ( document.getElementById('martin-saturate') ) new Martin('martin-saturate', saturate);
+
+function desaturate(canvas) {
+    canvas.desaturate(80);
+}
+
+if ( document.getElementById('martin-desaturate') ) new Martin('martin-desaturate', desaturate);
 
 
 function lighten(canvas) {
