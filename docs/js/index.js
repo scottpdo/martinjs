@@ -17,7 +17,7 @@ function init(canvas) {
         offsetY: 35
     });
 
-    canvas.toBW().convertToImage();
+    canvas.desaturate(100).convertToImage();
 
 }
 

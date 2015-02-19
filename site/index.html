@@ -140,8 +140,7 @@
 <p>Given an <code>&lt;img&gt;</code> or <code>&lt;canvas&gt;</code> element with <code>id="id"</code> , Martin is called with: <code>new Martin('id', init)</code></p>
 <p>In your callback function <code>init</code> , the first argument refers to the instance of Martin, on which you can call the available methods.</p>
 <h2 id="example">Example</h2>
-<p><strong>Note:</strong> For now, <code>height</code> and <code>width</code> attributes must be explicitly declared.</p>
-<pre><code>&lt;img id=&quot;image&quot; src=&quot;bunny.jpg&quot; width=&quot;400&quot; height=&quot;300&quot;&gt;
+<pre><code>&lt;img id=&quot;image&quot; src=&quot;bunny.jpg&quot;&gt;
 </code></pre>
 
 <p><img src="./images/bunny.jpg"></p>
@@ -162,7 +161,7 @@
         offsetY: 35
     });
 
-    canvas.toBW().convertToImage();
+    canvas.desaturate(100).convertToImage();
 
 }
 

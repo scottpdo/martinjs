@@ -485,6 +485,9 @@
 	// Create a rectangle
 	Martin.prototype.rect = function( obj ) {
 
+		if ( !obj.offsetX ) obj.offsetX = 0;
+		if ( !obj.offsetY ) obj.offsetY = 0;
+
 		this.context.beginPath();
 
 		this.context.rect(
@@ -504,6 +507,9 @@
     // Make a circle -- center X, center Y, radius, color
     Martin.prototype.circle = function( obj ) {
 
+		if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
+		if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
+
 		var centerX = this.normalizeX( obj.offsetX ),
 			centerY = this.normalizeY( obj.offsetY );
 
@@ -519,6 +525,9 @@
 
     // Make an ellipse -- same as circle but with radii for both X and Y
     Martin.prototype.ellipse = function( obj ) {
+
+		if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
+		if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
 
 		if ( obj.radiusX === obj.radiusY ) {
 			obj.radius = obj.radiusX;
@@ -595,28 +604,35 @@
 		amt = amt / 100;
 		if ( amt > 1 ) amt = 1;
 
-		function desaturate(context) {
-			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
-				pixels = imageData.data,
-				len = pixels.length;
+		function desaturate(layer) {
 
-			for (var i = 0; i < len; i += 4) {
+			_this.switchToLayer(layer);
 
-				var grayscale = pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
-					pixels[i]     = (1 - amt) * pixels[i] + amt * grayscale;        // red
-					pixels[i + 1] = (1 - amt) * pixels[i + 1] + amt * grayscale;        // green
-					pixels[i + 2] = (1 - amt) * pixels[i + 2] + amt * grayscale;        // blue
-			}
+			_this.loop(function(x, y, pixel) {
 
-			context.putImageData( imageData, 0, 0 );
+				var r = pixel.r,
+					g = pixel.g,
+					b = pixel.b;
+
+				var grayscale = r * 0.3 + g * 0.59 + b * 0.11;
+					r = (1 - amt) * r + amt * grayscale;        // red
+					g = (1 - amt) * g + amt * grayscale;        // green
+					b = (1 - amt) * b + amt * grayscale;        // blue
+
+				pixel.r = r;
+				pixel.g = g;
+				pixel.b = b;
+
+				return pixel;
+			});
 		}
 
 		// if not all, just current layer, otherwise all layers
 		if ( !all ) {
-			desaturate(this.context);
+			desaturate(this.currentLayer);
 		} else {
-			this.layers.forEach(function(layer) {
-				desaturate(layer.context);
+			this.layers.forEach(function(layer, i) {
+				desaturate(i);
 			});
 		}
 
@@ -633,27 +649,25 @@
 
 		var _this = this;
 
-		function makeLighten(context) {
-			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
-				pixels = imageData.data,
-				len = pixels.length;
+		function makeLighten(layer) {
 
-			for (var i = 0; i < len; i += 4) {
+			_this.switchToLayer(layer);
 
-				pixels[i] += Math.round(amt * 255 / 100);
-				pixels[i + 1] += Math.round(amt * 255 / 100);
-				pixels[i + 2] += Math.round(amt * 255 / 100);
+			_this.loop(function(x, y, pixel) {
 
-			}
+				pixel.r += Math.round(amt * 255 / 100);
+				pixel.g += Math.round(amt * 255 / 100);
+				pixel.b += Math.round(amt * 255 / 100);
 
-			context.putImageData( imageData, 0, 0 );
+				return pixel;
+			});
 		}
 
 		if ( !all ) {
-			makeLighten(this.context);
+			makeLighten(this.currentLayer);
 		} else {
-			this.layers.forEach(function(layer) {
-				makeLighten(layer.context);
+			this.layers.forEach(function(layer, i) {
+				makeLighten(i);
 			});
 		}
 
@@ -673,21 +687,21 @@
 
 		var _this = this;
 
-		function makeOpacity(context) {
-			var imageData = context.getImageData( 0, 0, _this.canvas.width, _this.canvas.height ),
-				pixels = imageData.data,
-				len = pixels.length;
+		function makeOpacity(layer) {
 
-			for ( var i = 0; i < len; i += 4 ) pixels[i + 3] *= amt;
+			_this.switchToLayer(layer);
 
-			context.putImageData( imageData, 0, 0 );
+			_this.loop(function(x, y, pixel) {
+				pixel.a *= amt;
+				return pixel;
+			});
 		}
 
 		if ( !all ) {
-			makeOpacity(this.context);
+			makeOpacity(this.currentLayer);
 		} else {
-			this.layers.forEach(function(layer) {
-				makeOpacity(layer.context);
+			this.layers.forEach(function(layer, i) {
+				makeOpacity(i);
 			});
 		}
 
@@ -822,6 +836,57 @@
 		this.container.removeChild( this.layers[0].canvas );
 		this.container.appendChild( img );
 
+	};
+
+	// Loop through the image data
+	Martin.prototype.loop = function(cb, put) {
+
+		var imageData = this.context.getImageData( 0, 0, this.width(), this.height() ),
+            pixels = imageData.data,
+            len = pixels.length,
+			n,
+			x,
+			y,
+			r, g, b, a,
+			pixel,
+			output;
+
+		for ( var i = 0; i < len; i += 4 ) {
+
+			// xy coordinates
+			n = i / 4;
+			x = n % this.width();
+			y = this.height() - Math.floor(n / this.width());
+
+			// rgba values
+			r = pixels[i];
+			g = pixels[i + 1];
+			b = pixels[i + 2];
+			a = pixels[i + 3];
+
+			// pass an object corresponding to the pixel to the callback
+			pixel = { r: r, g: g, b: b, a: a };
+
+			// execute the callback within the context of this instance
+			output = cb.call( this, x, y, pixel );
+
+			// reassign the actual rgba values of the pixel based on the output from the loop
+			pixels[i] = output.r;
+			pixels[i + 1] = output.g;
+			pixels[i + 2] = output.b;
+			pixels[i + 3] = output.a;
+
+		}
+
+		// explicitly declare if image data from callback is not to be used
+		if ( put !== false ) this.context.putImageData( imageData, 0, 0 );
+
+		return this;
+	};
+
+	Martin.prototype.putImageData = function(imageData) {
+		this.context.putImageData( imageData, 0, 0 );
+		return this;
 	};
 
 }());

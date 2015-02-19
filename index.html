@@ -26,8 +26,11 @@
 
         //canvas.toBW().background('#00f').lighten(25).opacity(0.6);
 
-        canvas.saturate(100, true);
-        //canvas.toBW();
+        canvas.newLayer().ellipse({
+            radiusX: 100,
+            radiusY: 50,
+            color: '#f00'
+        }).opacity(0.5);
 
         /*
         canvas.newLayer().write('MARTINJS.ORG', {

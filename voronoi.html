@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+
+    <title>Martin</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    <style>html, body { margin: 0; padding: 0; }</style>
+</head>
+
+<body>
+
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <script src="js/src/martin.js"></script>
+    <script src="js/src/martin.watermark.js"></script>
+
+    <script>
+
+    var canvas = new Martin('canvas', init);
+
+    function random(lower, upper) {
+        return Math.floor(Math.random() * upper) + lower;
+    }
+
+    function randomPoint(canvas, points) {
+
+        var point = [ random(0, canvas.width()), random(0, canvas.height()) ];
+        points.push(point);
+    }
+
+    function distance(to, from) {
+        var dx = to[0] - from[0],
+            dy = to[1] - from[1];
+        return Math.sqrt( dx * dx + dy * dy );
+    }
+
+    function mapHex(val, max) {
+        var output = Math.round(val * 16 / max);
+        if ( output === 10 ) output = 'a';
+        if ( output === 11 ) output = 'b';
+        if ( output === 12 ) output = 'c';
+        if ( output === 13 ) output = 'd';
+        if ( output === 14 ) output = 'e';
+        if ( output === 15 ) output = 'f';
+        return output.toString();
+    }
+
+    function init(canvas) {
+
+        var points = [],
+            dist,
+            indie,
+            n,
+            x,
+            y,
+            numPoints = 10;
+
+        for ( var i = 0; i < numPoints; i++ ) {
+            randomPoint(canvas, points);
+        }
+
+        canvas.loop(function(x, y, pixel) {
+
+            dist = 10000; // ridiculously high
+            points.forEach(function(point, index){
+                if ( distance([x, y], point) < dist ) {
+                    indie = index;
+                    dist = distance([x, y], point);
+
+                    pixel.r = pixel.g = pixel.b = indie * 255 / numPoints;
+                    pixel.a = 255;
+                }
+            });
+
+            return pixel;
+        });
+
+        function sumPx(arr, i) {
+            var sum = 0;
+            arr.forEach(function(px) {
+                sum += pixels[i + px];
+            });
+            return sum;
+        }
+
+        canvas.watermark('Scottland Donaldson').convertToImage();
+    }
+
+    </script>
+</body>
+</html>
