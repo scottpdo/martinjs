@@ -1,6 +1,6 @@
 # Photo Manipulation
 
-**Important: As of v0.1.0, none of these operations are reversible. As always, it's safest to create new layers and edit those if you may later want to retrieve old pixel data.**
+**Important: As of v0.1.1, none of these operations are reversible. As always, it's safest to create new layers and edit those if you may later want to retrieve old pixel data.**
 
 ### .saturate(`amt`, `all = false`)
 
@@ -51,3 +51,13 @@ canvas.opacity(0.5);
 ```
 
 <img id="martin-opacity" src="images/bunny.jpg" height="300" width="400">
+
+### .blur(`amount`, `all = false`)
+
+Places an `amount` px blur on the current layer, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js). If `all` is set to `true`, places an `amount` px blur on all layers.
+
+```
+canvas.blur(15);
+```
+
+<img id="martin-blur" src="images/bunny.jpg" height="300" width="400">

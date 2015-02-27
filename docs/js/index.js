@@ -100,6 +100,12 @@ function opacity(canvas) {
 
 if ( document.getElementById('martin-opacity') ) new Martin('martin-opacity', opacity);
 
+function blur(canvas) {
+    canvas.blur(15);
+}
+
+if ( document.getElementById('martin-blur') ) new Martin('martin-blur', blur);
+
 function background(canvas) {
     canvas.opacity(0.5).background('#f00');
 }

@@ -8,8 +8,8 @@ Martin is a JavaScript library for working with HTML5 canvas. Martin supports jQ
 
 You can download Martin here:
 
-- [Full version (19 kb)](download/martin.js)
-- [Minified (10 kb)](download/martin.min.js)
+- [Full version, annotated (31 kb)](download/martin.js)
+- [Minified (13 kb)](download/martin.min.js)
 
 \- Scottland / [@scottpdonaldson](https://twitter.com/scottpdonaldson)
 

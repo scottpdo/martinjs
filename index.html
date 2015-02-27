@@ -13,9 +13,7 @@
 
     <img id="humph" src="docs/images/marty-full.jpg">
 
-    <canvas id="canvas" width="400" height="400"></canvas>
-
-    <script src="js/src/martin.js"></script>
+    <script src="js/min/martin.min.js"></script>
     <script src="js/src/martin.watermark.js"></script>
 
     <script>
@@ -24,13 +22,31 @@
 
     function init(canvas) {
 
-        //canvas.toBW().background('#00f').lighten(25).opacity(0.6);
+        //canvas.desaturate(50).background('#00f').lighten(25).opacity(0.6);
 
-        canvas.newLayer().ellipse({
-            radiusX: 100,
-            radiusY: 50,
-            color: '#f00'
-        }).opacity(0.5);
+        canvas.newLayer().rect({
+            height: '50%',
+            offsetX: '10%',
+            offsetY: '50%',
+            width: '80%',
+            color: '#eee'
+        });
+        canvas.blur(50);
+        canvas.write({
+            text: 'My Sweet Bun Angel',
+            align: 'center',
+            offsetY: '84.5%',
+            offsetX: '50.5%',
+            color: '#000',
+            size: 60
+        }).write({
+            text: 'My Sweet Bun Angel',
+            align: 'center',
+            offsetY: '85%',
+            offsetX: '50%',
+            color: 'pink',
+            size: 60
+        }).convertToImage();
 
         /*
         canvas.newLayer().write('MARTINJS.ORG', {
@@ -48,29 +64,9 @@
         });
         */
 
-        canvas.convertToImage();
+        //canvas.convertToImage();
 
         return canvas;
-    }
-
-    var drawing = new Martin('canvas', canvasInit);
-
-    function canvasInit(drawing) {
-
-        /* drawing
-            .background('#ccc')//.background('#936')
-            .rect({
-                offsetX: 0,
-                offsetY: 240,
-                width: 200,
-                height: 120,
-                color: '#59c'
-            });
-            //.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff')
-            //.width(500, true);
-
-        //drawing.convertToImage(); */
-
     }
 
     </script>

@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+
+    <title>Martin</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+
+</head>
+
+<body>
+
+    <canvas id="canvas" width="600" height="400"></canvas>
+
+    <script src="js/src/martin.js"></script>
+    <script src="js/src/martin.watermark.js"></script>
+
+    <script>
+
+    var canvas = new Martin('canvas', concrete);
+
+    function concrete(canvas) {
+
+        canvas.background('#bbb');
+
+        canvas.write('Studio Project Wall Assembly', {
+            offsetX: 40,
+            offsetY: canvas.height() - 30
+        });
+
+        var inch = 20;
+
+        var colors = [
+            '#fff',
+            'transparent',
+            '#99f',
+            '#eee'
+        ];
+
+        var widths = [
+            10 * inch,
+            2 * inch,
+            2 * inch,
+            0.5 * inch
+        ];
+
+        var startX = 80,
+            startY = 40,
+            height = 300;
+
+        var prevWidths = 0;
+
+        canvas.newLayer();
+
+        widths.forEach(function(width, i) {
+
+            if ( !!widths[i - 1] ) prevWidths += widths[i - 1];
+
+            canvas.rect({
+                offsetX: startX + prevWidths,
+                offsetY: startY,
+                width: width,
+                height: height,
+                color: colors[i]
+            });
+        });
+
+        canvas.lighten(25);
+
+        canvas.watermark('Image generated in browser by Martin. http://martinjs.org');
+        canvas.convertToImage();
+    }
+
+    function wall(canvas) {
+
+        canvas.background('#bbb');
+
+        canvas.write('Wall Temperature Gradient', {
+            offsetX: 40,
+            offsetY: canvas.height() - 30
+        });
+
+        var inch = 44;
+
+        var colors = [
+            '#fff',
+            '#99f',
+            '#dd9',
+            'transparent',
+            '#963'
+        ];
+
+        var widths = [
+            0.375 * inch,
+            inch,
+            0.5 * inch,
+            2 * inch,
+            6 * inch
+        ];
+
+        var startX = 80,
+            startY = 40,
+            height = 300;
+
+        var prevWidths = 0;
+
+        canvas.newLayer();
+
+        widths.forEach(function(width, i) {
+
+            if ( !!widths[i - 1] ) prevWidths += widths[i - 1];
+
+            canvas.rect({
+                offsetX: startX + prevWidths,
+                offsetY: startY,
+                width: width,
+                height: height,
+                color: colors[i]
+            });
+        });
+
+        canvas.lighten(25);
+
+        var temps = [
+            63.6,
+            60.7,
+            29.6,
+            23.8,
+            14.3,
+            3.2
+        ];
+
+        var innerTemp = 70,
+            outerTemp = 0;
+
+        // reset prevwidths
+        prevWidths = 0
+
+        // inner
+        canvas.circle({
+            offsetX: startX - 10,
+            offsetY: (innerTemp / 70) * height + startY,
+            color: '#f00',
+            radius: 5
+        });
+
+        canvas.line({
+            startX: startX - 10,
+            endX: startX,
+            startY: (innerTemp / 70) * height + startY,
+            endY: (temps[0] / 70) * height + startY,
+            strokeWidth: 2,
+            color: '#f00'
+        });
+
+        canvas.write('70° F', {
+            offsetX: startX,
+            offsetY: (innerTemp / 70) * height + startY - 10
+        });
+
+        temps.forEach(function(temp, i) {
+
+            if ( !!widths[i - 1] ) prevWidths += widths[i - 1];
+
+            canvas.circle({
+                offsetX: startX + prevWidths,
+                offsetY: (temp / 70) * height + startY,
+                color: '#f00',
+                radius: 5
+            });
+
+            if ( i < temps.length - 1 ) {
+                canvas.line({
+                    startX: startX + prevWidths,
+                    endX: startX + prevWidths + widths[i],
+                    startY: (temp / 70) * height + startY,
+                    endY: (temps[i + 1] / 70) * height + startY,
+                    strokeWidth: 2,
+                    color: '#f00'
+                });
+            }
+
+            canvas.write(temp + '° F', {
+                offsetX: startX + prevWidths + 10,
+                offsetY: (temp / 70) * height + startY - 6,
+                size: 12
+            });
+        });
+
+        // inner
+        canvas.circle({
+            offsetX: startX + prevWidths + 10,
+            offsetY: (outerTemp / 70) * height + startY,
+            color: '#f00',
+            radius: 5
+        });
+
+        canvas.line({
+            startX: startX + prevWidths,
+            endX: startX + prevWidths + 10,
+            startY: (temps[temps.length - 1] / 70) * height + startY,
+            endY: (outerTemp / 70) * height + startY,
+            strokeWidth: 2,
+            color: '#f00'
+        });
+
+        canvas.write('0° F', {
+            offsetX: startX + prevWidths + 20,
+            offsetY: (outerTemp / 70) * height + startY - 10
+        });
+
+        canvas.watermark('Image generated in browser by Martin. http://martinjs.org');
+        canvas.convertToImage();
+    }
+
+    function roof(canvas) {
+
+        canvas.background('#bbb');
+
+        canvas.write('Roof Temperature Gradient', {
+            offsetX: 40,
+            offsetY: canvas.height() - 30
+        });
+
+        var inch = 44;
+
+        var colors = [
+            '#fff',
+            '#99f',
+            '#dd9',
+            '#9f3'
+        ];
+
+        var widths = [
+            0.375 * inch,
+            1.5 * inch,
+            0.5 * inch,
+            (1/ 16) * inch
+        ];
+
+        var startX = 80,
+            startY = 40,
+            height = 300;
+
+        var prevWidths = 0;
+
+        canvas.newLayer();
+
+        widths.forEach(function(width, i) {
+
+            if ( !!widths[i - 1] ) prevWidths += widths[i - 1];
+
+            canvas.rect({
+                offsetX: startX + prevWidths,
+                offsetY: startY,
+                width: width,
+                height: height,
+                color: colors[i]
+            });
+        });
+
+        canvas.lighten(25);
+
+        var temps = [
+            64.9,
+            62.6,
+            7.1,
+            2.5
+        ];
+
+        var innerTemp = 70,
+            outerTemp = 0;
+
+        // reset prevwidths
+        prevWidths = 0
+
+        // inner
+        canvas.circle({
+            offsetX: startX - 10,
+            offsetY: (innerTemp / 70) * height + startY,
+            color: '#f00',
+            radius: 5
+        });
+
+        canvas.line({
+            startX: startX - 10,
+            endX: startX,
+            startY: (innerTemp / 70) * height + startY,
+            endY: (temps[0] / 70) * height + startY,
+            strokeWidth: 2,
+            color: '#f00'
+        });
+
+        canvas.write('70° F', {
+            offsetX: startX,
+            offsetY: (innerTemp / 70) * height + startY - 10
+        });
+
+        temps.forEach(function(temp, i) {
+
+            if ( !!widths[i - 1] ) prevWidths += widths[i - 1];
+
+            canvas.circle({
+                offsetX: startX + prevWidths,
+                offsetY: (temp / 70) * height + startY,
+                color: '#f00',
+                radius: 5
+            });
+
+            if ( i < temps.length - 1 ) {
+                canvas.line({
+                    startX: startX + prevWidths,
+                    endX: startX + prevWidths + widths[i],
+                    startY: (temp / 70) * height + startY,
+                    endY: (temps[i + 1] / 70) * height + startY,
+                    strokeWidth: 2,
+                    color: '#f00'
+                });
+            }
+
+            canvas.write(temp + '° F', {
+                offsetX: startX + prevWidths + 10,
+                offsetY: (temp / 70) * height + startY - 6,
+                size: 12
+            });
+        });
+
+        // inner
+        canvas.circle({
+            offsetX: startX + prevWidths + 10,
+            offsetY: (outerTemp / 70) * height + startY,
+            color: '#f00',
+            radius: 5
+        });
+
+        canvas.line({
+            startX: startX + prevWidths,
+            endX: startX + prevWidths + 10,
+            startY: (temps[temps.length - 1] / 70) * height + startY,
+            endY: (outerTemp / 70) * height + startY,
+            strokeWidth: 2,
+            color: '#f00'
+        });
+
+        canvas.write('0° F', {
+            offsetX: startX + prevWidths + 20,
+            offsetY: (outerTemp / 70) * height + startY - 10
+        });
+
+        canvas.watermark('Image generated in browser by Martin. http://martinjs.org');
+        canvas.convertToImage();
+    }
+
+    </script>
+</body>
+</html>
