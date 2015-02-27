@@ -156,7 +156,7 @@ Martin.prototype.background = function( color ) {
 		this.switchToLayer(0);
 	}
 
-	var rgb = hexToRGB( color ),
+	var rgb = Martin.hexToRGB( color ),
 		r = rgb.r,
 		g = rgb.g,
 		b = rgb.b;
@@ -194,7 +194,7 @@ Martin.prototype.gradient = function( obj ) {
 	// angle += 90 because we refer to the perpendicular to the line
 	// formed by the original angle to determine our gradient
 	var angle = obj.angle ? obj.angle + 90 : 90,
-		radians = degToRad(angle),
+		radians = Martin.degToRad(angle),
 		slope = Math.tan(radians);
 	// if the absolute value of the slope is very very high (that is, a vertical line)
 	// set it to false and check against this later
