@@ -13,7 +13,7 @@
 
     <img id="humph" src="docs/images/marty-full.jpg">
 
-    <script src="js/min/martin.min.js"></script>
+    <script src="js/dist/martin.min.js"></script>
     <script src="js/src/martin.watermark.js"></script>
 
     <script>
@@ -25,26 +25,19 @@
         //canvas.desaturate(50).background('#00f').lighten(25).opacity(0.6);
 
         canvas.newLayer().rect({
-            height: '50%',
-            offsetX: '10%',
-            offsetY: '50%',
-            width: '80%',
+            height: '35%',
+            offsetY: '65%',
+            width: '100%',
             color: '#eee'
         });
-        canvas.blur(50);
-        canvas.write({
-            text: 'My Sweet Bun Angel',
+        canvas.blur(100).switchToLayer(0).blur(15);
+        canvas.newLayer().write({
+            text: 'MARTIN SO BLURRY',
+            font: 'Futura',
             align: 'center',
             offsetY: '84.5%',
             offsetX: '50.5%',
             color: '#000',
-            size: 60
-        }).write({
-            text: 'My Sweet Bun Angel',
-            align: 'center',
-            offsetY: '85%',
-            offsetX: '50%',
-            color: 'pink',
             size: 60
         }).convertToImage();
 

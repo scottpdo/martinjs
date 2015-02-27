@@ -9,7 +9,7 @@ By running `.convertToImage()` at the end of all of these, all of the canvas ele
 ```
 // darken the original image, reduce opacity, convert to black and white,
 // and give a yellow-ish background
-canvas.darken(10).opacity(0.6).toBW().background('#ea0');
+canvas.darken(10).opacity(0.6).desaturate(100).background('#ea0');
 
 // create a new layer for the background of the text
 // and reduce its opacity

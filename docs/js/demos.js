@@ -2,7 +2,7 @@ $(document).ready(function(){
 
 function sepia(canvas) {
 
-    canvas.darken(10).opacity(0.6).toBW().background('#ea0');
+    canvas.darken(10).opacity(0.6).desaturate(100).background('#ea0');
 
     canvas.newLayer().rect({
         offsetX: 0,
