@@ -3,18 +3,15 @@
 
 <head>
 
-    <title>Martin</title>
-
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    <title>Voronoi</title>
     <style>html, body { margin: 0; padding: 0; }</style>
+
+    <script src="http://martinjs.org/download/martin.min.js"></script>
 </head>
 
 <body>
 
-    <canvas id="canvas" width="400" height="400"></canvas>
-
-    <script src="js/src/martin.js"></script>
-    <script src="js/src/martin.watermark.js"></script>
+    <canvas id="canvas" width="600" height="600"></canvas>
 
     <script>
 
@@ -25,17 +22,18 @@
     }
 
     function randomPoint(canvas, points) {
-
         var point = [ random(0, canvas.width()), random(0, canvas.height()) ];
         points.push(point);
     }
 
+    // simple distance calculator
     function distance(to, from) {
         var dx = to[0] - from[0],
             dy = to[1] - from[1];
         return Math.sqrt( dx * dx + dy * dy );
     }
 
+    // map a number (i.e. 5) of a max (i.e. 10) to its hex value...
     function mapHex(val, max) {
         var output = Math.round(val * 16 / max);
         if ( output === 10 ) output = 'a';
@@ -47,7 +45,10 @@
         return output.toString();
     }
 
-    function init(canvas) {
+    function voronoi(canvas) {
+
+        // set a new layer
+        canvas.newLayer();
 
         var points = [],
             dist,
@@ -55,8 +56,9 @@
             n,
             x,
             y,
-            numPoints = 10;
+            numPoints = 12;
 
+        // put points on canvas
         for ( var i = 0; i < numPoints; i++ ) {
             randomPoint(canvas, points);
         }
@@ -64,7 +66,13 @@
         canvas.loop(function(x, y, pixel) {
 
             dist = 10000; // ridiculously high
+
+            // loop through the points
             points.forEach(function(point, index){
+
+                // if the distance from the current pixel to one of the points is
+                // less than the set distance, set the new distance, the point index,
+                // and set color values
                 if ( distance([x, y], point) < dist ) {
                     indie = index;
                     dist = distance([x, y], point);
@@ -77,15 +85,14 @@
             return pixel;
         });
 
-        function sumPx(arr, i) {
-            var sum = 0;
-            arr.forEach(function(px) {
-                sum += pixels[i + px];
-            });
-            return sum;
-        }
+        canvas.blur(1).opacity(0.6);
+    }
 
-        canvas.watermark('Scottland Donaldson').convertToImage();
+    function init(canvas) {
+
+        // Voronoi 10x
+        for ( var i = 0; i < 10; i++) voronoi(canvas);
+
     }
 
     </script>
