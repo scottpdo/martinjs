@@ -21,7 +21,7 @@ function init(canvas) {
 
 }
 
-new Martin('image', init);
+Martin('image', init);
 ```
 
 <img id="martin-overview" src="images/bunny.jpg" width="400" height="300">

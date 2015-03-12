@@ -14,6 +14,8 @@
 // The great initializer.
 window.Martin = function( id, init ) {
 
+    if ( !(this instanceof Martin) ) return new Martin( id, init );
+
     // Set the original element.
     this.original = document.getElementById( id );
 
@@ -41,8 +43,8 @@ Martin.prototype.makeCanvas = function(callback, init) {
 
             var canvas = document.createElement('canvas');
 
-            canvas.width = _this.original.width;
-            canvas.height = _this.original.height;
+            canvas.width = _this.original.naturalWidth;
+            canvas.height = _this.original.naturalHeight;
 
             canvas.getContext('2d').drawImage( _this.original, 0, 0 );
 

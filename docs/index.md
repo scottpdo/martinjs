@@ -8,14 +8,14 @@ Martin is a JavaScript library for working with HTML5 canvas. Martin supports jQ
 
 You can download Martin here:
 
-- [Full version, annotated (31 kb)](download/martin.js)
-- [Minified (13 kb)](download/martin.min.js)
+- [Full version, annotated (28 kb)](download/martin.js)
+- [Minified (12 kb)](download/martin.min.js)
 
 \- Scottland / [@scottpdonaldson](https://twitter.com/scottpdonaldson)
 
 ## Loading Martin
 
-Given an `<img>` or `<canvas>` element with `id="id"` , Martin is called with: `new Martin('id', init)`
+Given an `<img>` or `<canvas>` element with `id="id"` , Martin is called with: `Martin('id', init)`
 
 In your callback function `init` , the first argument refers to the instance of Martin, on which you can call the available methods.
 
@@ -49,7 +49,7 @@ function init(canvas) {
 
 }
 
-new Martin('image', init);
+Martin('image', init);
 ```
 <img id="image" src="images/bunny.jpg" width="400" height="300">
 

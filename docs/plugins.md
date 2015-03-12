@@ -16,7 +16,7 @@ function init(canvas) {
     canvas.watermark('Photo credit: Scottland Donaldson');
 }
 
-new Martin('image', init);
+Martin('image', init);
 ```
 
 <img id="martin-watermark" src="images/bunny.jpg" width="400" height="300">

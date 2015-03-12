@@ -1,6 +1,6 @@
 # Photo Manipulation
 
-**Important: As of v0.1.1, none of these operations are reversible. As always, it's safest to create new layers and edit those if you may later want to retrieve old pixel data.**
+**Important: As of v0.1.2, none of these operations are reversible. As always, it's safest to create new layers and edit those if you may later want to retrieve old pixel data.**
 
 ### .saturate(`amt`, `all = false`)
 

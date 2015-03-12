@@ -7,57 +7,39 @@
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
 
+
+    <style>#container { width: 200px; } #container img { max-width: 200px; }</style>
 </head>
 
 <body>
-
-    <img id="humph" src="docs/images/marty-full.jpg">
+    <div id="container">
+        <img id="humph" src="docs/images/marty-full.jpg">
+    </div>
 
     <script src="js/dist/martin.min.js"></script>
+    <script src="js/src/martin.gradient.js"></script>
     <script src="js/src/martin.watermark.js"></script>
 
     <script>
 
-    var canvas = new Martin('humph', init);
+    /* var img = document.createElement('img');
+    img.id = 'humph';
+    img.src = 'docs/images/marty-full.jpg';
+    document.getElementById('container').appendChild(img); */
+
+    var canvas = Martin('humph', init);
 
     function init(canvas) {
 
+        console.log(canvas.width());
+
         //canvas.desaturate(50).background('#00f').lighten(25).opacity(0.6);
 
-        canvas.newLayer().rect({
-            height: '35%',
-            offsetY: '65%',
-            width: '100%',
-            color: '#eee'
+        canvas.background('#f00').gradient({
+            angle: 0,
+            start: 20,
+            end: 80
         });
-        canvas.blur(100).switchToLayer(0).blur(15);
-        canvas.newLayer().write({
-            text: 'MARTIN SO BLURRY',
-            font: 'Futura',
-            align: 'center',
-            offsetY: '84.5%',
-            offsetX: '50.5%',
-            color: '#000',
-            size: 60
-        }).convertToImage();
-
-        /*
-        canvas.newLayer().write('MARTINJS.ORG', {
-            font: 'Futura',
-            size: 84,
-            offsetX: 5,
-            offsetY: 3
-        });
-
-        canvas.newLayer().write('MARTINJS.ORG', {
-            color: '#fff',
-            font: 'Futura',
-            size: 84,
-            offsetY: 3
-        });
-        */
-
-        //canvas.convertToImage();
 
         return canvas;
     }

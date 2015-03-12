@@ -21,7 +21,7 @@ function init(canvas) {
 
 }
 
-if ( document.getElementById('image') ) new Martin('image', init);
+if ( document.getElementById('image') ) Martin('image', init);
 
 function overview(canvas) {
 
@@ -35,7 +35,7 @@ function overview(canvas) {
 
 }
 
-if ( document.getElementById('martin-overview') ) new Martin('martin-overview', overview);
+if ( document.getElementById('martin-overview') ) Martin('martin-overview', overview);
 
 function cropHeight200(canvas) {
     canvas.height(200);
@@ -49,9 +49,9 @@ function resizeHeight400(canvas) {
     canvas.height(400, true);
 }
 
-if ( document.getElementById('martin-height-200-crop') ) new Martin('martin-height-200-crop', cropHeight200);
-if ( document.getElementById('martin-height-200-resize') ) new Martin('martin-height-200-resize', resizeHeight200);
-if ( document.getElementById('martin-height-400-resize') ) new Martin('martin-height-400-resize', resizeHeight400);
+if ( document.getElementById('martin-height-200-crop') ) Martin('martin-height-200-crop', cropHeight200);
+if ( document.getElementById('martin-height-200-resize') ) Martin('martin-height-200-resize', resizeHeight200);
+if ( document.getElementById('martin-height-400-resize') ) Martin('martin-height-400-resize', resizeHeight400);
 
 function cropWidth200(canvas) {
     canvas.width(200);
@@ -65,52 +65,52 @@ function resizeWidth500(canvas) {
     canvas.width(500, true);
 }
 
-if ( document.getElementById('martin-width-200-crop') ) new Martin('martin-width-200-crop', cropWidth200);
-if ( document.getElementById('martin-width-200-resize') ) new Martin('martin-width-200-resize', resizeWidth200);
-if ( document.getElementById('martin-width-500-resize') ) new Martin('martin-width-500-resize', resizeWidth500);
+if ( document.getElementById('martin-width-200-crop') ) Martin('martin-width-200-crop', cropWidth200);
+if ( document.getElementById('martin-width-200-resize') ) Martin('martin-width-200-resize', resizeWidth200);
+if ( document.getElementById('martin-width-500-resize') ) Martin('martin-width-500-resize', resizeWidth500);
 
 function saturate(canvas) {
     canvas.saturate(100);
 }
 
-if ( document.getElementById('martin-saturate') ) new Martin('martin-saturate', saturate);
+if ( document.getElementById('martin-saturate') ) Martin('martin-saturate', saturate);
 
 function desaturate(canvas) {
     canvas.desaturate(80);
 }
 
-if ( document.getElementById('martin-desaturate') ) new Martin('martin-desaturate', desaturate);
+if ( document.getElementById('martin-desaturate') ) Martin('martin-desaturate', desaturate);
 
 
 function lighten(canvas) {
     canvas.lighten(25);
 }
 
-if ( document.getElementById('martin-lighten') ) new Martin('martin-lighten', lighten);
+if ( document.getElementById('martin-lighten') ) Martin('martin-lighten', lighten);
 
 function darken(canvas) {
     canvas.darken(25);
 }
 
-if ( document.getElementById('martin-darken') ) new Martin('martin-darken', darken);
+if ( document.getElementById('martin-darken') ) Martin('martin-darken', darken);
 
 function opacity(canvas) {
     canvas.opacity(0.5);
 }
 
-if ( document.getElementById('martin-opacity') ) new Martin('martin-opacity', opacity);
+if ( document.getElementById('martin-opacity') ) Martin('martin-opacity', opacity);
 
 function blur(canvas) {
     canvas.blur(15);
 }
 
-if ( document.getElementById('martin-blur') ) new Martin('martin-blur', blur);
+if ( document.getElementById('martin-blur') ) Martin('martin-blur', blur);
 
 function background(canvas) {
     canvas.opacity(0.5).background('#f00');
 }
 
-if ( document.getElementById('martin-background') ) new Martin('martin-background', background);
+if ( document.getElementById('martin-background') ) Martin('martin-background', background);
 
 function line(canvas) {
     canvas.line({
@@ -124,7 +124,7 @@ function line(canvas) {
     });
 }
 
-if ( document.getElementById('martin-line') ) new Martin('martin-line', line);
+if ( document.getElementById('martin-line') ) Martin('martin-line', line);
 
 function rect(canvas) {
     canvas.rect({
@@ -136,7 +136,7 @@ function rect(canvas) {
     });
 }
 
-if ( document.getElementById('martin-rect') ) new Martin('martin-rect', rect);
+if ( document.getElementById('martin-rect') ) Martin('martin-rect', rect);
 
 function polygon(canvas) {
     canvas.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
@@ -153,7 +153,7 @@ function polygon(canvas) {
         });
 }
 
-if ( document.getElementById('martin-polygon') ) new Martin('martin-polygon', polygon);
+if ( document.getElementById('martin-polygon') ) Martin('martin-polygon', polygon);
 
 function circle(canvas) {
     canvas.circle({
@@ -164,7 +164,7 @@ function circle(canvas) {
     });
 }
 
-if ( document.getElementById('martin-circle') ) new Martin('martin-circle', circle);
+if ( document.getElementById('martin-circle') ) Martin('martin-circle', circle);
 
 function ellipse(canvas) {
     canvas.ellipse({
@@ -176,7 +176,7 @@ function ellipse(canvas) {
     });
 }
 
-if ( document.getElementById('martin-ellipse') ) new Martin('martin-ellipse', ellipse);
+if ( document.getElementById('martin-ellipse') ) Martin('martin-ellipse', ellipse);
 
 function write(canvas) {
     canvas.write('Hello World!', { color: '#fff' });
@@ -189,12 +189,12 @@ function write(canvas) {
     });
 }
 
-if ( document.getElementById('martin-write') ) new Martin('martin-write', write);
+if ( document.getElementById('martin-write') ) Martin('martin-write', write);
 
 function watermark(canvas) {
     canvas.watermark('Photo credit: Scottland Donaldson');
 }
 
-if ( document.getElementById('martin-watermark')) new Martin('martin-watermark', watermark);
+if ( document.getElementById('martin-watermark')) Martin('martin-watermark', watermark);
 
 });

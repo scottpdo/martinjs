@@ -22,7 +22,7 @@ function sepia(canvas) {
     canvas.convertToImage();
 }
 
-if ( document.getElementById('demo-sepia') ) new Martin('demo-sepia', sepia);
+if ( document.getElementById('demo-sepia') ) Martin('demo-sepia', sepia);
 
 function checkerboard(canvas) {
 
@@ -58,7 +58,7 @@ function checkerboard(canvas) {
     canvas.convertToImage();
 }
 
-if ( document.getElementById('demo-checkerboard') ) new Martin('demo-checkerboard', checkerboard);
+if ( document.getElementById('demo-checkerboard') ) Martin('demo-checkerboard', checkerboard);
 
 function textShadow(canvas) {
 
@@ -88,6 +88,6 @@ function textShadow(canvas) {
     canvas.convertToImage();
 }
 
-if ( document.getElementById('demo-text-shadow') ) new Martin('demo-text-shadow', textShadow);
+if ( document.getElementById('demo-text-shadow') ) Martin('demo-text-shadow', textShadow);
 
 });

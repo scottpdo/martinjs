@@ -1,5 +1,20 @@
 module.exports = function(grunt) {
 
+    var buildFiles = [
+        'init',
+        'constants',
+        'helpers',
+        'utils',
+        'layers',
+        'drawing',
+        'effects',
+        'misc'
+    ];
+
+    buildFiles.forEach(function(fileName, i) {
+        buildFiles[i] = 'js/src/' + fileName + '.js';
+    });
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
 
@@ -13,16 +28,8 @@ module.exports = function(grunt) {
         concat: {
             build: {
                 files: {
-                    'js/dist/martin.js': [
-                        'js/src/init.js',
-                        'js/src/constants.js',
-                        'js/src/helpers.js',
-                        'js/src/utils.js',
-                        'js/src/layers.js',
-                        'js/src/drawing.js',
-                        'js/src/effects.js',
-                        'js/src/misc.js'
-                    ],
+                    'js/dist/martin.js': buildFiles,
+                    'docs/download/martin.js': buildFiles
                 }
             }
         },
@@ -30,16 +37,8 @@ module.exports = function(grunt) {
         uglify: {
             build: {
                 files: {
-                    'js/dist/martin.min.js': [
-                        'js/src/init.js',
-                        'js/src/constants.js',
-                        'js/src/helpers.js',
-                        'js/src/utils.js',
-                        'js/src/layers.js',
-                        'js/src/drawing.js',
-                        'js/src/effects.js',
-                        'js/src/misc.js'
-                    ],
+                    'js/dist/martin.min.js': buildFiles,
+                    'docs/download/martin.min.js': buildFiles,
                     'js/dist/martin.watermark.min.js': ['js/src/martin.watermark.js']
                 }
             }
