@@ -2,6 +2,7 @@
     .newLayer()
     .duplicateLayer()
     .deleteLayer()
+    .clearLayer()
     .switchToLayer()
     .mergeLayers()
 */
@@ -62,6 +63,18 @@ Martin.prototype.deleteLayer = function( num ) {
 
     return this;
 
+};
+
+// Clear a layer of pixel data but don't delete it
+Martin.prototype.clearLayer = function(which) {
+
+    var original = this.currentLayer;
+
+    if ( which ) this.switchToLayer(which);
+
+    this.context.clearRect(0, 0, this.width(), this.height());
+
+    this.switchToLayer(original);
 };
 
 Martin.prototype.switchToLayer = function( num ) {
