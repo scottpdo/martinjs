@@ -20,12 +20,15 @@ Martin.extend = function( obj ) {
     }
 };
 
-// Replace a canvas with an image with a src of its data URL
-Martin.prototype.convertToImage = function() {
+// Get the dataURL of the merged layers of the canvas (without affecting
+// the layers), or smash them all into one layer and turn that into an image
+Martin.prototype.convertToImage = function(preserve) {
+
+    if ( preserve ) return this.mergeLayers(preserve);
 
     this.mergeLayers();
 
-    var img = new Image();
+    var img = document.createElement('img');
     img.src = this.layers[0].canvas.toDataURL();
 
     this.container.removeChild( this.layers[0].canvas );

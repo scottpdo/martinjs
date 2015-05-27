@@ -1,0 +1,25 @@
+{
+  "name": "martin",
+  "version": "0.1.3-beta",
+  "homepage": "http://martinjs.org",
+  "authors": [
+    "Scott Donaldson <scott.p.donaldson@gmail.com>"
+  ],
+  "main": "js/dist/martin.min.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "canvas"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "docs",
+    "images"
+  ]
+}
