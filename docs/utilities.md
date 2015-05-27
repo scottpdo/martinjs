@@ -1,8 +1,30 @@
 # Utilities
 
-### .convertToImage()
+### .convertToImage(`preserve = false`)
 
-Merges all layers and converts the canvas to a downloadable image.
+Merges all the layers.
+
+If `preserve` is set to `true`, the layers will all remain intact (and able to be further edited), and it returns a data URL representing the merged layers. This can be set as the `src` of some image, opened as a link in a new tab, or downloaded.
+
+If `preserve` is set to `false` or left empty, this will merge and destroy the existing layers and replace the working canvas with an image whose `src` is the above data URL.
+
+```js
+canvas.convertToImage(true);
+```
+
+Returns:
+
+```
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAEsCAYAAADtt+XCAAAgAElEQ…AhmOkBkzZBB5jvYB+rK1vlMqtQ1ArpK8ABM2mg9b9244b8P3MPH12RU3nkAAAAAElFTkSuQmCC
+```
+
+<hr>
+
+```js
+canvas.convertToImage();
+```
+
+Returns:
 
 <img src="images/bunny.jpg" height="300" width="400">
 
