@@ -7,8 +7,6 @@
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
 
-
-    <style>#container { width: 200px; } #container img { max-width: 200px; }</style>
 </head>
 
 <body>
@@ -41,7 +39,9 @@
             end: 80
         });
 
-        return canvas;
+        var data = canvas.convertToImage(true);
+        console.log(data);
+
     }
 
     </script>
