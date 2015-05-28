@@ -3,7 +3,7 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-    Version: 0.1.3-beta
+    Version: 0.1.3.1-beta
 
     ----------------------------------------
 
@@ -32,7 +32,7 @@ window.Martin = function( id, init ) {
 
 };
 
-Martin._version = '0.1.3-beta';
+Martin._version = '0.1.3.1-beta';
 
 // Convert an image to a canvas or just return the canvas.
 Martin.prototype.makeCanvas = function(callback, init) {
