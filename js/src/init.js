@@ -3,10 +3,12 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
+    Version: 0.1.3-beta
 
     ----------------------------------------
 
     MARTIN
+    _version
     .makeCanvas()
     .handleLoad()
 */
@@ -29,6 +31,8 @@ window.Martin = function( id, init ) {
     this.makeCanvas(callback.bind(this), init);
 
 };
+
+Martin._version = '0.1.3-beta';
 
 // Convert an image to a canvas or just return the canvas.
 Martin.prototype.makeCanvas = function(callback, init) {

@@ -3,10 +3,12 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
+    Version: 0.1.3-beta
 
     ----------------------------------------
 
     MARTIN
+    _version
     .makeCanvas()
     .handleLoad()
 */
@@ -29,6 +31,8 @@ window.Martin = function( id, init ) {
     this.makeCanvas(callback.bind(this), init);
 
 };
+
+Martin._version = '0.1.3-beta';
 
 // Convert an image to a canvas or just return the canvas.
 Martin.prototype.makeCanvas = function(callback, init) {
@@ -183,12 +187,15 @@ Martin.extend = function( obj ) {
     }
 };
 
-// Replace a canvas with an image with a src of its data URL
-Martin.prototype.convertToImage = function() {
+// Get the dataURL of the merged layers of the canvas (without affecting
+// the layers), or smash them all into one layer and turn that into an image
+Martin.prototype.convertToImage = function(preserve) {
+
+    if ( preserve ) return this.mergeLayers(preserve);
 
     this.mergeLayers();
 
-    var img = new Image();
+    var img = document.createElement('img');
     img.src = this.layers[0].canvas.toDataURL();
 
     this.container.removeChild( this.layers[0].canvas );
@@ -292,6 +299,7 @@ Martin.prototype.putImageData = function(imageData) {
     .newLayer()
     .duplicateLayer()
     .deleteLayer()
+    .clearLayer()
     .switchToLayer()
     .mergeLayers()
 */
@@ -354,6 +362,18 @@ Martin.prototype.deleteLayer = function( num ) {
 
 };
 
+// Clear a layer of pixel data but don't delete it
+Martin.prototype.clearLayer = function(which) {
+
+    var original = this.currentLayer;
+
+    if ( which ) this.switchToLayer(which);
+
+    this.context.clearRect(0, 0, this.width(), this.height());
+
+    this.switchToLayer(original);
+};
+
 Martin.prototype.switchToLayer = function( num ) {
 
     this.context = this.layers[num || 0].context;
@@ -363,36 +383,59 @@ Martin.prototype.switchToLayer = function( num ) {
 
 };
 
-// Merge layers. TODO: If given an array i.e. [0, 1, 2, 3], merge those onto the lowest layer.
-// Otherwise merge all the layers and return a single canvas.
-Martin.prototype.mergeLayers = function( layers ) {
+// If `preserve` is true, returns a dataURL of the merged image data,
+// otherwise actually merges all the layers onto the lowest layer
+Martin.prototype.mergeLayers = function( preserve ) {
 
-    if ( !layers ) layers = this.layers;
-
-    var _this = this;
+    var layers = this.layers,
+        aboveLayer,
+        belowLayer,
+        belowLayerContext,
+        aboveCanvas;
 
     function mergeDown(index) {
 
         if ( index > 0 ) {
 
-            var aboveLayer = layers[index],
-                belowLayer = layers[index - 1],
-                aboveCanvas = layers[index].canvas;
+            belowLayer = layers[index - 1];
+            belowLayerContext = belowLayer.context;
+
+            aboveLayer = layers[index];
+            aboveCanvas = layers[index].canvas;
 
             // put the new data onto the target layer
-            belowLayer.context.drawImage( aboveCanvas, 0, 0 );
+            belowLayerContext.drawImage( aboveCanvas, 0, 0 );
 
             // Remove the old layer from the DOM and update the this.layers array
-            _this.container.removeChild( layers[index].canvas );
+            this.container.removeChild( layers[index].canvas );
             layers.pop();
 
-            return mergeDown( index - 1 );
+            return mergeDown.call( this, index - 1 );
         }
     }
 
-    mergeDown( layers.length - 1 );
+    if ( preserve ) {
 
-    return this;
+        var i = 0;
+
+        belowLayer = document.createElement('canvas');
+        belowLayerContext = belowLayer.getContext('2d');
+
+        belowLayer.setAttribute('width', this.width());
+        belowLayer.setAttribute('height', this.height());
+
+        while ( i < layers.length ) {
+
+            belowLayerContext.drawImage( layers[i].canvas, 0, 0 );
+
+            i++;
+        }
+        
+    } else {
+        mergeDown.call( this, layers.length - 1 );
+    }
+
+    return preserve ? belowLayer.toDataURL() : this;
 
 };
 

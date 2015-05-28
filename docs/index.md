@@ -6,10 +6,16 @@ Martin is a JavaScript library for working with HTML5 canvas. Martin supports jQ
 
 **Martin is in pre-release beta, so features are subject to change.**
 
-You can download Martin here:
+You can download Martin (v0.1.3-beta) here:
 
-- [Full version, annotated (28 kb)](download/martin.js)
-- [Minified (12 kb)](download/martin.min.js)
+- [Full version, annotated (29 kb)](download/martin.js)
+- [Minified (13 kb)](download/martin.min.js)
+
+Or through Bower:
+
+```js
+bower install martinjs --save
+```
 
 \- Scottland / [@scottpdonaldson](https://twitter.com/scottpdonaldson)
 
