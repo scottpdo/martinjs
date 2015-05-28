@@ -1,48 +1,68 @@
 <!DOCTYPE HTML>
 <html>
-
 <head>
 
     <title>Martin</title>
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    <style>
+        body { padding-bottom: 2em; }
+        .section { padding: 2em 2em 0; }
+        .section p { margin-top: 0; }
+    </style>
+
+    <script src="js/dist/martin.js"></script>
+    <script src="js/src/martin.gradient.js"></script>
+    <script src="js/src/martin.watermark.js"></script>
 
 </head>
 
 <body>
-    <div id="container">
-        <img id="humph" src="docs/images/marty-full.jpg">
+    <div class="section">
+        <p>Source Image</p>
+        <img id="src" src="docs/images/marty-full.jpg">
     </div>
 
-    <script src="js/dist/martin.min.js"></script>
-    <script src="js/src/martin.gradient.js"></script>
-    <script src="js/src/martin.watermark.js"></script>
+    <div class="section">
+        <p>New layer, draw circle on that layer</p>
+        <p id="new-layer-layer-count" style="font-weight: bold;"></p>
+        <img id="new-layer" src="docs/images/marty-full.jpg">
+    </div>
+
+    <div class="section">
+        <p>New layer, draw circle on that layer,
+        switch to bottom layer, draw rectangle</p>
+        <p id="switch-layer-active-layer" style="font-weight: bold;"></p>
+        <img id="switch-layer" src="docs/images/marty-full.jpg">
+    </div>
 
     <script>
 
-    /* var img = document.createElement('img');
-    img.id = 'humph';
-    img.src = 'docs/images/marty-full.jpg';
-    document.getElementById('container').appendChild(img); */
-
-    var canvas = Martin('humph', init);
-
-    function init(canvas) {
-
-        console.log(canvas.width());
-
-        //canvas.desaturate(50).background('#00f').lighten(25).opacity(0.6);
-
-        canvas.background('#f00').gradient({
-            angle: 0,
-            start: 20,
-            end: 80
+    Martin('new-layer', function(canvas) {
+        canvas.newLayer();
+        canvas.circle({
+            color: '#fff',
+            radius: 100
         });
 
-        var data = canvas.convertToImage(true);
-        console.log(data);
+        document.getElementById('new-layer-layer-count').innerHTML = 'Layer count: ' + canvas.layers.length;
+    });
 
-    }
+    Martin('switch-layer', function(canvas) {
+        canvas.newLayer();
+        canvas.circle({
+            color: '#fff',
+            radius: 100
+        });
+        canvas.switchToLayer(0);
+        canvas.rect({
+            color: '#f00',
+            width: canvas.width(),
+            height: 100,
+            offsetY: '50%'
+        });
+        document.getElementById('switch-layer-active-layer').innerHTML = 'Current layer: Layer ' + canvas.currentLayer;
+    });
 
     </script>
 </body>
