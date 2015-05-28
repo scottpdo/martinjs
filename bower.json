@@ -1,5 +1,5 @@
 {
-  "name": "martin",
+  "name": "martinjs",
   "version": "0.1.3-beta",
   "homepage": "http://martinjs.org",
   "authors": [
@@ -10,6 +10,8 @@
     "globals"
   ],
   "keywords": [
+    "martin",
+    "martinjs",
     "canvas"
   ],
   "license": "MIT",
