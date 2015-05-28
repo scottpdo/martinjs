@@ -20,7 +20,6 @@ var paths = {
         'utils',
         'layers',
         'elements',
-        'drawing',
         'effects',
         'misc'
     ],

@@ -33,8 +33,8 @@
 
         var ellipse = canvas.ellipse({
             color: '#fff',
-            offsetY: canvas.height() / 2,
-            offsetX: canvas.width() / 2,
+            offsetY: 100,
+            offsetX: 100,
             radiusX: 100,
             radiusY: 200
         });
@@ -47,6 +47,39 @@
             color: '#fe0'
         });
 
+        var line = canvas.line({
+            startX: 40,
+            startY: 40,
+            endX: 300,
+            endY: 100,
+            color: '#fff',
+            strokeWidth: 25,
+            cap: 'round'
+        });
+
+        var polygon = canvas.polygon({
+            points: [
+                [0, 0],
+                [0, 100],
+                [100, 0]
+            ],
+            color: '#00f'
+        });
+
+        var x = 40,
+            y = 40;
+        setInterval(function() {
+            x++; y++;
+            line.moveTo(x, y);
+        }, 50);
+
+        var z = 0,
+            w = 0;
+        setInterval(function() {
+            z += 0.25; w += 0.5;
+            polygon.moveTo(z, w);
+        }, 100);
+
         var x = 25;
         setInterval(function(){
             x++;
@@ -56,9 +89,8 @@
         var y = 0;
         setInterval(function(){
             y++;
-            console.log(y);
-            ellipse.moveTo(y, 400);
-        }, 500);
+            ellipse.moveTo(y, 100);
+        }, 10);
 
         /*
         canvas.write({

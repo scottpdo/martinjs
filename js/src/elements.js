@@ -1,3 +1,23 @@
+/*
+
+    Martin.Element constructor
+
+    Elements:
+    .line()
+    .rect()
+    .circle()
+    .ellipse()
+    .polygon()
+
+    Element methods:
+    .moveTo()
+
+    Finally:
+    - Loop through drawing methods and
+      create a corresponding method on the main Martin instance
+*/
+
+
 Martin.Element = function(type, canvas, obj) {
 
     if ( Martin.Element.prototype.hasOwnProperty(type) ) {
@@ -27,14 +47,22 @@ Martin.Element = function(type, canvas, obj) {
     }
 };
 
-Martin.Element.prototype.circle = function(canvas, obj) {
-
-    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
-        centerY = canvas.normalizeY( obj.offsetY || 0 );
+Martin.Element.prototype.line = function(canvas, obj) {
 
     this.context.beginPath();
 
-    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
+    this.context.moveTo(
+        canvas.normalizeX(obj.startX || 0 ),
+        canvas.normalizeY(obj.startY || 0 )
+    );
+
+    this.context.lineTo(
+        canvas.normalizeX(obj.endX || canvas.width() ),
+        canvas.normalizeY(obj.endY || canvas.height() )
+    );
+
+    if ( !obj.strokeWidth ) obj.strokeWidth = 1;
+    obj.stroke = obj.color ? obj.color : '#000';
 
     Martin.setContext( this.context, obj );
 
@@ -62,6 +90,23 @@ Martin.Element.prototype.rect = function(canvas, obj) {
     return this;
 };
 
+Martin.Element.prototype.circle = function(canvas, obj) {
+
+    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
+        centerY = canvas.normalizeY( obj.offsetY || 0 );
+
+    this.context.beginPath();
+
+    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
+
+    Martin.setContext( this.context, obj );
+
+    this.context.closePath();
+
+    return this;
+
+};
+
 Martin.Element.prototype.ellipse = function(canvas, obj) {
 
     if ( obj.radiusX === obj.radiusY ) {
@@ -83,6 +128,8 @@ Martin.Element.prototype.ellipse = function(canvas, obj) {
 
         this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
 
+        this.context.scale( 1 / scale, 1 );
+
     } else {
 
         scale = obj.radiusY / obj.radiusX;
@@ -91,7 +138,39 @@ Martin.Element.prototype.ellipse = function(canvas, obj) {
 
         this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
 
+        this.context.scale( 1, 1 / scale );
+
     }
+
+    Martin.setContext( this.context, obj );
+
+    this.context.closePath();
+
+    return this;
+}
+
+Martin.Element.prototype.polygon = function(canvas, obj) {
+
+    this.context.beginPath();
+
+    for ( var i = 0; i < obj.points.length; i++ ) {
+
+        var x = obj.points[i][0],
+            y = obj.points[i][1],
+            toX = canvas.normalizeX( x ),
+            toY = canvas.normalizeY( y );
+
+        if ( i === 0 ) this.context.moveTo( toX, toY );
+
+        this.context.lineTo( toX, toY );
+
+    }
+
+    // close the path
+    this.context.lineTo(
+        canvas.normalizeX(obj.points[0][0]),
+        canvas.normalizeY(obj.points[0][1])
+    );
 
     Martin.setContext( this.context, obj );
 
@@ -103,14 +182,45 @@ Martin.Element.prototype.ellipse = function(canvas, obj) {
 // ----- Move an element to new coordinates
 Martin.Element.prototype.moveTo = function(x, y) {
 
-    // clear existin data
+    var data = this.data;
+
+    // clear existing data
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.data.offsetX = x;
-    this.data.offsetY = y;
+    if ( this.type === 'line' ) {
+        data.endX += x - data.startX;
+        data.endY += y - data.startY;
+        data.startX = x;
+        data.startY = y;
+    } else if ( this.type === 'polygon' ) {
+        data.points.forEach(function(pt, i) {
+            if ( i > 0 ) {
+                var thisX = pt[0],
+                    thisY = pt[1];
+                data.points[i] = [
+                    thisX + (x - data.points[0][0]),
+                    thisY + (y - data.points[0][1])
+                ];
+            }
+        });
+        data.points[0] = [x, y];
+    } else {
+        data.offsetX = x;
+        data.offsetY = y;
+    }
 
-    this[this.type](this.base, this.data);
+    this[this.type](this.base, data);
 
     return this;
 
 };
+
+(function(){
+    var drawingElements = ['line', 'rect', 'circle', 'ellipse', 'polygon'];
+
+    drawingElements.forEach(function(el) {
+        Martin.prototype[el] = function(obj) {
+            return new Martin.Element(el, this, obj);
+        }
+    });
+})();
