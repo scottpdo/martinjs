@@ -22,6 +22,12 @@
     "test",
     "tests",
     "docs",
-    "images"
+    "images",
+    "site",
+    "index.html",
+    "thermal.html",
+    "voronoi.html",
+    "mkdocs.yml",
+    "README.md"
   ]
 }
