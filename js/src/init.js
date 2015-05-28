@@ -93,7 +93,7 @@ Martin.prototype.handleLoad = function(init) {
     originalContainer.insertBefore( this.container, this.canvas );
 
     // And move the canvas into the new container
-    this.container.appendChild( this.canvas );
+    this.canvas.parentNode.removeChild(this.canvas);
 
     // Position the container relatively so that we can absolutely
     // position any children within it. Also set dimensions.
@@ -103,16 +103,11 @@ Martin.prototype.handleLoad = function(init) {
 
     // Create a stylesheet that will declare position all children of [data-martin]
     var style = document.createElement('style');
-    style.innerHTML = '[data-martin] *{position:absolute;bottom:0;left:0;}';
+    style.innerHTML = '[data-martin] *{position:absolute;top:0;left:0;}';
     document.head.appendChild(style);
 
     // Set the layers (currently just this.canvas)
-    this.layers = [{
-        canvas: this.canvas,
-        context: this.context
-    }];
-
-    this.currentLayer = 0;
+    this.newLayer(this.canvas);
 
     // Now we are ready and can initialize
     return init(this);

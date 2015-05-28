@@ -93,7 +93,7 @@ Martin.prototype.handleLoad = function(init) {
     originalContainer.insertBefore( this.container, this.canvas );
 
     // And move the canvas into the new container
-    this.container.appendChild( this.canvas );
+    this.canvas.parentNode.removeChild(this.canvas);
 
     // Position the container relatively so that we can absolutely
     // position any children within it. Also set dimensions.
@@ -103,16 +103,11 @@ Martin.prototype.handleLoad = function(init) {
 
     // Create a stylesheet that will declare position all children of [data-martin]
     var style = document.createElement('style');
-    style.innerHTML = '[data-martin] *{position:absolute;bottom:0;left:0;}';
+    style.innerHTML = '[data-martin] *{position:absolute;top:0;left:0;}';
     document.head.appendChild(style);
 
     // Set the layers (currently just this.canvas)
-    this.layers = [{
-        canvas: this.canvas,
-        context: this.context
-    }];
-
-    this.currentLayer = 0;
+    this.newLayer(this.canvas);
 
     // Now we are ready and can initialize
     return init(this);
@@ -209,9 +204,7 @@ Martin.prototype.normalizeX = function( val ) {
 };
 
 Martin.prototype.normalizeY = function( val ) {
-    val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-    // Flip it upside down (a la Cartesian)
-    return this.canvas.height - val;
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
 };
 
 Martin.prototype.normalizePercentX = function( val ) {
@@ -223,23 +216,21 @@ Martin.prototype.normalizePercentY = function( val ) {
 };
 
 // Set the fill, stroke, alpha for a new shape
-Martin.prototype.setContext = function( obj ) {
+Martin.setContext = function( context, obj ) {
 
-    var c = this.context;
+    context.save();
 
-    c.save();
+    context.fillStyle = obj.color || '#000';
+    context.fill();
 
-    c.fillStyle = obj.color || '#000';
-    c.fill();
+    context.globalAlpha = obj.alpha || 1;
 
-    c.globalAlpha = obj.alpha || 1;
+    context.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
+    context.lineCap = obj.cap ? obj.cap : 'square';
+    context.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
+    context.stroke();
 
-    c.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
-    c.lineCap = obj.cap ? obj.cap : 'square';
-    c.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
-    c.stroke();
-
-    c.restore();
+    context.restore();
 
 };
 
@@ -304,36 +295,71 @@ Martin.prototype.putImageData = function(imageData) {
     .mergeLayers()
 */
 
+// ----- Layer constructor
+Martin.Layer = function(baseCanvas, arg) {
+
+    this.DOMelement = document.createElement('div');
+    this.DOMelement.setAttribute('data-martin', '');
+    this.DOMelement.setAttribute('data-martin-layer', '');
+
+    this.width = baseCanvas.width;
+    this.height = baseCanvas.height;
+
+    this.elements = [];
+
+    if ( typeof arg === 'string' ) {
+        this.type = arg;
+    } else {
+        for ( var i in arg ) this[i] = arg[i];
+    }
+
+    return this;
+
+};
+
+// ----- Add an element to a layer
+Martin.Layer.prototype.addElement = function(type) {
+
+    var canvas = document.createElement('canvas');
+
+    canvas.width = this.width;
+    canvas.height = this.height;
+
+    this.DOMelement.appendChild(canvas);
+
+    this.canvas = canvas;
+    this.context = canvas.getContext('2d');
+
+    this.elements.push({
+        type: type
+    });
+
+    return this.elements.length - 1;
+
+};
 
 // Create a new (top-most) layer and switch to that layer.
 // Optional: include pixel data for the new layer
 Martin.prototype.newLayer = function(arg, data) {
 
-    var newCanvas = document.createElement('canvas'),
-        layerObject = {};
+    var newLayer = new Martin.Layer(this.canvas);
 
-    newCanvas.width = this.canvas.width;
-    newCanvas.height = this.canvas.height;
-
-    this.container.appendChild( newCanvas );
-
-    // Don't forget to set the new context and currentlayer
-    this.context = newCanvas.getContext('2d');
-    this.currentLayer = this.layers.length;
-
-    // if there is data for the new layer, put it now
-    if ( data ) this.context.putImageData(data, 0, 0);
-
-    layerObject.canvas = newCanvas;
-    layerObject.context = this.context;
-
-    if ( typeof arg === 'string' ) {
-        layerObject.type = arg;
-    } else {
-        for ( var i in arg ) layerObject[i] = arg[i];
+    // if no layers yet (initializing),
+    // set layers to an empty array
+    // and append canvas to new layer's DOM element
+    if ( !this.layers ) {
+        this.layers = [];
+        newLayer.DOMelement.appendChild(this.canvas);
     }
 
-    this.layers.push(layerObject);
+    this.container.insertBefore( newLayer.DOMelement, this.firstChild );
+
+    // Don't forget to set the new context and currentlayer
+    this.context = newLayer.context;
+    this.currentLayerIndex = this.layers.length;
+    this.currentLayer = newLayer;
+
+    this.layers.push(newLayer);
 
     return this;
 
@@ -349,7 +375,7 @@ Martin.prototype.deleteLayer = function( num ) {
     // don't delete if the only layer
     if ( this.layers.length > 1 ) {
 
-        num = num || this.currentLayer;
+        num = num || this.currentLayerIndex;
 
         this.container.removeChild(this.layers[num].canvas);
         this.layers.splice(num, 1);
@@ -365,7 +391,7 @@ Martin.prototype.deleteLayer = function( num ) {
 // Clear a layer of pixel data but don't delete it
 Martin.prototype.clearLayer = function(which) {
 
-    var original = this.currentLayer;
+    var original = this.currentLayerIndex;
 
     if ( which ) this.switchToLayer(which);
 
@@ -377,7 +403,8 @@ Martin.prototype.clearLayer = function(which) {
 Martin.prototype.switchToLayer = function( num ) {
 
     this.context = this.layers[num || 0].context;
-    this.currentLayer = num || 0;
+    this.currentLayer = this.layers[num || 0];
+    this.currentLayerIndex = num || 0;
 
     return this;
 
@@ -430,12 +457,129 @@ Martin.prototype.mergeLayers = function( preserve ) {
 
             i++;
         }
-        
+
     } else {
         mergeDown.call( this, layers.length - 1 );
     }
 
     return preserve ? belowLayer.toDataURL() : this;
+
+};
+
+Martin.Element = function(type, canvas, obj) {
+
+    if ( Martin.Element.prototype.hasOwnProperty(type) ) {
+
+        // adds a new canvas within the current layer
+        var layer = canvas.currentLayer;
+        var index = layer.addElement(type);
+
+        // base refers to the instance of Martin
+        this.base = canvas;
+        this.layer = layer;
+        this.canvas = this.layer.canvas;
+        this.context = this.layer.context;
+
+        this.data = obj;
+        this.type = type;
+        this.index = index;
+
+        // draw the element
+        this[type].call(layer, canvas, obj);
+
+        return this;
+
+    } else {
+
+        throw new Error('Given type is not an allowed element. Check Martin.elements for allowed types.');
+    }
+};
+
+Martin.Element.prototype.circle = function(canvas, obj) {
+
+    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
+        centerY = canvas.normalizeY( obj.offsetY || 0 );
+
+    this.context.beginPath();
+
+    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
+
+    Martin.setContext( this.context, obj );
+
+    this.context.closePath();
+
+    return this;
+
+};
+
+Martin.Element.prototype.rect = function(canvas, obj) {
+
+    this.context.beginPath();
+
+    this.context.rect(
+        canvas.normalizeX( obj.offsetX || 0 ),
+        canvas.normalizeY( obj.offsetY || 0 ),
+        canvas.normalizeX( obj.width ),
+        canvas.normalizeY( obj.height )
+    );
+
+    Martin.setContext( this.context, obj );
+
+    this.context.closePath();
+
+    return this;
+};
+
+Martin.Element.prototype.ellipse = function(canvas, obj) {
+
+    if ( obj.radiusX === obj.radiusY ) {
+        obj.radius = obj.radiusX;
+        return this.circle( canvas, obj );
+    }
+
+    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
+        centerY = canvas.normalizeY( obj.offsetY || 0 ),
+        scale;
+
+    this.context.beginPath();
+
+    if ( obj.radiusX > obj.radiusY ) {
+
+        scale = obj.radiusX / obj.radiusY;
+
+        this.context.scale( scale, 1 );
+
+        this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
+
+    } else {
+
+        scale = obj.radiusY / obj.radiusX;
+
+        this.context.scale( 1, scale );
+
+        this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
+
+    }
+
+    Martin.setContext( this.context, obj );
+
+    this.context.closePath();
+
+    return this;
+}
+
+// ----- Move an element to new coordinates
+Martin.Element.prototype.moveTo = function(x, y) {
+
+    // clear existin data
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.data.offsetX = x;
+    this.data.offsetY = y;
+
+    this[this.type](this.base, this.data);
+
+    return this;
 
 };
 
@@ -468,85 +612,21 @@ Martin.prototype.line = function( obj ) {
 // Create a rectangle
 Martin.prototype.rect = function( obj ) {
 
-    if ( !obj.offsetX ) obj.offsetX = 0;
-    if ( !obj.offsetY ) obj.offsetY = 0;
+    return new Martin.Element('rect', this, obj);
 
-    this.context.beginPath();
-
-    this.context.rect(
-        this.normalizeX( obj.offsetX ),
-        this.normalizeY( obj.offsetY ),
-        this.normalizeX( obj.width ),
-        -this.canvas.height + this.normalizeY( obj.height ) // we don't *really* want to normalize the height here, just percentage-wise
-    );
-
-    this.setContext( obj );
-
-    this.context.closePath();
-
-    return this;
 };
 
 // Make a circle -- center X, center Y, radius, color
 Martin.prototype.circle = function( obj ) {
 
-    if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
-    if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
-
-    var centerX = this.normalizeX( obj.offsetX ),
-        centerY = this.normalizeY( obj.offsetY );
-
-    this.context.beginPath();
-
-    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
-
-    this.setContext( obj );
-
-    return this;
+    return new Martin.Element('circle', this, obj);
 
 };
 
 // Make an ellipse -- same as circle but with radii for both X and Y
 Martin.prototype.ellipse = function( obj ) {
 
-    if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
-    if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
-
-    if ( obj.radiusX === obj.radiusY ) {
-        obj.radius = obj.radiusX;
-        return this.circle( obj );
-    }
-
-    var centerX = this.normalizeX( obj.offsetX ),
-        centerY = this.normalizeY( obj.offsetY );
-
-    this.context.beginPath();
-
-    var scale;
-
-    if ( obj.radiusX > obj.radiusY ) {
-
-        scale = obj.radiusX / obj.radiusY;
-
-        this.context.scale( scale, 1 );
-
-        this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
-
-    } else {
-
-        scale = obj.radiusY / obj.radiusX;
-
-        this.context.scale( 1, scale );
-
-        this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
-
-    }
-
-    this.setContext( obj );
-
-    this.context.restore();
-
-    return this;
+    return new Martin.Element('ellipse', this, obj);
 
 };
 
@@ -994,7 +1074,10 @@ Martin.prototype.blur = function( radius, all ) {
 
 Martin.prototype.write = function( arg1, arg2 ) {
 
-	var text, obj;
+	var text,
+		obj,
+		size,
+		fontString;
 
 	if ( typeof arg1 === 'string' ) {
 		text = arg1;
@@ -1006,9 +1089,9 @@ Martin.prototype.write = function( arg1, arg2 ) {
 
 	if ( !obj ) obj = {};
 
-	var size = obj.size || 16;
+	size = obj.size || 16;
 
-	var fontString = size + 'px ';
+	fontString = size + 'px ';
 	fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
 
 	this.context.font = fontString;
@@ -1018,7 +1101,7 @@ Martin.prototype.write = function( arg1, arg2 ) {
 	this.context.fillText(
 		text,
 		this.normalizeX(obj.offsetX || 0),
-		obj.offsetY ? this.normalizeY(obj.offsetY) - size : this.canvas.height - size
+		this.normalizeY(obj.offsetY || 0)
 	);
 
 	return this;

@@ -7,36 +7,71 @@
     .mergeLayers()
 */
 
+// ----- Layer constructor
+Martin.Layer = function(baseCanvas, arg) {
+
+    this.DOMelement = document.createElement('div');
+    this.DOMelement.setAttribute('data-martin', '');
+    this.DOMelement.setAttribute('data-martin-layer', '');
+
+    this.width = baseCanvas.width;
+    this.height = baseCanvas.height;
+
+    this.elements = [];
+
+    if ( typeof arg === 'string' ) {
+        this.type = arg;
+    } else {
+        for ( var i in arg ) this[i] = arg[i];
+    }
+
+    return this;
+
+};
+
+// ----- Add an element to a layer
+Martin.Layer.prototype.addElement = function(type) {
+
+    var canvas = document.createElement('canvas');
+
+    canvas.width = this.width;
+    canvas.height = this.height;
+
+    this.DOMelement.appendChild(canvas);
+
+    this.canvas = canvas;
+    this.context = canvas.getContext('2d');
+
+    this.elements.push({
+        type: type
+    });
+
+    return this.elements.length - 1;
+
+};
 
 // Create a new (top-most) layer and switch to that layer.
 // Optional: include pixel data for the new layer
 Martin.prototype.newLayer = function(arg, data) {
 
-    var newCanvas = document.createElement('canvas'),
-        layerObject = {};
+    var newLayer = new Martin.Layer(this.canvas);
 
-    newCanvas.width = this.canvas.width;
-    newCanvas.height = this.canvas.height;
-
-    this.container.appendChild( newCanvas );
-
-    // Don't forget to set the new context and currentlayer
-    this.context = newCanvas.getContext('2d');
-    this.currentLayer = this.layers.length;
-
-    // if there is data for the new layer, put it now
-    if ( data ) this.context.putImageData(data, 0, 0);
-
-    layerObject.canvas = newCanvas;
-    layerObject.context = this.context;
-
-    if ( typeof arg === 'string' ) {
-        layerObject.type = arg;
-    } else {
-        for ( var i in arg ) layerObject[i] = arg[i];
+    // if no layers yet (initializing),
+    // set layers to an empty array
+    // and append canvas to new layer's DOM element
+    if ( !this.layers ) {
+        this.layers = [];
+        newLayer.DOMelement.appendChild(this.canvas);
     }
 
-    this.layers.push(layerObject);
+    this.container.insertBefore( newLayer.DOMelement, this.firstChild );
+
+    // Don't forget to set the new context and currentlayer
+    this.context = newLayer.context;
+    this.currentLayerIndex = this.layers.length;
+    this.currentLayer = newLayer;
+
+    this.layers.push(newLayer);
 
     return this;
 
@@ -52,7 +87,7 @@ Martin.prototype.deleteLayer = function( num ) {
     // don't delete if the only layer
     if ( this.layers.length > 1 ) {
 
-        num = num || this.currentLayer;
+        num = num || this.currentLayerIndex;
 
         this.container.removeChild(this.layers[num].canvas);
         this.layers.splice(num, 1);
@@ -68,7 +103,7 @@ Martin.prototype.deleteLayer = function( num ) {
 // Clear a layer of pixel data but don't delete it
 Martin.prototype.clearLayer = function(which) {
 
-    var original = this.currentLayer;
+    var original = this.currentLayerIndex;
 
     if ( which ) this.switchToLayer(which);
 
@@ -80,7 +115,8 @@ Martin.prototype.clearLayer = function(which) {
 Martin.prototype.switchToLayer = function( num ) {
 
     this.context = this.layers[num || 0].context;
-    this.currentLayer = num || 0;
+    this.currentLayer = this.layers[num || 0];
+    this.currentLayerIndex = num || 0;
 
     return this;
 
@@ -133,7 +169,7 @@ Martin.prototype.mergeLayers = function( preserve ) {
 
             i++;
         }
-        
+
     } else {
         mergeDown.call( this, layers.length - 1 );
     }

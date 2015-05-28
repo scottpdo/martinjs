@@ -42,9 +42,7 @@ Martin.prototype.normalizeX = function( val ) {
 };
 
 Martin.prototype.normalizeY = function( val ) {
-    val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-    // Flip it upside down (a la Cartesian)
-    return this.canvas.height - val;
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
 };
 
 Martin.prototype.normalizePercentX = function( val ) {
@@ -56,23 +54,21 @@ Martin.prototype.normalizePercentY = function( val ) {
 };
 
 // Set the fill, stroke, alpha for a new shape
-Martin.prototype.setContext = function( obj ) {
+Martin.setContext = function( context, obj ) {
 
-    var c = this.context;
+    context.save();
 
-    c.save();
+    context.fillStyle = obj.color || '#000';
+    context.fill();
 
-    c.fillStyle = obj.color || '#000';
-    c.fill();
+    context.globalAlpha = obj.alpha || 1;
 
-    c.globalAlpha = obj.alpha || 1;
+    context.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
+    context.lineCap = obj.cap ? obj.cap : 'square';
+    context.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
+    context.stroke();
 
-    c.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
-    c.lineCap = obj.cap ? obj.cap : 'square';
-    c.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
-    c.stroke();
-
-    c.restore();
+    context.restore();
 
 };
 

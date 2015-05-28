@@ -27,85 +27,21 @@ Martin.prototype.line = function( obj ) {
 // Create a rectangle
 Martin.prototype.rect = function( obj ) {
 
-    if ( !obj.offsetX ) obj.offsetX = 0;
-    if ( !obj.offsetY ) obj.offsetY = 0;
+    return new Martin.Element('rect', this, obj);
 
-    this.context.beginPath();
-
-    this.context.rect(
-        this.normalizeX( obj.offsetX ),
-        this.normalizeY( obj.offsetY ),
-        this.normalizeX( obj.width ),
-        -this.canvas.height + this.normalizeY( obj.height ) // we don't *really* want to normalize the height here, just percentage-wise
-    );
-
-    this.setContext( obj );
-
-    this.context.closePath();
-
-    return this;
 };
 
 // Make a circle -- center X, center Y, radius, color
 Martin.prototype.circle = function( obj ) {
 
-    if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
-    if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
-
-    var centerX = this.normalizeX( obj.offsetX ),
-        centerY = this.normalizeY( obj.offsetY );
-
-    this.context.beginPath();
-
-    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
-
-    this.setContext( obj );
-
-    return this;
+    return new Martin.Element('circle', this, obj);
 
 };
 
 // Make an ellipse -- same as circle but with radii for both X and Y
 Martin.prototype.ellipse = function( obj ) {
 
-    if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
-    if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
-
-    if ( obj.radiusX === obj.radiusY ) {
-        obj.radius = obj.radiusX;
-        return this.circle( obj );
-    }
-
-    var centerX = this.normalizeX( obj.offsetX ),
-        centerY = this.normalizeY( obj.offsetY );
-
-    this.context.beginPath();
-
-    var scale;
-
-    if ( obj.radiusX > obj.radiusY ) {
-
-        scale = obj.radiusX / obj.radiusY;
-
-        this.context.scale( scale, 1 );
-
-        this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
-
-    } else {
-
-        scale = obj.radiusY / obj.radiusX;
-
-        this.context.scale( 1, scale );
-
-        this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
-
-    }
-
-    this.setContext( obj );
-
-    this.context.restore();
-
-    return this;
+    return new Martin.Element('ellipse', this, obj);
 
 };
 

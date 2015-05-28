@@ -87,7 +87,10 @@
 
 Martin.prototype.write = function( arg1, arg2 ) {
 
-	var text, obj;
+	var text,
+		obj,
+		size,
+		fontString;
 
 	if ( typeof arg1 === 'string' ) {
 		text = arg1;
@@ -99,9 +102,9 @@ Martin.prototype.write = function( arg1, arg2 ) {
 
 	if ( !obj ) obj = {};
 
-	var size = obj.size || 16;
+	size = obj.size || 16;
 
-	var fontString = size + 'px ';
+	fontString = size + 'px ';
 	fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
 
 	this.context.font = fontString;
@@ -111,7 +114,7 @@ Martin.prototype.write = function( arg1, arg2 ) {
 	this.context.fillText(
 		text,
 		this.normalizeX(obj.offsetX || 0),
-		obj.offsetY ? this.normalizeY(obj.offsetY) - size : this.canvas.height - size
+		this.normalizeY(obj.offsetY || 0)
 	);
 
 	return this;

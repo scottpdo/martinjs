@@ -19,6 +19,7 @@ var paths = {
         'helpers',
         'utils',
         'layers',
+        'elements',
         'drawing',
         'effects',
         'misc'
