@@ -182,18 +182,19 @@ Martin.extend = function( obj ) {
     }
 };
 
-// Get the dataURL of the merged layers of the canvas (without affecting
-// the layers), or smash them all into one layer and turn that into an image
-Martin.prototype.convertToImage = function(preserve) {
+// Get the dataURL of the merged layers of the canvas,
+// then turn that into one image
+Martin.prototype.convertToImage = function() {
 
-    if ( preserve ) return this.mergeLayers(preserve);
+    var dataURL = this.toDataURL(),
+        img = document.createElement('img');
 
-    this.mergeLayers();
+    img.src = dataURL;
 
-    var img = document.createElement('img');
-    img.src = this.layers[0].canvas.toDataURL();
+    this.layers.forEach(function(layer, i){
+        this.deleteLayer(i);
+    }, this);
 
-    this.container.removeChild( this.layers[0].canvas );
     this.container.appendChild( img );
 
 };
@@ -372,17 +373,10 @@ Martin.prototype.duplicateLayer = function() {
 
 Martin.prototype.deleteLayer = function( num ) {
 
-    // don't delete if the only layer
-    if ( this.layers.length > 1 ) {
+    num = num || this.currentLayerIndex;
 
-        num = num || this.currentLayerIndex;
-
-        this.container.removeChild(this.layers[num].canvas);
-        this.layers.splice(num, 1);
-
-    } else {
-        throw new Error("Can't delete the only layer.");
-    }
+    this.container.removeChild(this.layers[num].DOMelement);
+    this.layers.splice(num, 1);
 
     return this;
 
@@ -410,59 +404,28 @@ Martin.prototype.switchToLayer = function( num ) {
 
 };
 
-// If `preserve` is true, returns a dataURL of the merged image data,
-// otherwise actually merges all the layers onto the lowest layer
-Martin.prototype.mergeLayers = function( preserve ) {
+// Return's a data URL of all the working layers
+Martin.prototype.toDataURL = function() {
 
     var layers = this.layers,
-        aboveLayer,
-        belowLayer,
-        belowLayerContext,
-        aboveCanvas;
+        scratch = document.createElement('canvas'),
+        scratchContext = scratch.getContext('2d');
 
-    function mergeDown(index) {
+    scratch.width = this.width();
+    scratch.height = this.height();
 
-        if ( index > 0 ) {
+    // loop through layers
+    layers.forEach(function(layer, i) {
 
-            belowLayer = layers[index - 1];
-            belowLayerContext = belowLayer.context;
-
-            aboveLayer = layers[index];
-            aboveCanvas = layers[index].canvas;
-
-            // put the new data onto the target layer
-            belowLayerContext.drawImage( aboveCanvas, 0, 0 );
-
-            // Remove the old layer from the DOM and update the this.layers array
-            this.container.removeChild( layers[index].canvas );
-            layers.pop();
-
-            return mergeDown.call( this, index - 1 );
+        // loop through layer children
+        if ( layer.DOMelement.children ) {
+            Array.prototype.slice.call(layer.DOMelement.children).forEach(function(c) {
+                scratchContext.drawImage( c, 0, 0 );
+            });
         }
-    }
+    });
 
-    if ( preserve ) {
-
-        var i = 0;
-
-        belowLayer = document.createElement('canvas');
-        belowLayerContext = belowLayer.getContext('2d');
-
-        belowLayer.setAttribute('width', this.width());
-        belowLayer.setAttribute('height', this.height());
-
-        while ( i < layers.length ) {
-
-            belowLayerContext.drawImage( layers[i].canvas, 0, 0 );
-
-            i++;
-        }
-
-    } else {
-        mergeDown.call( this, layers.length - 1 );
-    }
-
-    return preserve ? belowLayer.toDataURL() : this;
+    return scratch.toDataURL();
 
 };
 

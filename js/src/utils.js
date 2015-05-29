@@ -20,18 +20,19 @@ Martin.extend = function( obj ) {
     }
 };
 
-// Get the dataURL of the merged layers of the canvas (without affecting
-// the layers), or smash them all into one layer and turn that into an image
-Martin.prototype.convertToImage = function(preserve) {
+// Get the dataURL of the merged layers of the canvas,
+// then turn that into one image
+Martin.prototype.convertToImage = function() {
 
-    if ( preserve ) return this.mergeLayers(preserve);
+    var dataURL = this.toDataURL(),
+        img = document.createElement('img');
 
-    this.mergeLayers();
+    img.src = dataURL;
 
-    var img = document.createElement('img');
-    img.src = this.layers[0].canvas.toDataURL();
+    this.layers.forEach(function(layer, i){
+        this.deleteLayer(i);
+    }, this);
 
-    this.container.removeChild( this.layers[0].canvas );
     this.container.appendChild( img );
 
 };
