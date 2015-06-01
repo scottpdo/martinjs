@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+    <title>Martin</title>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.0/normalize.min.css">
+    <style>
+        body { padding-bottom: 2em; }
+        .section { padding: 2em 2em 0; }
+        .section p { margin-top: 0; }
+    </style>
+
+    <script src="js/dist/martin.js"></script>
+    <script src="js/src/martin.gradient.js"></script>
+    <script src="js/src/martin.watermark.js"></script>
+
+</head>
+
+<body>
+
+    <div class="section">
+        <p>Background</p>
+        <img id="background" src="docs/images/marty-full.jpg">
+    </div>
+
+    <script>
+
+    Martin('background', function(canvas) {
+
+        window.canvas = canvas;
+
+        canvas.newLayer();
+
+        canvas.circle({
+            radius: 100
+        });
+
+        canvas.circle({
+            radius: 80,
+            x: 80,
+            color: '#fe0'
+        });
+        canvas.circle({
+            x: 160,
+            radius: 60,
+            color: '#00f'
+        }).bumpDown();
+
+        canvas.newLayer();
+
+        canvas.rect({
+            x: canvas.width() / 2 - 100,
+            y: canvas.height() / 2 - 100,
+            height: 120,
+            width: 120,
+            color: '#f00'
+        })
+    });
+
+    </script>
+</body>
+</html>

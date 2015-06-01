@@ -29,8 +29,6 @@
 
         window.canvas = canvas;
 
-        // canvas.newLayer();
-
         var ellipse = canvas.ellipse({
             color: '#fff',
             offsetY: 100,
@@ -47,7 +45,7 @@
             color: '#fe0'
         });
 
-        var line = canvas.line({
+        var line = canvas.newLayer().line({
             startX: 40,
             startY: 40,
             endX: 300,
@@ -57,7 +55,7 @@
             cap: 'round'
         });
 
-        var polygon = canvas.polygon({
+        var polygon = canvas.switchToLayer(0).polygon({
             points: [
                 [0, 0],
                 [0, 100],
@@ -65,8 +63,9 @@
             ],
             color: '#00f'
         });
+        polygon.moveTo(50, 0);
 
-        canvas.convertToImage();
+        // canvas.convertToImage();
 
         /* var x = 40,
             y = 40;

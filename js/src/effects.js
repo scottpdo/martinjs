@@ -104,9 +104,9 @@ Martin.prototype.opacity = function( amt, all ) {
 
     var _this = this;
 
-    function makeOpacity(layer) {
+    function makeOpacity(layer, i) {
 
-        _this.switchToLayer(layer);
+        _this.switchToLayer(i);
 
         _this.loop(function(x, y, pixel) {
             pixel.a *= amt;
@@ -117,9 +117,7 @@ Martin.prototype.opacity = function( amt, all ) {
     if ( !all ) {
         makeOpacity(this.currentLayer);
     } else {
-        this.layers.forEach(function(layer, i) {
-            makeOpacity(i);
-        });
+        this.layers.forEach(makeOpacity);
     }
 
     return this;

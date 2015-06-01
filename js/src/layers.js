@@ -8,16 +8,13 @@
 */
 
 // ----- Layer constructor
-Martin.Layer = function(baseCanvas, arg) {
+Martin.Layer = function(base, arg, data, elements) {
 
-    this.DOMelement = document.createElement('div');
-    this.DOMelement.setAttribute('data-martin', '');
-    this.DOMelement.setAttribute('data-martin-layer', '');
-
-    this.width = baseCanvas.width;
-    this.height = baseCanvas.height;
-
-    this.elements = [];
+    this.base = base;
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = base.width();
+    this.canvas.height = base.height();
+    this.context = this.canvas.getContext('2d');
 
     if ( typeof arg === 'string' ) {
         this.type = arg;
@@ -25,60 +22,64 @@ Martin.Layer = function(baseCanvas, arg) {
         for ( var i in arg ) this[i] = arg[i];
     }
 
+    if ( data ) this.context.putImageData( data, 0, 0 );
+
+    this.elements = [] || elements;
+
     return this;
 
+};
+
+Martin.Layer.prototype.getImageData = function() {
+    var imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    return imageData;
+};
+
+Martin.Layer.prototype.renderLayer = function() {
+    var base = this.base,
+        imageData = this.getImageData();
+    base.context.drawImage( this.canvas, 0, 0 );
+};
+
+Martin.Layer.prototype.clearLayer = function() {
+    this.context.clearRect(0, 0, this.base.width(), this.base.height());
 };
 
 // ----- Add an element to a layer
-Martin.Layer.prototype.addElement = function(type) {
-
-    var canvas = document.createElement('canvas');
-
-    canvas.width = this.width;
-    canvas.height = this.height;
-
-    this.DOMelement.appendChild(canvas);
-
-    this.canvas = canvas;
-    this.context = canvas.getContext('2d');
-
-    this.elements.push({
-        type: type
-    });
-
-    return this.elements.length - 1;
-
+Martin.Layer.prototype.addElement = function(element) {
+    this.elements.push(element);
+    return element;
 };
 
 // Create a new (top-most) layer and switch to that layer.
-// Optional: include pixel data for the new layer
-Martin.prototype.newLayer = function(arg, data) {
+// Optional: include pixel data and elements for the new layer
+Martin.prototype.newLayer = function(arg, data, elements) {
 
-    var newLayer = new Martin.Layer(this.canvas);
+    var newLayer = new Martin.Layer(this, arg, data, elements);
 
     // if no layers yet (initializing),
-    // set layers to an empty array
-    // and append canvas to new layer's DOM element
+    // the layers are just this new layer,
+    // and the new layer's context should be the base's
     if ( !this.layers ) {
-        this.layers = [];
-        newLayer.DOMelement.appendChild(this.canvas);
+        this.layers = [newLayer];
+        newLayer.canvas = newLayer.base.canvas;
+        newLayer.context = newLayer.base.context;
+    } else {
+        this.layers.push(newLayer);
     }
 
-    this.container.insertBefore( newLayer.DOMelement, this.firstChild );
-
     // Don't forget to set the new context and currentlayer
-    this.context = newLayer.context;
     this.currentLayerIndex = this.layers.length;
     this.currentLayer = newLayer;
 
-    this.layers.push(newLayer);
+    this.render();
 
-    return this;
+    return newLayer;
 
 };
 
 Martin.prototype.duplicateLayer = function() {
-    this.newLayer( '', this.context.imageData );
+    this.newLayer( '', this.context.imageData, this.elements );
     return this;
 };
 
@@ -112,30 +113,5 @@ Martin.prototype.switchToLayer = function( num ) {
     this.currentLayerIndex = num || 0;
 
     return this;
-
-};
-
-// Return's a data URL of all the working layers
-Martin.prototype.toDataURL = function() {
-
-    var layers = this.layers,
-        scratch = document.createElement('canvas'),
-        scratchContext = scratch.getContext('2d');
-
-    scratch.width = this.width();
-    scratch.height = this.height();
-
-    // loop through layers
-    layers.forEach(function(layer, i) {
-
-        // loop through layer children
-        if ( layer.DOMelement.children ) {
-            Array.prototype.slice.call(layer.DOMelement.children).forEach(function(c) {
-                scratchContext.drawImage( c, 0, 0 );
-            });
-        }
-    });
-
-    return scratch.toDataURL();
 
 };

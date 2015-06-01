@@ -24,41 +24,56 @@ Martin.Element = function(type, canvas, obj) {
 
         // adds a new canvas within the current layer
         var layer = canvas.currentLayer;
-        var index = layer.addElement(type);
 
         // base refers to the instance of Martin
         this.base = canvas;
-        this.layer = layer;
-        this.canvas = this.layer.canvas;
-        this.context = this.layer.context;
 
         this.data = obj;
         this.type = type;
-        this.index = index;
+        this.layer = layer;
 
-        // draw the element
-        this[type].call(layer, canvas, obj);
+        layer.addElement(this);
+
+        this.renderElement();
+        layer.renderLayer();
 
         return this;
 
     } else {
 
-        throw new Error('Given type is not an allowed element. Check Martin.elements for allowed types.');
+        throw new Error('Given type is not an allowed element.');
     }
 };
 
-Martin.Element.prototype.line = function(canvas, obj) {
+Martin.Element.prototype.renderElement = function() {
+    return this[this.type]();
+};
 
-    this.context.beginPath();
+Martin.Element.prototype.imageData = function() {
 
-    this.context.moveTo(
-        canvas.normalizeX(obj.startX || 0 ),
-        canvas.normalizeY(obj.startY || 0 )
+    var context = this.layer.context,
+        obj = this.data;
+
+    context.putImageData(obj.imageData, obj.x || 0, obj.y || 0);
+
+    return this;
+};
+
+Martin.Element.prototype.line = function() {
+
+    var context = this.context,
+        obj = this.data;
+
+    context.beginPath();
+
+    context.moveTo(
+        canvas.normalizeX( obj.x || 0 ),
+        canvas.normalizeY( obj.y || 0 )
     );
 
-    this.context.lineTo(
-        canvas.normalizeX(obj.endX || canvas.width() ),
-        canvas.normalizeY(obj.endY || canvas.height() )
+    context.lineTo(
+        canvas.normalizeX( obj.height || canvas.width() ),
+        canvas.normalizeY( obj.width || canvas.height() )
     );
 
     if ( !obj.strokeWidth ) obj.strokeWidth = 1;
@@ -66,42 +81,49 @@ Martin.Element.prototype.line = function(canvas, obj) {
 
     Martin.setContext( this.context, obj );
 
-    this.context.closePath();
+    context.closePath();
 
     return this;
 
 };
 
-Martin.Element.prototype.rect = function(canvas, obj) {
+Martin.Element.prototype.rect = function() {
 
-    this.context.beginPath();
+    var base = this.base,
+        context = this.layer.context,
+        obj = this.data;
 
-    this.context.rect(
-        canvas.normalizeX( obj.offsetX || 0 ),
-        canvas.normalizeY( obj.offsetY || 0 ),
-        canvas.normalizeX( obj.width ),
-        canvas.normalizeY( obj.height )
+    context.beginPath();
+
+    context.rect(
+        base.normalizeX( obj.x || 0 ),
+        base.normalizeY( obj.y || 0 ),
+        base.normalizeX( obj.width ),
+        base.normalizeY( obj.height )
     );
 
-    Martin.setContext( this.context, obj );
+    Martin.setContext( context, obj );
 
-    this.context.closePath();
+    context.closePath();
 
     return this;
 };
 
-Martin.Element.prototype.circle = function(canvas, obj) {
+Martin.Element.prototype.circle = function() {
 
-    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
-        centerY = canvas.normalizeY( obj.offsetY || 0 );
+    var base = this.base,
+        context = this.layer.context,
+        obj = this.data,
+        centerX = base.normalizeX( obj.x || 0 ),
+        centerY = base.normalizeY( obj.y || 0 );
 
-    this.context.beginPath();
+    context.beginPath();
 
-    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
+    context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
 
-    Martin.setContext( this.context, obj );
+    Martin.setContext( context, obj );
 
-    this.context.closePath();
+    context.closePath();
 
     return this;
 
@@ -179,6 +201,45 @@ Martin.Element.prototype.polygon = function(canvas, obj) {
     return this;
 }
 
+Martin.Element.prototype.layerIndex = function() {
+    return this.layer.elements.indexOf(this);
+};
+
+Martin.Element.prototype.remove = function() {
+    this.layer.elements.splice(this.layerIndex(), 1);
+    this.base.render();
+    return this;
+};
+
+Martin.Element.prototype.bump = function(i) {
+    this.remove();
+    this.layer.elements.splice(this.layerIndex() + i, 0, this);
+    this.base.render();
+    return this;
+};
+
+Martin.Element.prototype.bumpUp = function() {
+    return this.bump(1);
+};
+
+Martin.Element.prototype.bumpDown = function() {
+    return this.bump(-1);
+};
+
+Martin.Element.prototype.bumpToTop = function() {
+    this.remove();
+    this.layer.elements.splice(this.layer.elements.length - 1, 0, this);
+    this.base.render();
+    return this;
+};
+
+Martin.Element.prototype.bumpToBottom = function() {
+    this.remove();
+    this.layer.elements.splice(0, 0, this);
+    this.base.render();
+    return this;
+};
+
 // ----- Move an element to new coordinates
 Martin.Element.prototype.moveTo = function(x, y) {
 
@@ -221,6 +282,6 @@ Martin.Element.prototype.moveTo = function(x, y) {
     drawingElements.forEach(function(el) {
         Martin.prototype[el] = function(obj) {
             return new Martin.Element(el, this, obj);
-        }
+        };
     });
 })();

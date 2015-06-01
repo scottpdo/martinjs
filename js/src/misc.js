@@ -85,6 +85,7 @@
 
 });
 
+// TODO: should return a text Element
 Martin.prototype.write = function( arg1, arg2 ) {
 
 	var text,
@@ -133,7 +134,7 @@ Martin.prototype.background = function( color ) {
 
 		bump = 1; // we bump all other layers
 
-		this.newLayer({
+		var newLayer = this.newLayer({
 			type: 'background',
 			fill: color
 		});
@@ -142,15 +143,11 @@ Martin.prototype.background = function( color ) {
 		var background = this.layers.pop(),
 			bottom = this.container.firstChild;
 
-		// reassign our layers
-		for ( var l = this.layers.length; l >= 0; l-- ) {
-
-			this.layers[l] = this.layers[l - 1] || background;
-
-		}
+		// add to the bottom of layer stack
+		this.layers.unshift(background);
 
 		this.switchToLayer(0);
-		this.container.insertBefore(background.canvas, bottom);
+		this.container.insertBefore(background, bottom);
 
 	// if we're redoing the background, just switch to that
 	// background layer and work it

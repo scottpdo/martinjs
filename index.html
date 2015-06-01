@@ -24,6 +24,12 @@
     </div>
 
     <div class="section">
+        <p>Data URL:</p>
+        <p style="height: 200px; overflow: hidden;"><a id="to-data-url-output" style="font-weight: bold; overflow: hidden; word-break: break-all;" target="_blank"></a></p>
+        <img id="to-data-url" src="docs/images/marty-full.jpg">
+    </div>
+
+    <div class="section">
         <p>New layer, draw circle on that layer</p>
         <p id="new-layer-layer-count" style="font-weight: bold;"></p>
         <img id="new-layer" src="docs/images/marty-full.jpg">
@@ -38,11 +44,18 @@
 
     <script>
 
+    Martin('to-data-url', function(canvas) {
+        document.getElementById('to-data-url-output').innerHTML = canvas.toDataURL();
+        document.getElementById('to-data-url-output').href = canvas.toDataURL();
+    });
+
     Martin('new-layer', function(canvas) {
         canvas.newLayer();
         canvas.circle({
             color: '#fff',
-            radius: 100
+            radius: 100,
+            offsetX: '50%',
+            offsetY: '50%'
         });
 
         document.getElementById('new-layer-layer-count').innerHTML = 'Layer count: ' + canvas.layers.length;
@@ -52,7 +65,9 @@
         canvas.newLayer();
         canvas.circle({
             color: '#fff',
-            radius: 100
+            radius: 100,
+            offsetX: '50%',
+            offsetY: '50%'
         });
         canvas.switchToLayer(0);
         canvas.rect({
@@ -61,7 +76,7 @@
             height: 100,
             offsetY: '50%'
         });
-        document.getElementById('switch-layer-active-layer').innerHTML = 'Current layer: Layer ' + canvas.currentLayer;
+        document.getElementById('switch-layer-active-layer').innerHTML = 'Current layer: Layer ' + canvas.currentLayerIndex;
     });
 
     </script>

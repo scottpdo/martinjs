@@ -3,12 +3,14 @@
     usage and not the public-facing API, the exception being Martin.extend.
 
     extend()
+    .render()
+    .toDataURL()
     .convertToImage()
     .normalizeX()
     .normalizeY()
     .normalizePercentX()
     .normalizePercentY()
-    .setContext()
+    setContext()
     .loop()
     .putImageData()
 */
@@ -19,6 +21,42 @@ Martin.extend = function( obj ) {
         Martin.prototype[method] = obj[method];
     }
 };
+
+// Render: looping through layers, loop through elements and render each
+Martin.prototype.render = function() {
+    this.layers.forEach(function(layer) {
+        layer.elements.forEach(function(element) {
+            element.renderElement();
+        });
+        layer.renderLayer();
+    });
+};
+
+// Return's a data URL of all the working layers
+Martin.prototype.toDataURL = function() {
+
+    var layers = this.layers,
+        scratch = document.createElement('canvas'),
+        scratchContext = scratch.getContext('2d');
+
+    scratch.width = this.width();
+    scratch.height = this.height();
+
+    // loop through layers
+    layers.forEach(function(layer, i) {
+
+        // loop through layer children
+        /* if ( layer.DOMelement.children ) {
+            Array.prototype.slice.call(layer.DOMelement.children).forEach(function(c) {
+                scratchContext.drawImage( c, 0, 0 );
+            });
+        } */
+    });
+
+    return scratch.toDataURL();
+
+};
+
 
 // Get the dataURL of the merged layers of the canvas,
 // then turn that into one image
