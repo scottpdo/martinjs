@@ -85,42 +85,6 @@
 
 });
 
-// TODO: should return a text Element
-Martin.prototype.write = function( arg1, arg2 ) {
-
-	var text,
-		obj,
-		size,
-		fontString;
-
-	if ( typeof arg1 === 'string' ) {
-		text = arg1;
-		obj = arg2;
-	} else {
-		obj = arg1;
-		text = obj.text || '';
-	}
-
-	if ( !obj ) obj = {};
-
-	size = obj.size || 16;
-
-	fontString = size + 'px ';
-	fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
-
-	this.context.font = fontString;
-	this.context.fillStyle = obj.color || '#000';
-	this.context.textBaseline = 'top';
-	this.context.textAlign = obj.align || 'left';
-	this.context.fillText(
-		text,
-		this.normalizeX(obj.offsetX || 0),
-		this.normalizeY(obj.offsetY || 0)
-	);
-
-	return this;
-};
-
 // Method for giving a canvas a background color.
 // Only target semi-transparent pixels, and use a weighted
 // average to calculate the outcome.

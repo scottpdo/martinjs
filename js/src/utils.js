@@ -24,7 +24,8 @@ Martin.extend = function( obj ) {
 
 // Render: looping through layers, loop through elements and render each
 Martin.prototype.render = function() {
-    this.layers.forEach(function(layer) {
+    this.layers.forEach(function(layer, i) {
+        layer.clearLayer();
         layer.elements.forEach(function(element) {
             element.renderElement();
         });

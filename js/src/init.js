@@ -109,8 +109,8 @@ Martin.prototype.handleLoad = function(init) {
 
     // Give that layer some image data
     var imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    new Martin.Element('imageData', this, {
-        imageData: imageData
+    new Martin.Element('image', this, {
+        original: this.original
     });
 
     // Now we are ready and can initialize
