@@ -21,6 +21,7 @@ var paths = {
         'layers',
         'elements',
         'effects',
+        'events',
         'misc'
     ],
     jsCoreDist: 'js/dist',

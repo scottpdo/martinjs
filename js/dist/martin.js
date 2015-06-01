@@ -201,27 +201,7 @@ Martin.prototype.render = function() {
 
 // Return's a data URL of all the working layers
 Martin.prototype.toDataURL = function() {
-
-    var layers = this.layers,
-        scratch = document.createElement('canvas'),
-        scratchContext = scratch.getContext('2d');
-
-    scratch.width = this.width();
-    scratch.height = this.height();
-
-    // loop through layers
-    layers.forEach(function(layer, i) {
-
-        // loop through layer children
-        /* if ( layer.DOMelement.children ) {
-            Array.prototype.slice.call(layer.DOMelement.children).forEach(function(c) {
-                scratchContext.drawImage( c, 0, 0 );
-            });
-        } */
-    });
-
-    return scratch.toDataURL();
-
+    return this.canvas.toDataURL();
 };
 
 
@@ -331,16 +311,26 @@ Martin.prototype.putImageData = function(imageData) {
 };
 
 /*
+
+    Martin.Layer constructor
+
+    Methods:
+    .getImageData()
+    .renderLayer()
+    .clearLayer()
+    .addElement()
+
+    Methods for working with Layers
+
     .newLayer()
     .duplicateLayer()
     .deleteLayer()
     .clearLayer()
     .switchToLayer()
-    .mergeLayers()
 */
 
 // ----- Layer constructor
-Martin.Layer = function(base, arg, data, elements) {
+Martin.Layer = function(base, arg) {
 
     this.base = base;
     this.canvas = document.createElement('canvas');
@@ -354,9 +344,7 @@ Martin.Layer = function(base, arg, data, elements) {
         for ( var i in arg ) this[i] = arg[i];
     }
 
-    if ( data ) this.context.putImageData( data, 0, 0 );
-
-    this.elements = [] || elements;
+    this.elements = [];
 
     return this;
 
@@ -419,7 +407,6 @@ Martin.prototype.deleteLayer = function( num ) {
 
     num = num || this.currentLayerIndex;
 
-    this.container.removeChild(this.layers[num].DOMelement);
     this.layers.splice(num, 1);
 
     return this;

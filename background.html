@@ -74,28 +74,19 @@
             color: '#fff'
         });
 
-        setTimeout(function(){
-            text.moveTo(200, 200);
-        }, 500);
+        var i = 0;
+
+        setInterval(function(){
+            i++;
+        }, 1000);
 
         square.bumpUp();
-
-        function position(element) {
-            var xPosition = 0;
-            var yPosition = 0;
-
-            while(element) {
-                xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
-                yPosition += (element.offsetTop - element.scrollTop + element.clientTop);
-                element = element.offsetParent;
-            }
-            return { x: xPosition, y: yPosition };
-        }
-
         canvas.mousemove(function(e) {
 
             var x = e.offsetX,
                 y = e.offsetY;
+
+            text.data.text = i;
             text.moveTo(x, y);
 
         }).on('click', function() {

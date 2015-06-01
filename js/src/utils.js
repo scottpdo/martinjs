@@ -35,27 +35,7 @@ Martin.prototype.render = function() {
 
 // Return's a data URL of all the working layers
 Martin.prototype.toDataURL = function() {
-
-    var layers = this.layers,
-        scratch = document.createElement('canvas'),
-        scratchContext = scratch.getContext('2d');
-
-    scratch.width = this.width();
-    scratch.height = this.height();
-
-    // loop through layers
-    layers.forEach(function(layer, i) {
-
-        // loop through layer children
-        /* if ( layer.DOMelement.children ) {
-            Array.prototype.slice.call(layer.DOMelement.children).forEach(function(c) {
-                scratchContext.drawImage( c, 0, 0 );
-            });
-        } */
-    });
-
-    return scratch.toDataURL();
-
+    return this.canvas.toDataURL();
 };
 
 
