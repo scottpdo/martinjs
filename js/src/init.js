@@ -3,7 +3,7 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-    Version: 0.1.3.1-beta
+    Version: 0.2.1-alpha
 
     ----------------------------------------
 

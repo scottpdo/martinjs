@@ -1,6 +1,6 @@
 {
   "name": "martinjs",
-  "version": "0.2.0-alpha",
+  "version": "0.2.1-alpha",
   "homepage": "http://martinjs.org",
   "authors": [
     "Scott Donaldson <scott.p.donaldson@gmail.com>"
@@ -24,6 +24,8 @@
     "docs",
     "images",
     "site",
+    "background.html",
+    "canvas.html",
     "index.html",
     "test.html",
     "thermal.html",

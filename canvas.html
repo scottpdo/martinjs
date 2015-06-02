@@ -20,13 +20,12 @@
 <body>
 
     <div class="section">
-        <p>Background</p>
-        <img id="background" src="docs/images/marty-full.jpg">
+        <canvas id="test" width="640" height="640"></canvas>
     </div>
 
     <script>
 
-    Martin('background', function(canvas) {
+    Martin('test', function(canvas) {
 
         window.canvas = canvas;
 
@@ -74,8 +73,11 @@
             color: '#fff'
         });
 
-        var fonts = ['Cooper Std', 'Times New Roman', 'Futura'],
-            i = 0;
+        var i = 0;
+
+        setInterval(function(){
+            i++;
+        }, 1000);
 
         square.bumpUp();
         canvas.mousemove(function(e) {
@@ -83,15 +85,12 @@
             var x = e.offsetX,
                 y = e.offsetY;
 
+            text.data.text = i;
             text.moveTo(x, y);
 
         }).on('click', function() {
-            // text.data.color = text.data.color === '#000' ? '#fff' : '#000';
-            text.font(fonts[i % fonts.length]);
-            i++;
+            text.data.color = text.data.color === '#000' ? '#fff' : '#000';
         });
-
-        console.log(text);
     });
 
     </script>

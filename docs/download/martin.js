@@ -3,7 +3,7 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-    Version: 0.1.3.1-beta
+    Version: 0.2.1-alpha
 
     ----------------------------------------
 
@@ -645,22 +645,88 @@ Martin.Element.prototype.text = function() {
 	var base = this.base,
         context = this.layer.context,
         obj = this.data,
-        text,
 		size,
-		fontString;
+        style,
+        font,
+        fontOutput;
 
-    text = obj.text;
-	size = obj.size || 16;
+    var clone = {};
 
-	fontString = size + 'px ';
-	fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
+    // use custom getters and setters for these properties
+    style = obj.style || '';
+    size = obj.size || '';
+    font = obj.font || '';
 
-	context.font = fontString;
+    function fontString(style, size, font) {
+        return (style ? style + ' ' : '') + (size || 16) + 'px ' + (font || 'sans-serif');
+    };
+
+    fontOutput = fontString(obj.style, obj.size, obj.font);
+
+    this.fontSize = function(size) {
+        if ( size ) {
+            this.data.size = size;
+            return size;
+        } else {
+            return this.data.size;
+        }
+    };
+
+    this.fontStyle = function(style) {
+        if ( style ) {
+            this.data.style = style;
+            return style;
+        }
+
+        return this.data.style;
+    };
+
+    this.font = function(font) {
+        if ( font ) {
+            this.data.font = font;
+            return font;
+        }
+
+        return this.data.style;
+    };
+
+    this.width = function() {
+        return context.measureText(obj.text || '').width;
+    };
+
+    Object.defineProperty(clone, 'theStyle', {
+        get: function() {
+            return style;
+        },
+        set: function(style) {
+            fontOutput = fontString(style, obj.size, obj.font);
+        }
+    });
+
+    Object.defineProperty(clone, 'theSize', {
+        get: function() {
+            return size;
+        },
+        set: function(size) {
+            fontOutput = fontString(obj.style, size, obj.font);
+        }
+    });
+
+    Object.defineProperty(clone, 'theFont', {
+        get: function() {
+            return font;
+        },
+        set: function(font) {
+            fontOutput = fontString(obj.style, obj.size, font);
+        }
+    });
+
+	context.font = fontOutput;
 	context.fillStyle = obj.color || '#000';
 	context.textBaseline = 'top';
 	context.textAlign = obj.align || 'left';
 	context.fillText(
-		text,
+		obj.text || '',
 		base.normalizeX(obj.x || 0),
 		base.normalizeY(obj.y || 0)
 	);
@@ -1077,19 +1143,36 @@ Martin.prototype.blur = function( radius, all ) {
 };
 
 (function(){
-    var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave'];
+    var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mousedown', 'mouseup'];
 
     events.forEach(function(evt){
         Martin.prototype[evt] = function(cb) {
-            this.canvas.addEventListener(evt, cb);
+
+            var canvas = this;
+
+            function callback(e) {
+                cb(e);
+                canvas.render();
+            }
+
+            this.canvas.addEventListener(evt, callback);
             return this;
         };
     });
 
     Martin.prototype.on = function(evt, cb) {
-        if ( events.indexOf(evt) > -1 ) {
-            this.canvas.addEventListener(evt, cb);
+
+        var canvas = this;
+
+        function callback(e) {
+            cb(e);
+            canvas.render();
         }
+
+        if ( events.indexOf(evt) > -1 ) {
+            this.canvas.addEventListener(evt, callback);
+        }
+        
         return this;
     };
 })();
