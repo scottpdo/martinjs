@@ -46,7 +46,10 @@ Martin.Layer.prototype.getImageData = function() {
 Martin.Layer.prototype.renderLayer = function() {
     var base = this.base,
         imageData = this.getImageData();
-    base.context.drawImage( this.canvas, 0, 0 );
+    // only draw if there is a context for the base --
+    // if the <img> or <canvas> hasn't fully initialized
+    // this won't run
+    if ( base.context ) base.context.drawImage( this.canvas, 0, 0 );
 };
 
 Martin.Layer.prototype.clearLayer = function() {

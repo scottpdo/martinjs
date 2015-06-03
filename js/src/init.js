@@ -3,20 +3,18 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-    Version: 0.2.1-alpha
 
     ----------------------------------------
 
     MARTIN
-    _version
     .makeCanvas()
     .handleLoad()
+    _version
 */
 
 // The great initializer.
-window.Martin = function( id, init ) {
-
-    if ( !(this instanceof Martin) ) return new Martin( id, init );
+window.Martin = function( id ) {
+    if ( !(this instanceof Martin) ) return new Martin( id );
 
     // Set the original element.
     this.original = document.getElementById( id );
@@ -27,15 +25,12 @@ window.Martin = function( id, init ) {
     }
 
     // Now prepare yourself...
-    var callback = this.handleLoad;
-    this.makeCanvas(callback.bind(this), init);
+    return this.makeCanvas();
 
 };
 
-Martin._version = '0.2.0-rc.1';
-
 // Convert an image to a canvas or just return the canvas.
-Martin.prototype.makeCanvas = function(callback, init) {
+Martin.prototype.makeCanvas = function() {
 
     if ( this.original.tagName === 'IMG' ) {
 
@@ -57,7 +52,7 @@ Martin.prototype.makeCanvas = function(callback, init) {
             _this.canvas = canvas;
             _this.context = context;
 
-            return callback(init);
+            return _this;
         };
 
         // if loaded, return
@@ -70,7 +65,8 @@ Martin.prototype.makeCanvas = function(callback, init) {
 
         this.canvas = this.original;
         this.context = this.original.getContext('2d');
-        return callback(init);
+
+        return _this;
 
     }
 };
@@ -117,3 +113,5 @@ Martin.prototype.handleLoad = function(init) {
     return init(this);
 
 };
+
+Martin._version = '0.2.2-alpha';

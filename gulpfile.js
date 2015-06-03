@@ -1,4 +1,7 @@
-var gulp = require('gulp'),
+var VERSION = '0.2.2-alpha';
+
+var fs = require('fs'),
+    gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     concat = require('gulp-concat'),
     awspublish = require('gulp-awspublish'),
@@ -8,7 +11,16 @@ var gulp = require('gulp'),
 var reload = browserSync.reload;
 
 // ----- Config
-var aws = require('./aws.json');
+var bower = require('./bower.json'),
+    aws = require('./aws.json');
+
+function writeBowerVersion() {
+    bower.version = VERSION;
+    fs.writeFile('./bower.json', JSON.stringify(bower, null, '  '), function(err, data) {
+        if (err) return console.log(err);
+        console.log('Wrote version to bower.json');
+    });
+}
 
 var jsPrefix = 'js/src/';
 
@@ -33,15 +45,44 @@ paths.jsCoreIn.forEach(function(path, i) {
     paths.jsCoreIn[i] = jsPrefix + paths.jsCoreIn[i] + '.js';
 });
 
-function fullAndMin(dest) {
-    gulp.src( paths.jsCoreIn )
-        .pipe(concat('martin.js'))
-        .pipe(gulp.dest( dest ));
+function writeVersion(callback) {
 
-    gulp.src( paths.jsCoreIn )
-        .pipe(concat('martin.min.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest( dest ));
+    writeBowerVersion();
+
+    var init = './js/src/init.js';
+
+    fs.readFile(init, 'utf8', function read(err, data) {
+
+        var lines = data.split('\n'),
+            versionString = 'Martin._version = ';
+        lines.forEach(function(line, i) {
+            if ( line.indexOf(versionString) > -1 ) {
+                lines.splice(i, 1, versionString + "'" + VERSION + "'" + ';');
+            }
+        });
+
+        fs.writeFile(init, lines.join('\n'), function(err, data) {
+            if (err) return console.log(err);
+            console.log('Wrote version to init.js');
+            callback();
+        });
+    });
+}
+
+function fullAndMin(dest) {
+
+    function processFiles() {
+        gulp.src( paths.jsCoreIn )
+            .pipe(concat('martin.js'))
+            .pipe(gulp.dest( dest ));
+
+        gulp.src( paths.jsCoreIn )
+            .pipe(concat('martin.min.js'))
+            .pipe(uglify())
+            .pipe(gulp.dest( dest ));
+    }
+
+    writeVersion(processFiles);
 }
 
 gulp.task('js', function() {
