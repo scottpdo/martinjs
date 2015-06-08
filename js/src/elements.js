@@ -34,6 +34,8 @@ Martin.Element = function(type, canvas, obj) {
 
         layer.addElement(this);
 
+        this.base.render();
+
         return this;
 
     } else {
