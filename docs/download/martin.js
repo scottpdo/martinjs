@@ -63,6 +63,8 @@ Martin.prototype.makeCanvas = function() {
 
     }
 
+    this.render();
+
     return this;
 };
 
@@ -425,6 +427,8 @@ Martin.Element = function(type, canvas, obj) {
         this.layer = layer;
 
         layer.addElement(this);
+
+        this.base.render();
 
         return this;
 

@@ -63,6 +63,8 @@ Martin.prototype.makeCanvas = function() {
 
     }
 
+    this.render();
+
     return this;
 };
 
