@@ -42,42 +42,85 @@
         <img id="switch-layer" src="docs/images/marty-full.jpg">
     </div>
 
+    <div class="section">
+        <p>Draw (bright) yellow and blue rectangles on base layer, desaturate to gray scale. Create new layer, draw (bright) red circle, slightly desaturate.</p>
+        <img id="desaturate" src="docs/images/marty-full.jpg">
+    </div>
+
+    <div class="section">
+        <p>Blur base layer slightly. Create new layer, draw red circle, blur heavily.</p>
+        <img id="blur" src="docs/images/marty-full.jpg">
+    </div>
+
     <script>
 
-    Martin('to-data-url', function(canvas) {
-        document.getElementById('to-data-url-output').innerHTML = canvas.toDataURL();
-        document.getElementById('to-data-url-output').href = canvas.toDataURL();
+    var dataURL = Martin('to-data-url');
+    document.getElementById('to-data-url-output').innerHTML = dataURL.toDataURL();
+    document.getElementById('to-data-url-output').href = dataURL.toDataURL();
+
+    var newLayer = Martin('new-layer');
+    newLayer.newLayer();
+    newLayer.circle({
+        color: '#fff',
+        radius: 100,
+        x: '50%',
+        y: '50%'
     });
 
-    Martin('new-layer', function(canvas) {
-        canvas.newLayer();
-        canvas.circle({
-            color: '#fff',
-            radius: 100,
-            offsetX: '50%',
-            offsetY: '50%'
-        });
+    document.getElementById('new-layer-layer-count').innerHTML = 'Layer count: ' + newLayer.layers.length;
 
-        document.getElementById('new-layer-layer-count').innerHTML = 'Layer count: ' + canvas.layers.length;
+    var switchLayer = Martin('switch-layer');
+    switchLayer.newLayer();
+    switchLayer.circle({
+        color: '#fff',
+        radius: 100,
+        x: '50%',
+        y: '50%'
     });
+    switchLayer.switchToLayer(0);
+    switchLayer.rect({
+        color: '#f00',
+        width: switchLayer.width(),
+        height: 100,
+        y: '50%'
+    });
+    document.getElementById('switch-layer-active-layer').innerHTML = 'Current layer: Layer ' + switchLayer.currentLayerIndex;
 
-    Martin('switch-layer', function(canvas) {
-        canvas.newLayer();
-        canvas.circle({
-            color: '#fff',
-            radius: 100,
-            offsetX: '50%',
-            offsetY: '50%'
-        });
-        canvas.switchToLayer(0);
-        canvas.rect({
-            color: '#f00',
-            width: canvas.width(),
-            height: 100,
-            offsetY: '50%'
-        });
-        document.getElementById('switch-layer-active-layer').innerHTML = 'Current layer: Layer ' + canvas.currentLayerIndex;
+    var desaturate = Martin('desaturate');
+    desaturate.rect({
+        x: 10,
+        y: 10,
+        width: '50%',
+        height: '25%',
+        color: '#ff0'
     });
+    desaturate.rect({
+        x: 40,
+        y: 40,
+        width: '50%',
+        height: '25%',
+        color: '#00f'
+    });
+    desaturate.desaturate(100);
+    desaturate.newLayer();
+    desaturate.circle({
+        x: '50%',
+        y: '50%',
+        radius: 120,
+        color: '#f00'
+    });
+    desaturate.desaturate(40);
+
+    var blur = Martin('blur');
+    blur.blur(6);
+    blur.newLayer();
+    blur.circle({
+        x: '50%',
+        y: '50%',
+        radius: 120,
+        color: '#f00'
+    });
+    blur.blur(50);
 
     </script>
 </body>

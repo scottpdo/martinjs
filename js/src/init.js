@@ -51,10 +51,11 @@ Martin.prototype.makeCanvas = function() {
         original.parentNode.removeChild( original );
 
         // Give that layer some image data
-        var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
         new Martin.Element('image', this, {
             original: original
         });
+
+        original.onload = this.render.bind(this);
 
     } else if ( this.original.tagName === 'CANVAS' ) {
 

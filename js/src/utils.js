@@ -29,6 +29,9 @@ Martin.prototype.render = function() {
         layer.elements.forEach(function(element) {
             element.renderElement();
         });
+        layer.effects.forEach(function(effect) {
+            effect.renderEffect();
+        });
         layer.renderLayer();
     });
 };
@@ -90,56 +93,4 @@ Martin.setContext = function( context, obj ) {
 
     context.restore();
 
-};
-
-// Loop through the image data
-Martin.prototype.loop = function(cb, put) {
-
-    var imageData = this.context.getImageData( 0, 0, this.width(), this.height() ),
-        pixels = imageData.data,
-        len = pixels.length,
-        n,
-        x,
-        y,
-        r, g, b, a,
-        pixel,
-        output;
-
-    for ( var i = 0; i < len; i += 4 ) {
-
-        // xy coordinates
-        n = i / 4;
-        x = n % this.width();
-        y = this.height() - Math.floor(n / this.width());
-
-        // rgba values
-        r = pixels[i];
-        g = pixels[i + 1];
-        b = pixels[i + 2];
-        a = pixels[i + 3];
-
-        // pass an object corresponding to the pixel to the callback
-        pixel = { r: r, g: g, b: b, a: a };
-
-        // execute the callback within the context of this instance
-        output = cb.call( this, x, y, pixel );
-
-        // reassign the actual rgba values of the pixel based on the output from the loop
-        pixels[i] = output.r;
-        pixels[i + 1] = output.g;
-        pixels[i + 2] = output.b;
-        pixels[i + 3] = output.a;
-
-    }
-
-    // explicitly declare if image data from callback is not to be used
-    if ( put !== false ) this.context.putImageData( imageData, 0, 0 );
-
-    return this;
-};
-
-// Simple shell for putting image data
-Martin.prototype.putImageData = function(imageData) {
-    this.context.putImageData( imageData, 0, 0 );
-    return this;
 };
