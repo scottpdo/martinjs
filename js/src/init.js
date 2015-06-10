@@ -8,21 +8,16 @@
 
     MARTIN
     .makeCanvas()
-    .handleLoad()
     _version
 */
 
 // The great initializer.
 window.Martin = function( id ) {
+
     if ( !(this instanceof Martin) ) return new Martin( id );
 
-    // Set the original element.
-    this.original = document.getElementById( id );
-
-    if ( !this.original || !id ) {
-
-        throw new Error('Must provide a <canvas> or <img> element.');
-    }
+    // Set the original element, if there is one
+    this.original = document.getElementById( id ) || null;
 
     // Now prepare yourself...
     return this.makeCanvas();
@@ -38,32 +33,40 @@ Martin.prototype.makeCanvas = function() {
     // Create an empty layer
     this.newLayer();
 
-    if ( this.original.tagName === 'IMG' ) {
+    if ( this.original ) {
 
-        var canvas = this.canvas,
-            context = this.context,
-            original = this.original;
+        if ( this.original.tagName === 'IMG' ) {
 
-        canvas.width = original.naturalWidth;
-        canvas.height = original.naturalHeight;
+            var canvas = this.canvas,
+                context = this.context,
+                original = this.original;
 
-        original.parentNode.insertBefore( canvas, original );
-        original.parentNode.removeChild( original );
+            function d() {
 
-        // Give that layer some image data
-        new Martin.Element('image', this, {
-            original: original
-        });
+                canvas.width = original.naturalWidth;
+                canvas.height = original.naturalHeight;
 
-        original.onload = this.render.bind(this);
+                original.parentNode.insertBefore( canvas, original );
+                original.parentNode.removeChild( original );
 
-    } else if ( this.original.tagName === 'CANVAS' ) {
+                // Give that layer some image data
+                new Martin.Element('image', this, {
+                    original: original
+                });
+            }
 
-        this.canvas = this.original;
-        this.context = this.original.getContext('2d');
+            original.onload = d.bind(this);
+            if ( original.complete ) d();
 
+        } else if ( this.original.tagName === 'CANVAS' ) {
+
+            this.canvas = this.original;
+            this.context = this.original.getContext('2d');
+        }
     }
 
+    // only render and execute callback immediately
+    // if the original is not an image
     this.render();
 
     return this;
@@ -71,4 +74,4 @@ Martin.prototype.makeCanvas = function() {
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.2-alpha';
+Martin._version = '0.2.3-alpha';

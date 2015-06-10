@@ -3,9 +3,7 @@
 
 	.width()
 	.height()
-	.write()
 	.background()
-	.gradient()
 */
 
 // Set or change dimensions.

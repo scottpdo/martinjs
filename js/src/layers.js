@@ -32,9 +32,6 @@ Martin.Layer = function(base, arg) {
         for ( var i in arg ) this[i] = arg[i];
     }
 
-    this.elements = [];
-    this.effects = [];
-
     return this;
 
 };
@@ -89,7 +86,7 @@ Martin.Layer.prototype.loop = function(cb, put) {
 };
 
 Martin.Layer.prototype.getImageData = function() {
-    var imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    var imageData = this.context ? this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) : null;
     return imageData;
 };
 
@@ -114,7 +111,11 @@ Martin.Layer.prototype.clearLayer = function() {
 
 // ----- Add an element to a layer
 Martin.Layer.prototype.addElement = function(element) {
-    this.elements.push(element);
+    if (this.elements) {
+        this.elements.push(element);
+    } else {
+        this.elements = [element];
+    }
     return element;
 };
 

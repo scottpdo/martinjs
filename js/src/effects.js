@@ -1,6 +1,6 @@
 /*
 
-    Martin.Layer constructor
+    Martin.Effect constructor
 
     .desaturate()
     .saturate()
@@ -41,10 +41,19 @@ Martin.Effect = function(type, canvas, amount) {
     }
 };
 
-Martin.Layer.prototype.addEffect = function(effect) {
-    this.effects.push(effect);
-    return effect;
-};
+// Add an effect to either an element or a layer
+(function() {
+    var addEffect = function(effect) {
+        if (this.effects) {
+            this.effects.push(effect);
+        } else {
+            this.effects = [effect];
+        }
+        return effect;
+    };
+    Martin.Element.prototype.addEffect = addEffect;
+    Martin.Layer.prototype.addEffect = addEffect;
+})();
 
 Martin.Effect.prototype.renderEffect = function() {
     return this[this.type]();

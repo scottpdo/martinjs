@@ -15,32 +15,50 @@
     .putImageData()
 */
 
+Martin.utils = {};
+
 // Extend Martin with plugins, if you want
-Martin.extend = function( obj ) {
+Martin.utils.extend = function( obj ) {
     for ( var method in obj ) {
         Martin.prototype[method] = obj[method];
     }
 };
 
-// Render: looping through layers, loop through elements and render each
-Martin.prototype.render = function() {
-    this.layers.forEach(function(layer, i) {
+Martin.extend = Martin.utils.extend;
+
+Martin.utils.forEach = function(arr, cb) {
+    if (arr) {
+        arr.forEach(cb);
+    }
+};
+
+Martin.prototype.remove = function() {
+    var canvas = this.canvas,
+        parent = canvas.parentNode;
+    parent.removeChild(this.canvas);
+};
+
+// Render: looping through layers, loop through elements
+// and render each (with optional callback)
+Martin.prototype.render = function(cb) {
+    Martin.utils.forEach(this.layers, function(layer, i) {
         layer.clearLayer();
-        layer.elements.forEach(function(element) {
+        Martin.utils.forEach(layer.elements, function(element) {
             element.renderElement();
         });
-        layer.effects.forEach(function(effect) {
+        Martin.utils.forEach(layer.effects, function(effect) {
             effect.renderEffect();
         });
         layer.renderLayer();
     });
+
+    if (cb) cb();
 };
 
 // Return's a data URL of all the working layers
 Martin.prototype.toDataURL = function() {
     return this.canvas.toDataURL();
 };
-
 
 // Get the dataURL of the merged layers of the canvas,
 // then turn that into one image

@@ -8,21 +8,16 @@
 
     MARTIN
     .makeCanvas()
-    .handleLoad()
     _version
 */
 
 // The great initializer.
 window.Martin = function( id ) {
+
     if ( !(this instanceof Martin) ) return new Martin( id );
 
-    // Set the original element.
-    this.original = document.getElementById( id );
-
-    if ( !this.original || !id ) {
-
-        throw new Error('Must provide a <canvas> or <img> element.');
-    }
+    // Set the original element, if there is one
+    this.original = document.getElementById( id ) || null;
 
     // Now prepare yourself...
     return this.makeCanvas();
@@ -38,32 +33,40 @@ Martin.prototype.makeCanvas = function() {
     // Create an empty layer
     this.newLayer();
 
-    if ( this.original.tagName === 'IMG' ) {
+    if ( this.original ) {
 
-        var canvas = this.canvas,
-            context = this.context,
-            original = this.original;
+        if ( this.original.tagName === 'IMG' ) {
 
-        canvas.width = original.naturalWidth;
-        canvas.height = original.naturalHeight;
+            var canvas = this.canvas,
+                context = this.context,
+                original = this.original;
 
-        original.parentNode.insertBefore( canvas, original );
-        original.parentNode.removeChild( original );
+            function d() {
 
-        // Give that layer some image data
-        new Martin.Element('image', this, {
-            original: original
-        });
+                canvas.width = original.naturalWidth;
+                canvas.height = original.naturalHeight;
 
-        original.onload = this.render.bind(this);
+                original.parentNode.insertBefore( canvas, original );
+                original.parentNode.removeChild( original );
 
-    } else if ( this.original.tagName === 'CANVAS' ) {
+                // Give that layer some image data
+                new Martin.Element('image', this, {
+                    original: original
+                });
+            }
 
-        this.canvas = this.original;
-        this.context = this.original.getContext('2d');
+            original.onload = d.bind(this);
+            if ( original.complete ) d();
 
+        } else if ( this.original.tagName === 'CANVAS' ) {
+
+            this.canvas = this.original;
+            this.context = this.original.getContext('2d');
+        }
     }
 
+    // only render and execute callback immediately
+    // if the original is not an image
     this.render();
 
     return this;
@@ -71,7 +74,7 @@ Martin.prototype.makeCanvas = function() {
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.2-alpha';
+Martin._version = '0.2.3-alpha';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -136,32 +139,50 @@ Martin.hexToRGB = function( hex ) {
     .putImageData()
 */
 
+Martin.utils = {};
+
 // Extend Martin with plugins, if you want
-Martin.extend = function( obj ) {
+Martin.utils.extend = function( obj ) {
     for ( var method in obj ) {
         Martin.prototype[method] = obj[method];
     }
 };
 
-// Render: looping through layers, loop through elements and render each
-Martin.prototype.render = function() {
-    this.layers.forEach(function(layer, i) {
+Martin.extend = Martin.utils.extend;
+
+Martin.utils.forEach = function(arr, cb) {
+    if (arr) {
+        arr.forEach(cb);
+    }
+};
+
+Martin.prototype.remove = function() {
+    var canvas = this.canvas,
+        parent = canvas.parentNode;
+    parent.removeChild(this.canvas);
+};
+
+// Render: looping through layers, loop through elements
+// and render each (with optional callback)
+Martin.prototype.render = function(cb) {
+    Martin.utils.forEach(this.layers, function(layer, i) {
         layer.clearLayer();
-        layer.elements.forEach(function(element) {
+        Martin.utils.forEach(layer.elements, function(element) {
             element.renderElement();
         });
-        layer.effects.forEach(function(effect) {
+        Martin.utils.forEach(layer.effects, function(effect) {
             effect.renderEffect();
         });
         layer.renderLayer();
     });
+
+    if (cb) cb();
 };
 
 // Return's a data URL of all the working layers
 Martin.prototype.toDataURL = function() {
     return this.canvas.toDataURL();
 };
-
 
 // Get the dataURL of the merged layers of the canvas,
 // then turn that into one image
@@ -250,9 +271,6 @@ Martin.Layer = function(base, arg) {
         for ( var i in arg ) this[i] = arg[i];
     }
 
-    this.elements = [];
-    this.effects = [];
-
     return this;
 
 };
@@ -307,7 +325,7 @@ Martin.Layer.prototype.loop = function(cb, put) {
 };
 
 Martin.Layer.prototype.getImageData = function() {
-    var imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    var imageData = this.context ? this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) : null;
     return imageData;
 };
 
@@ -332,7 +350,11 @@ Martin.Layer.prototype.clearLayer = function() {
 
 // ----- Add an element to a layer
 Martin.Layer.prototype.addElement = function(element) {
-    this.elements.push(element);
+    if (this.elements) {
+        this.elements.push(element);
+    } else {
+        this.elements = [element];
+    }
     return element;
 };
 
@@ -447,7 +469,15 @@ Martin.Element = function(type, canvas, obj) {
 };
 
 Martin.Element.prototype.renderElement = function() {
-    return this[this.type]();
+    // render the element
+    this[this.type]();
+    // apply any effects
+    if ( this.effects ) {
+        this.effects.forEach(function(effect) {
+            // TODO
+        });
+    }
+    return this;
 };
 
 Martin.Element.prototype.image = function() {
@@ -788,7 +818,7 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
 /*
 
-    Martin.Layer constructor
+    Martin.Effect constructor
 
     .desaturate()
     .saturate()
@@ -829,10 +859,19 @@ Martin.Effect = function(type, canvas, amount) {
     }
 };
 
-Martin.Layer.prototype.addEffect = function(effect) {
-    this.effects.push(effect);
-    return effect;
-};
+// Add an effect to either an element or a layer
+(function() {
+    var addEffect = function(effect) {
+        if (this.effects) {
+            this.effects.push(effect);
+        } else {
+            this.effects = [effect];
+        }
+        return effect;
+    };
+    Martin.Element.prototype.addEffect = addEffect;
+    Martin.Layer.prototype.addEffect = addEffect;
+})();
 
 Martin.Effect.prototype.renderEffect = function() {
     return this[this.type]();
@@ -1152,9 +1191,7 @@ Martin.Effect.prototype.blur = function( amt ) {
 
 	.width()
 	.height()
-	.write()
 	.background()
-	.gradient()
 */
 
 // Set or change dimensions.

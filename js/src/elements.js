@@ -45,7 +45,15 @@ Martin.Element = function(type, canvas, obj) {
 };
 
 Martin.Element.prototype.renderElement = function() {
-    return this[this.type]();
+    // render the element
+    this[this.type]();
+    // apply any effects
+    if ( this.effects ) {
+        this.effects.forEach(function(effect) {
+            // TODO
+        });
+    }
+    return this;
 };
 
 Martin.Element.prototype.image = function() {

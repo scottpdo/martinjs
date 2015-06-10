@@ -1,4 +1,4 @@
-var VERSION = '0.2.2-alpha';
+var VERSION = '0.2.3-alpha';
 
 var fs = require('fs'),
     gulp = require('gulp'),
@@ -27,7 +27,6 @@ var jsPrefix = 'js/src/';
 var paths = {
     jsCoreIn: [
         'init',
-        'constants',
         'helpers',
         'utils',
         'layers',
@@ -69,6 +68,39 @@ function writeVersion(callback) {
     });
 }
 
+function writeTestSource() {
+    var test = './test/index.html';
+    fs.readFile(test, 'utf8', function read(err, data) {
+
+        data = data.split('\n');
+
+        var start = '<!-- start JS core files -->',
+            end = '<!-- end JS core files -->',
+            startLine,
+            endLine,
+            newLines = [];
+
+        data.forEach(function(line, i) {
+            if ( line.indexOf(start) > -1 ) { startLine = i; }
+            if ( line.indexOf(end) > -1 ) { endLine = i; }
+        });
+
+        paths.jsCoreIn.forEach(function(path) {
+            newLines.push('<script src="../' + path + '"></script>');
+        });
+
+        newLines = newLines.join('\n');
+
+        data.splice(startLine + 1, endLine - startLine - 1, newLines);
+        data = data.join('\n');
+
+        fs.writeFile(test, data, function(err, data) {
+            if (err) return console.log(err);
+            console.log('Wrote core JS files to the test spec.');
+        });
+    });
+}
+
 function fullAndMin(dest) {
 
     function processFiles() {
@@ -83,6 +115,7 @@ function fullAndMin(dest) {
     }
 
     writeVersion(processFiles);
+    writeTestSource();
 }
 
 gulp.task('js', function() {
