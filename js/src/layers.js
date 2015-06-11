@@ -14,7 +14,7 @@
     .duplicateLayer()
     .deleteLayer()
     .clearLayer()
-    .switchToLayer()
+    .layer()
 */
 
 // ----- Layer constructor
@@ -166,19 +166,20 @@ Martin.prototype.clearLayer = function(which) {
 
     var original = this.currentLayerIndex;
 
-    if ( which ) this.switchToLayer(which);
+    if ( which ) this.layer(which);
 
     this.context.clearRect(0, 0, this.width(), this.height());
 
-    this.switchToLayer(original);
+    this.layer(original);
 };
 
-Martin.prototype.switchToLayer = function( num ) {
+// Switch the context and return the requested later
+Martin.prototype.layer = function( num ) {
 
     this.context = this.layers[num || 0].context;
     this.currentLayer = this.layers[num || 0];
     this.currentLayerIndex = num || 0;
 
-    return this;
+    return this.layers[num || 0];
 
 };

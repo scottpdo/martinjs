@@ -4,31 +4,31 @@
     events.forEach(function(evt){
         Martin.prototype[evt] = function(cb) {
 
-            var canvas = this;
-
             function callback(e) {
                 cb(e);
-                canvas.render();
+                this.render();
             }
 
-            this.canvas.addEventListener(evt, callback);
+            this.canvas.addEventListener(evt, callback.bind(this));
             return this;
         };
     });
 
     Martin.prototype.on = function(evt, cb) {
 
-        var canvas = this;
+        evt = evt.split(' ');
 
         function callback(e) {
             cb(e);
-            canvas.render();
+            this.render();
         }
 
-        if ( events.indexOf(evt) > -1 ) {
-            this.canvas.addEventListener(evt, callback);
-        }
-        
+        evt.forEach(function(ev) {
+            if ( events.indexOf(ev) > -1 ) {
+                this.canvas.addEventListener(ev, callback.bind(this));
+            }
+        }, this);
+
         return this;
     };
 })();

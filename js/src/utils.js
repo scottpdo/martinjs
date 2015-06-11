@@ -36,6 +36,7 @@ Martin.prototype.remove = function() {
     var canvas = this.canvas,
         parent = canvas.parentNode;
     parent.removeChild(this.canvas);
+    return this;
 };
 
 // Render: looping through layers, loop through elements

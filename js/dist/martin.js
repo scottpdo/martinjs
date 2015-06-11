@@ -46,6 +46,9 @@ Martin.prototype.makeCanvas = function() {
                 canvas.width = original.naturalWidth;
                 canvas.height = original.naturalHeight;
 
+                this.width(canvas.width);
+                this.height(canvas.height);
+
                 original.parentNode.insertBefore( canvas, original );
                 original.parentNode.removeChild( original );
 
@@ -55,8 +58,10 @@ Martin.prototype.makeCanvas = function() {
                 });
             }
 
+            // This should only fire once! Fire if the image is complete,
+            // or add a handler for once it has finished loading.
+            if ( original.complete ) return d.call(this);
             original.onload = d.bind(this);
-            if ( original.complete ) d();
 
         } else if ( this.original.tagName === 'CANVAS' ) {
 
@@ -160,6 +165,7 @@ Martin.prototype.remove = function() {
     var canvas = this.canvas,
         parent = canvas.parentNode;
     parent.removeChild(this.canvas);
+    return this;
 };
 
 // Render: looping through layers, loop through elements
@@ -253,7 +259,7 @@ Martin.setContext = function( context, obj ) {
     .duplicateLayer()
     .deleteLayer()
     .clearLayer()
-    .switchToLayer()
+    .layer()
 */
 
 // ----- Layer constructor
@@ -405,20 +411,21 @@ Martin.prototype.clearLayer = function(which) {
 
     var original = this.currentLayerIndex;
 
-    if ( which ) this.switchToLayer(which);
+    if ( which ) this.layer(which);
 
     this.context.clearRect(0, 0, this.width(), this.height());
 
-    this.switchToLayer(original);
+    this.layer(original);
 };
 
-Martin.prototype.switchToLayer = function( num ) {
+// Switch the context and return the requested later
+Martin.prototype.layer = function( num ) {
 
     this.context = this.layers[num || 0].context;
     this.currentLayer = this.layers[num || 0];
     this.currentLayerIndex = num || 0;
 
-    return this;
+    return this.layers[num || 0];
 
 };
 
@@ -427,17 +434,26 @@ Martin.prototype.switchToLayer = function( num ) {
     Martin.Element constructor
 
     Elements:
+    .background()
     .line()
     .rect()
     .circle()
     .ellipse()
     .polygon()
+    .text()
 
     Element methods:
+    .layerIndex()
+    .remove()
+    .bump()
+    .bumpUp()
+    .bumpDown()
+    .bumpToTop()
+    .bumpToBottom()
     .moveTo()
 
     Finally:
-    - Loop through drawing methods and
+    - Loop through Elements and
       create a corresponding method on the main Martin instance
 */
 
@@ -457,6 +473,9 @@ Martin.Element = function(type, canvas, obj) {
         this.layer = layer;
 
         layer.addElement(this);
+
+        // automatically push backgrounds to the bottom of the layer
+        if ( this.type === 'background' ) this.bumpToBottom();
 
         this.base.render();
 
@@ -489,6 +508,20 @@ Martin.Element.prototype.image = function() {
 
     return this;
 };
+
+Martin.Element.prototype.background = function() {
+
+    var base = this.base,
+        context = this.layer.context,
+        color = typeof this.data === 'string' ? this.data : this.data.color,
+        obj = {};
+
+    obj.color = color;
+    this.data = obj;
+
+	return this.rect();
+};
+
 
 Martin.Element.prototype.line = function() {
 
@@ -530,8 +563,8 @@ Martin.Element.prototype.rect = function() {
     context.rect(
         base.normalizeX( obj.x || 0 ),
         base.normalizeY( obj.y || 0 ),
-        base.normalizeX( obj.width ),
-        base.normalizeY( obj.height )
+        base.normalizeX( obj.width || this.base.width() ),
+        base.normalizeY( obj.height || this.base.height() )
     );
 
     Martin.setContext( context, obj );
@@ -806,10 +839,10 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
 };
 
-(function(){
-    var drawingElements = ['line', 'rect', 'circle', 'ellipse', 'polygon', 'text'];
+(function() {
+    var elements = ['background', 'line', 'rect', 'circle', 'ellipse', 'polygon', 'text'];
 
-    drawingElements.forEach(function(el) {
+    elements.forEach(function(el) {
         Martin.prototype[el] = function(obj) {
             return new Martin.Element(el, this, obj);
         };
@@ -843,6 +876,7 @@ Martin.Effect = function(type, canvas, amount) {
 
         this.base = canvas;
         this.type = type;
+        this.inverse = false; // some effects are just the inverse of another
         this.layer = layer;
 
         this.amount = amount;
@@ -859,7 +893,7 @@ Martin.Effect = function(type, canvas, amount) {
     }
 };
 
-// Add an effect to either an element or a layer
+// Add an effect
 (function() {
     var addEffect = function(effect) {
         if (this.effects) {
@@ -869,7 +903,8 @@ Martin.Effect = function(type, canvas, amount) {
         }
         return effect;
     };
-    Martin.Element.prototype.addEffect = addEffect;
+    // TODO: effect can be added to element
+    // Martin.Element.prototype.addEffect = addEffect;
     Martin.Layer.prototype.addEffect = addEffect;
 })();
 
@@ -877,11 +912,19 @@ Martin.Effect.prototype.renderEffect = function() {
     return this[this.type]();
 };
 
+// for inverse effects
+Martin.Effect.prototype.invert = function(inverse) {
+    this.inverse = true;
+    return this[inverse]();
+};
+
 // Desaturate
-Martin.Effect.prototype.desaturate = function( amt ) {
+Martin.Effect.prototype.desaturate = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
+
+    if ( this.inverse ) amt *= -1;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -907,16 +950,18 @@ Martin.Effect.prototype.desaturate = function( amt ) {
     return this;
 };
 
-Martin.Effect.prototype.saturate = function( amt ) {
-    return this.desaturate( -amt );
+Martin.Effect.prototype.saturate = function() {
+    return this.invert('desaturate');
 };
 
 // Lighten and darken. (Darken just returns the opposite of lighten).
 // Takes an input from 0 to 100. Higher values return pure white or black.
-Martin.Effect.prototype.lighten = function( amt ) {
+Martin.Effect.prototype.lighten = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
+
+    if ( this.inverse ) amt *= -1;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -933,15 +978,15 @@ Martin.Effect.prototype.lighten = function( amt ) {
     return this;
 };
 
-Martin.Effect.prototype.darken = function( amt ) {
-    return this.lighten( -amt );
+Martin.Effect.prototype.darken = function() {
+    return this.invert('lighten');
 };
 
 // Fade uniform
-Martin.Effect.prototype.opacity = function( amt ) {
+Martin.Effect.prototype.opacity = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -971,12 +1016,14 @@ Martin._BlurStack.mul_shift_table = function(i) {
 };
 
 // And, what we've all been waiting for:
-Martin.Effect.prototype.blur = function( amt ) {
+Martin.Effect.prototype.blur = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
 
     if ( isNaN(amt) || amt < 1 ) return this;
+    // Round to nearest pixel
+    amt = Math.round(amt);
 
     var iterations = 2,			// increase for smoother blurring
         width = this.base.width(),
@@ -1141,6 +1188,20 @@ Martin.Effect.prototype.blur = function( amt ) {
     return this;
 };
 
+// Adjust the amount of an Effect
+Martin.Effect.prototype.increase = function(amt) {
+
+    if ( this.inverse ) amt = -(amt || 1);
+
+    this.amount += amt || 1;
+    this.base.render();
+    return this;
+};
+
+Martin.Effect.prototype.decrease = function(amt) {
+    return this.increase(-amt);
+};
+
 (function(){
     var effects = ['desaturate', 'saturate', 'lighten', 'darken', 'opacity', 'blur'];
 
@@ -1157,31 +1218,31 @@ Martin.Effect.prototype.blur = function( amt ) {
     events.forEach(function(evt){
         Martin.prototype[evt] = function(cb) {
 
-            var canvas = this;
-
             function callback(e) {
                 cb(e);
-                canvas.render();
+                this.render();
             }
 
-            this.canvas.addEventListener(evt, callback);
+            this.canvas.addEventListener(evt, callback.bind(this));
             return this;
         };
     });
 
     Martin.prototype.on = function(evt, cb) {
 
-        var canvas = this;
+        evt = evt.split(' ');
 
         function callback(e) {
             cb(e);
-            canvas.render();
+            this.render();
         }
 
-        if ( events.indexOf(evt) > -1 ) {
-            this.canvas.addEventListener(evt, callback);
-        }
-        
+        evt.forEach(function(ev) {
+            if ( events.indexOf(ev) > -1 ) {
+                this.canvas.addEventListener(ev, callback.bind(this));
+            }
+        }, this);
+
         return this;
     };
 })();
@@ -1191,7 +1252,6 @@ Martin.Effect.prototype.blur = function( amt ) {
 
 	.width()
 	.height()
-	.background()
 */
 
 // Set or change dimensions.
@@ -1209,125 +1269,43 @@ Martin.Effect.prototype.blur = function( amt ) {
 			dummyCanvas,
 			dummyContext;
 
+		// normalize the value
 		if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
 
 		oldHeight = this.canvas.height;
-
-		// Update the container
-		this.container.style[which] = val + 'px';
 
 		// get the ratio, in case we're resizing
 		ratio = val / this.canvas[which];
 
 		// Update height or width of all the layers' canvases
 		// and update their contexts
-		for ( var i = this.layers.length - 1; i >= 0; i-- ) {
+		this.layers.forEach(function(layer, i) {
 
-			imageData = this.layers[i].context.getImageData(
-				0,
-				which === 'height' && !resize ? this.canvas.height - val : 0,
-				this.canvas.width,
-				this.canvas.height
-			);
+			imageData = layer.getImageData();
 
 			dummyCanvas = document.createElement('canvas');
 			dummyContext = dummyCanvas.getContext('2d');
 
-			dummyCanvas.setAttribute('width', this.canvas.width);
-			dummyCanvas.setAttribute('height', this.canvas.height);
+			dummyCanvas.setAttribute('width', layer.base.width);
+			dummyCanvas.setAttribute('height', layer.base.height);
 
-			dummyContext.putImageData(
-				this.layers[i].context.getImageData(
-					0,
-					0,
-					this.canvas.width,
-					this.canvas.height
-				),
-				0,
-				0
-			);
+			dummyContext.putImageData( imageData, 0, 0 );
 
-			this.layers[i].canvas.setAttribute(which, val);
+			layer.canvas[which] = val;
 
 			if ( resize ) {
 
-				this.layers[i].context.scale(
+				layer.context.scale(
 					which === 'width' ? ratio : 1,
 					which === 'height' ? ratio : 1
 				);
 			}
 
-			this.layers[i].context.drawImage(dummyCanvas, 0, which === 'height' && !resize ? val - oldHeight : 0);
+			layer.context.drawImage(dummyCanvas, 0, 0);
 
-		}
-
-		// Since we might have increased dimensions, if a background
-		// was already set, make sure that the new size receives that background
-		if ( this.layers[0].type === 'background' ) this.background( this.layers[0].fill );
+		});
 
 		return this;
 
 	};
-
 });
-
-// Method for giving a canvas a background color.
-// Only target semi-transparent pixels, and use a weighted
-// average to calculate the outcome.
-Martin.prototype.background = function( color ) {
-
-	var originalLayer = this.currentLayer,
-		bump = 0;
-
-	// first time background
-	if ( this.layers[0].type !== 'background' ) {
-
-		bump = 1; // we bump all other layers
-
-		var newLayer = this.newLayer({
-			type: 'background',
-			fill: color
-		});
-
-		// now get that background we just created
-		var background = this.layers.pop(),
-			bottom = this.container.firstChild;
-
-		// add to the bottom of layer stack
-		this.layers.unshift(background);
-
-		this.switchToLayer(0);
-		this.container.insertBefore(background, bottom);
-
-	// if we're redoing the background, just switch to that
-	// background layer and work it
-	} else {
-		this.layers[0].fill = color;
-		this.switchToLayer(0);
-	}
-
-	var rgb = Martin.hexToRGB( color ),
-		r = rgb.r,
-		g = rgb.g,
-		b = rgb.b;
-
-	var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-		pixels = imageData.data,
-		len = pixels.length;
-
-	for ( var i = 0; i < len; i += 4 ) {
-
-		pixels[i]		= r;
-		pixels[i + 1]	= g;
-		pixels[i + 2]	= b;
-		pixels[i + 3]	= 255;
-
-	}
-
-	this.putImageData( imageData );
-
-	this.switchToLayer(originalLayer + bump);
-
-	return this;
-
-};

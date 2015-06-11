@@ -3,7 +3,6 @@
 
 	.width()
 	.height()
-	.background()
 */
 
 // Set or change dimensions.
@@ -21,125 +20,43 @@
 			dummyCanvas,
 			dummyContext;
 
+		// normalize the value
 		if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
 
 		oldHeight = this.canvas.height;
-
-		// Update the container
-		this.container.style[which] = val + 'px';
 
 		// get the ratio, in case we're resizing
 		ratio = val / this.canvas[which];
 
 		// Update height or width of all the layers' canvases
 		// and update their contexts
-		for ( var i = this.layers.length - 1; i >= 0; i-- ) {
+		this.layers.forEach(function(layer, i) {
 
-			imageData = this.layers[i].context.getImageData(
-				0,
-				which === 'height' && !resize ? this.canvas.height - val : 0,
-				this.canvas.width,
-				this.canvas.height
-			);
+			imageData = layer.getImageData();
 
 			dummyCanvas = document.createElement('canvas');
 			dummyContext = dummyCanvas.getContext('2d');
 
-			dummyCanvas.setAttribute('width', this.canvas.width);
-			dummyCanvas.setAttribute('height', this.canvas.height);
+			dummyCanvas.setAttribute('width', layer.base.width);
+			dummyCanvas.setAttribute('height', layer.base.height);
 
-			dummyContext.putImageData(
-				this.layers[i].context.getImageData(
-					0,
-					0,
-					this.canvas.width,
-					this.canvas.height
-				),
-				0,
-				0
-			);
+			dummyContext.putImageData( imageData, 0, 0 );
 
-			this.layers[i].canvas.setAttribute(which, val);
+			layer.canvas[which] = val;
 
 			if ( resize ) {
 
-				this.layers[i].context.scale(
+				layer.context.scale(
 					which === 'width' ? ratio : 1,
 					which === 'height' ? ratio : 1
 				);
 			}
 
-			this.layers[i].context.drawImage(dummyCanvas, 0, which === 'height' && !resize ? val - oldHeight : 0);
+			layer.context.drawImage(dummyCanvas, 0, 0);
 
-		}
-
-		// Since we might have increased dimensions, if a background
-		// was already set, make sure that the new size receives that background
-		if ( this.layers[0].type === 'background' ) this.background( this.layers[0].fill );
+		});
 
 		return this;
 
 	};
-
 });
-
-// Method for giving a canvas a background color.
-// Only target semi-transparent pixels, and use a weighted
-// average to calculate the outcome.
-Martin.prototype.background = function( color ) {
-
-	var originalLayer = this.currentLayer,
-		bump = 0;
-
-	// first time background
-	if ( this.layers[0].type !== 'background' ) {
-
-		bump = 1; // we bump all other layers
-
-		var newLayer = this.newLayer({
-			type: 'background',
-			fill: color
-		});
-
-		// now get that background we just created
-		var background = this.layers.pop(),
-			bottom = this.container.firstChild;
-
-		// add to the bottom of layer stack
-		this.layers.unshift(background);
-
-		this.switchToLayer(0);
-		this.container.insertBefore(background, bottom);
-
-	// if we're redoing the background, just switch to that
-	// background layer and work it
-	} else {
-		this.layers[0].fill = color;
-		this.switchToLayer(0);
-	}
-
-	var rgb = Martin.hexToRGB( color ),
-		r = rgb.r,
-		g = rgb.g,
-		b = rgb.b;
-
-	var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-		pixels = imageData.data,
-		len = pixels.length;
-
-	for ( var i = 0; i < len; i += 4 ) {
-
-		pixels[i]		= r;
-		pixels[i + 1]	= g;
-		pixels[i + 2]	= b;
-		pixels[i + 3]	= 255;
-
-	}
-
-	this.putImageData( imageData );
-
-	this.switchToLayer(originalLayer + bump);
-
-	return this;
-
-};

@@ -25,6 +25,7 @@ Martin.Effect = function(type, canvas, amount) {
 
         this.base = canvas;
         this.type = type;
+        this.inverse = false; // some effects are just the inverse of another
         this.layer = layer;
 
         this.amount = amount;
@@ -41,7 +42,7 @@ Martin.Effect = function(type, canvas, amount) {
     }
 };
 
-// Add an effect to either an element or a layer
+// Add an effect
 (function() {
     var addEffect = function(effect) {
         if (this.effects) {
@@ -51,7 +52,8 @@ Martin.Effect = function(type, canvas, amount) {
         }
         return effect;
     };
-    Martin.Element.prototype.addEffect = addEffect;
+    // TODO: effect can be added to element
+    // Martin.Element.prototype.addEffect = addEffect;
     Martin.Layer.prototype.addEffect = addEffect;
 })();
 
@@ -59,11 +61,19 @@ Martin.Effect.prototype.renderEffect = function() {
     return this[this.type]();
 };
 
+// for inverse effects
+Martin.Effect.prototype.invert = function(inverse) {
+    this.inverse = true;
+    return this[inverse]();
+};
+
 // Desaturate
-Martin.Effect.prototype.desaturate = function( amt ) {
+Martin.Effect.prototype.desaturate = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
+
+    if ( this.inverse ) amt *= -1;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -89,16 +99,18 @@ Martin.Effect.prototype.desaturate = function( amt ) {
     return this;
 };
 
-Martin.Effect.prototype.saturate = function( amt ) {
-    return this.desaturate( -amt );
+Martin.Effect.prototype.saturate = function() {
+    return this.invert('desaturate');
 };
 
 // Lighten and darken. (Darken just returns the opposite of lighten).
 // Takes an input from 0 to 100. Higher values return pure white or black.
-Martin.Effect.prototype.lighten = function( amt ) {
+Martin.Effect.prototype.lighten = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
+
+    if ( this.inverse ) amt *= -1;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -115,15 +127,15 @@ Martin.Effect.prototype.lighten = function( amt ) {
     return this;
 };
 
-Martin.Effect.prototype.darken = function( amt ) {
-    return this.lighten( -amt );
+Martin.Effect.prototype.darken = function() {
+    return this.invert('lighten');
 };
 
 // Fade uniform
-Martin.Effect.prototype.opacity = function( amt ) {
+Martin.Effect.prototype.opacity = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -153,12 +165,14 @@ Martin._BlurStack.mul_shift_table = function(i) {
 };
 
 // And, what we've all been waiting for:
-Martin.Effect.prototype.blur = function( amt ) {
+Martin.Effect.prototype.blur = function() {
 
     var layer = this.layer,
-        amt = amt || this.amount;
+        amt = this.amount;
 
     if ( isNaN(amt) || amt < 1 ) return this;
+    // Round to nearest pixel
+    amt = Math.round(amt);
 
     var iterations = 2,			// increase for smoother blurring
         width = this.base.width(),
@@ -321,6 +335,20 @@ Martin.Effect.prototype.blur = function( amt ) {
     layer.putImageData( imageData );
 
     return this;
+};
+
+// Adjust the amount of an Effect
+Martin.Effect.prototype.increase = function(amt) {
+
+    if ( this.inverse ) amt = -(amt || 1);
+
+    this.amount += amt || 1;
+    this.base.render();
+    return this;
+};
+
+Martin.Effect.prototype.decrease = function(amt) {
+    return this.increase(-amt);
 };
 
 (function(){

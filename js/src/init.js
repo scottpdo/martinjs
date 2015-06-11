@@ -46,6 +46,9 @@ Martin.prototype.makeCanvas = function() {
                 canvas.width = original.naturalWidth;
                 canvas.height = original.naturalHeight;
 
+                this.width(canvas.width);
+                this.height(canvas.height);
+
                 original.parentNode.insertBefore( canvas, original );
                 original.parentNode.removeChild( original );
 
@@ -55,8 +58,10 @@ Martin.prototype.makeCanvas = function() {
                 });
             }
 
+            // This should only fire once! Fire if the image is complete,
+            // or add a handler for once it has finished loading.
+            if ( original.complete ) return d.call(this);
             original.onload = d.bind(this);
-            if ( original.complete ) d();
 
         } else if ( this.original.tagName === 'CANVAS' ) {
 

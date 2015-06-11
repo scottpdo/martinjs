@@ -3,17 +3,26 @@
     Martin.Element constructor
 
     Elements:
+    .background()
     .line()
     .rect()
     .circle()
     .ellipse()
     .polygon()
+    .text()
 
     Element methods:
+    .layerIndex()
+    .remove()
+    .bump()
+    .bumpUp()
+    .bumpDown()
+    .bumpToTop()
+    .bumpToBottom()
     .moveTo()
 
     Finally:
-    - Loop through drawing methods and
+    - Loop through Elements and
       create a corresponding method on the main Martin instance
 */
 
@@ -33,6 +42,9 @@ Martin.Element = function(type, canvas, obj) {
         this.layer = layer;
 
         layer.addElement(this);
+
+        // automatically push backgrounds to the bottom of the layer
+        if ( this.type === 'background' ) this.bumpToBottom();
 
         this.base.render();
 
@@ -65,6 +77,20 @@ Martin.Element.prototype.image = function() {
 
     return this;
 };
+
+Martin.Element.prototype.background = function() {
+
+    var base = this.base,
+        context = this.layer.context,
+        color = typeof this.data === 'string' ? this.data : this.data.color,
+        obj = {};
+
+    obj.color = color;
+    this.data = obj;
+
+	return this.rect();
+};
+
 
 Martin.Element.prototype.line = function() {
 
@@ -106,8 +132,8 @@ Martin.Element.prototype.rect = function() {
     context.rect(
         base.normalizeX( obj.x || 0 ),
         base.normalizeY( obj.y || 0 ),
-        base.normalizeX( obj.width ),
-        base.normalizeY( obj.height )
+        base.normalizeX( obj.width || this.base.width() ),
+        base.normalizeY( obj.height || this.base.height() )
     );
 
     Martin.setContext( context, obj );
@@ -382,10 +408,10 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
 };
 
-(function(){
-    var drawingElements = ['line', 'rect', 'circle', 'ellipse', 'polygon', 'text'];
+(function() {
+    var elements = ['background', 'line', 'rect', 'circle', 'ellipse', 'polygon', 'text'];
 
-    drawingElements.forEach(function(el) {
+    elements.forEach(function(el) {
         Martin.prototype[el] = function(obj) {
             return new Martin.Element(el, this, obj);
         };

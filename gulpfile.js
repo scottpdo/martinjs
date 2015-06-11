@@ -157,6 +157,7 @@ gulp.task('serve', ['js'], function() {
     });
 
     gulp.watch( paths.jsCoreIn, ['js'] ).on('change', reload);
+    gulp.watch( './test/test.js' ).on('change', reload);
     gulp.watch( paths.html ).on('change', reload);
 
 });
