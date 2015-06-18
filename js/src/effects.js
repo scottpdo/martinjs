@@ -348,7 +348,7 @@ Martin.Effect.prototype.increase = function(amt) {
 };
 
 Martin.Effect.prototype.decrease = function(amt) {
-    return this.increase(-amt);
+    return this.increase(-amt || -1);
 };
 
 (function(){

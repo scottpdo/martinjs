@@ -1,4 +1,4 @@
-var VERSION = '0.2.3-alpha';
+var VERSION = '0.2.3-beta';
 
 var fs = require('fs'),
     gulp = require('gulp'),

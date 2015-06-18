@@ -85,7 +85,7 @@ Martin.prototype.makeCanvas = function() {
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.3-alpha';
+Martin._version = '0.2.3-beta';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -1205,7 +1205,7 @@ Martin.Effect.prototype.increase = function(amt) {
 };
 
 Martin.Effect.prototype.decrease = function(amt) {
-    return this.increase(-amt);
+    return this.increase(-amt || -1);
 };
 
 (function(){
