@@ -42,12 +42,11 @@ describe('Initializing an instance of Martin from an image', function() {
     // get image
     var img = document.createElement('img');
     img.src = '../images/humphrey.jpg';
-    img.id = 'dummy';
     img.style.display = 'none';
     document.body.appendChild(img);
 
     // create instance of Martin from image
-    var canvas = Martin('dummy');
+    var canvas = Martin(img);
     canvas.canvas.style.display = 'none';
 
     var baseLayer = canvas.layers[0];
@@ -103,12 +102,10 @@ describe('Initializing an instance of Martin from an image', function() {
      var canvas = document.createElement('canvas');
      canvas.width = 400;
      canvas.height = 200;
-     canvas.id = 'dummyCanvas';
-     canvas.style.display = 'none';
      document.body.appendChild(canvas);
 
-     // create instance of Martin from image
-     canvas = Martin('dummyCanvas');
+     // create instance of Martin from canvas
+     canvas = Martin(canvas);
      canvas.canvas.style.display = 'none';
 
      var baseLayer = canvas.layers[0];

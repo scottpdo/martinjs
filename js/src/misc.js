@@ -33,14 +33,10 @@
 		this.layers.forEach(function(layer, i) {
 
 			layer.canvas[which] = val;
-
-			if ( resize ) {
-
-				layer.context.scale(
-					which === 'width' ? ratio : 1,
-					which === 'height' ? ratio : 1
-				);
-			}
+			layer.context.scale(
+				which === 'width' ? ratio : 1,
+				which === 'height' ? ratio : 1
+			);
 
 			layer.renderLayer();
 

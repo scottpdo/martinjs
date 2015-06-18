@@ -11,13 +11,19 @@
     _version
 */
 
-// The great initializer.
-window.Martin = function( id ) {
+// The great initializer. Pass in a string to select element by ID,
+// or an HTMLElement
+window.Martin = function( val ) {
 
-    if ( !(this instanceof Martin) ) return new Martin( id );
+    if ( !(this instanceof Martin) ) return new Martin( val );
 
     // Set the original element, if there is one
-    this.original = document.getElementById( id ) || null;
+    this.original = null;
+    if ( typeof val === 'string' ) {
+        this.original = document.getElementById(val);
+    } else if ( val instanceof HTMLElement ) {
+        this.original = val;
+    }
 
     // Now prepare yourself...
     return this.makeCanvas();
