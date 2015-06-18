@@ -70,7 +70,8 @@ Martin.Element.prototype.renderElement = function() {
 
 Martin.Element.prototype.image = function() {
 
-    var layer = this.layer,
+    var base = this.base,
+        layer = this.layer,
         context = layer.context,
         obj = this.data;
 

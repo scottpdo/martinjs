@@ -36,13 +36,18 @@
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;
 
-		if ( which === 'width' ) this.scale.x *= ratio;
-		if ( which === 'height' ) this.scale.y *= ratio;
+		if ( resize ) {
 
-		this.context.scale(
-			this.scale.x,
-			this.scale.y
-		);
+			if ( which === 'width' ) this.scale.x *= ratio;
+			if ( which === 'height' ) this.scale.y *= ratio;
+
+			this.context.scale(
+				this.scale.x,
+				this.scale.y
+			);
+
+			this.canvas[which] = val;
+		}
 
 		this.base.render();
 

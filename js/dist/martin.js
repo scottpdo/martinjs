@@ -258,8 +258,8 @@ Martin.Layer = function(base, arg) {
 
     this.base = base;
     this.canvas = document.createElement('canvas');
-    this.canvas.width = base.width();
-    this.canvas.height = base.height();
+    this.canvas.width = base.original.naturalWidth || base.width();
+    this.canvas.height = base.original.naturalHeight || base.height();
     this.context = this.canvas.getContext('2d');
     this.scale = {
         x: 1,
@@ -377,18 +377,15 @@ Martin.Layer.prototype.addElement = function(element) {
 };
 
 // Create a new (top-most) layer and switch to that layer.
-// Optional: include pixel data and elements for the new layer
-Martin.prototype.newLayer = function(arg, data, elements) {
+Martin.prototype.newLayer = function(arg) {
 
-    var newLayer = new Martin.Layer(this, arg, data, elements);
+    var newLayer = new Martin.Layer(this, arg);
 
     // if no layers yet (initializing),
     // the layers are just this new layer,
     // and the new layer's context should be the base's
     if ( !this.layers ) {
         this.layers = [newLayer];
-        newLayer.canvas = newLayer.base.canvas;
-        newLayer.context = newLayer.base.context;
     } else {
         this.layers.push(newLayer);
     }
@@ -513,7 +510,8 @@ Martin.Element.prototype.renderElement = function() {
 
 Martin.Element.prototype.image = function() {
 
-    var layer = this.layer,
+    var base = this.base,
+        layer = this.layer,
         context = layer.context,
         obj = this.data;
 
@@ -1302,13 +1300,18 @@ Martin.Effect.prototype.decrease = function(amt) {
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;
 
-		if ( which === 'width' ) this.scale.x *= ratio;
-		if ( which === 'height' ) this.scale.y *= ratio;
+		if ( resize ) {
 
-		this.context.scale(
-			this.scale.x,
-			this.scale.y
-		);
+			if ( which === 'width' ) this.scale.x *= ratio;
+			if ( which === 'height' ) this.scale.y *= ratio;
+
+			this.context.scale(
+				this.scale.x,
+				this.scale.y
+			);
+
+			this.canvas[which] = val;
+		}
 
 		this.base.render();
 
