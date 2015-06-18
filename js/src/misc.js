@@ -10,9 +10,24 @@
 
 	Martin.prototype[which] = function( val, resize ) {
 
+		// if no value given, return the corresponding value
+		if ( !val ) return this.canvas[which];
+
+		// Update height or width of all the layers' canvases
+		// and update their contexts
+		this.canvas[which] = val;
+		this.layers.forEach(function(layer) {
+			layer[which](val, resize);
+		});
+
+		return this;
+
+	};
+
+	Martin.Layer.prototype[which] = function(val, resize) {
+
 		var ratio;
 
-		// if no value given, return the corresponding value
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
@@ -21,28 +36,16 @@
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;
 
-		// update dimensions of base canvas
-		this.canvas[which] = val;
+		if ( which === 'width' ) this.scale.x *= ratio;
+		if ( which === 'height' ) this.scale.y *= ratio;
+
 		this.context.scale(
-			which === 'width' ? ratio : 1,
-			which === 'height' ? ratio : 1
+			this.scale.x,
+			this.scale.y
 		);
 
-		// Update height or width of all the layers' canvases
-		// and update their contexts
-		this.layers.forEach(function(layer, i) {
-
-			layer.canvas[which] = val;
-			layer.context.scale(
-				which === 'width' ? ratio : 1,
-				which === 'height' ? ratio : 1
-			);
-
-			layer.renderLayer();
-
-		});
+		this.base.render();
 
 		return this;
-
 	};
 });

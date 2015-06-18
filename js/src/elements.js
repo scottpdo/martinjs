@@ -70,19 +70,22 @@ Martin.Element.prototype.renderElement = function() {
 
 Martin.Element.prototype.image = function() {
 
-    var context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
-    context.drawImage(obj.original, obj.x || 0, obj.y || 0);
+    context.drawImage(
+        obj.original,
+        0, 0, obj.original.naturalWidth, obj.original.naturalHeight,
+        0, 0, layer.width(), layer.height()
+    );
 
     return this;
 };
 
 Martin.Element.prototype.background = function() {
 
-    var base = this.base,
-        context = this.layer.context,
-        color = typeof this.data === 'string' ? this.data : this.data.color,
+    var color = typeof this.data === 'string' ? this.data : this.data.color,
         obj = {};
 
     obj.color = color;
@@ -94,20 +97,20 @@ Martin.Element.prototype.background = function() {
 
 Martin.Element.prototype.line = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
     context.beginPath();
 
     context.moveTo(
-        base.normalizeX( obj.x || 0 ),
-        base.normalizeY( obj.y || 0 )
+        layer.normalizeX( obj.x || 0 ),
+        layer.normalizeY( obj.y || 0 )
     );
 
     context.lineTo(
-        base.normalizeX( obj.height || base.width() ),
-        base.normalizeY( obj.width || base.height() )
+        layer.normalizeX( obj.height || layer.width() ),
+        layer.normalizeY( obj.width || layer.height() )
     );
 
     if ( !obj.strokeWidth ) obj.strokeWidth = 1;
@@ -123,17 +126,17 @@ Martin.Element.prototype.line = function() {
 
 Martin.Element.prototype.rect = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
     context.beginPath();
 
     context.rect(
-        base.normalizeX( obj.x || 0 ),
-        base.normalizeY( obj.y || 0 ),
-        base.normalizeX( obj.width || this.base.width() ),
-        base.normalizeY( obj.height || this.base.height() )
+        layer.normalizeX( obj.x || 0 ),
+        layer.normalizeY( obj.y || 0 ),
+        layer.normalizeX( obj.width || layer.width() ),
+        layer.normalizeY( obj.height || layer.height() )
     );
 
     Martin.setContext( context, obj );
@@ -145,11 +148,11 @@ Martin.Element.prototype.rect = function() {
 
 Martin.Element.prototype.circle = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data,
-        centerX = base.normalizeX( obj.x || 0 ),
-        centerY = base.normalizeY( obj.y || 0 );
+        centerX = layer.normalizeX( obj.x || 0 ),
+        centerY = layer.normalizeY( obj.y || 0 );
 
     context.beginPath();
 
@@ -163,52 +166,54 @@ Martin.Element.prototype.circle = function() {
 
 };
 
-Martin.Element.prototype.ellipse = function(canvas, obj) {
+Martin.Element.prototype.ellipse = function() {
 
     if ( obj.radiusX === obj.radiusY ) {
         obj.radius = obj.radiusX;
         return this.circle( canvas, obj );
     }
 
-    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
-        centerY = canvas.normalizeY( obj.offsetY || 0 ),
+    var layer = this.layer,
+        context = layer.context,
+        centerX = layer.normalizeX( obj.offsetX || 0 ),
+        centerY = layer.normalizeY( obj.offsetY || 0 ),
         scale;
 
-    this.context.beginPath();
+    context.beginPath();
 
     if ( obj.radiusX > obj.radiusY ) {
 
         scale = obj.radiusX / obj.radiusY;
 
-        this.context.scale( scale, 1 );
+        context.scale( this.scale.x * scale, this.scale.y );
 
-        this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
+        context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
 
-        this.context.scale( 1 / scale, 1 );
+        context.scale( this.scale.x / scale, this.scale.y );
 
     } else {
 
         scale = obj.radiusY / obj.radiusX;
 
-        this.context.scale( 1, scale );
+        context.scale( this.scale.x, this.scale.y * scale );
 
-        this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
+        context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
 
-        this.context.scale( 1, 1 / scale );
+        context.scale( this.scale.x, this.scale.y / scale );
 
     }
 
-    Martin.setContext( this.context, obj );
+    Martin.setContext( context, obj );
 
-    this.context.closePath();
+    context.closePath();
 
     return this;
 }
 
 Martin.Element.prototype.polygon = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
     context.beginPath();
@@ -217,8 +222,8 @@ Martin.Element.prototype.polygon = function() {
 
         var x = obj.points[i][0],
             y = obj.points[i][1],
-            toX = canvas.normalizeX( x ),
-            toY = canvas.normalizeY( y );
+            toX = layer.normalizeX( x ),
+            toY = layer.normalizeY( y );
 
         if ( i === 0 ) context.moveTo( toX, toY );
 
@@ -228,8 +233,8 @@ Martin.Element.prototype.polygon = function() {
 
     // close the path
     context.lineTo(
-        base.normalizeX(obj.points[0][0]),
-        base.normalizeY(obj.points[0][1])
+        layer.normalizeX(obj.points[0][0]),
+        layer.normalizeY(obj.points[0][1])
     );
 
     Martin.setContext( context, obj );
@@ -241,8 +246,8 @@ Martin.Element.prototype.polygon = function() {
 
 Martin.Element.prototype.text = function() {
 
-	var base = this.base,
-        context = this.layer.context,
+	var layer = this.layer,
+        context = layer.context,
         obj = this.data,
 		size,
         style,
@@ -326,8 +331,8 @@ Martin.Element.prototype.text = function() {
 	context.textAlign = obj.align || 'left';
 	context.fillText(
 		obj.text || '',
-		base.normalizeX(obj.x || 0),
-		base.normalizeY(obj.y || 0)
+		layer.normalizeX(obj.x || 0),
+		layer.normalizeY(obj.y || 0)
 	);
 
 	return this;

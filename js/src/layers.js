@@ -25,6 +25,10 @@ Martin.Layer = function(base, arg) {
     this.canvas.width = base.width();
     this.canvas.height = base.height();
     this.context = this.canvas.getContext('2d');
+    this.scale = {
+        x: 1,
+        y: 1
+    };
 
     if ( typeof arg === 'string' ) {
         this.type = arg;
@@ -34,6 +38,23 @@ Martin.Layer = function(base, arg) {
 
     return this;
 
+};
+
+// Normalize X and Y values
+Martin.Layer.prototype.normalizeX = function( val ) {
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
+};
+
+Martin.Layer.prototype.normalizeY = function( val ) {
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
+};
+
+Martin.Layer.prototype.normalizePercentX = function( val ) {
+    return ( val / 100 ) * this.canvas.width;
+};
+
+Martin.Layer.prototype.normalizePercentY = function( val ) {
+    return ( val / 100 ) * this.canvas.height;
 };
 
 // Loop through the image data

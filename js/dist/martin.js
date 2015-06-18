@@ -188,7 +188,9 @@ Martin.prototype.render = function(cb) {
         layer.renderLayer();
     });
 
-    if (cb) cb();
+    if (cb) return cb();
+
+    return this;
 };
 
 // Return's a data URL of all the working layers
@@ -209,25 +211,8 @@ Martin.prototype.convertToImage = function() {
         this.deleteLayer(i);
     }, this);
 
-    this.container.appendChild( img );
+    if ( this.container ) this.container.appendChild( img );
 
-};
-
-// Normalize X and Y values
-Martin.prototype.normalizeX = function( val ) {
-    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
-};
-
-Martin.prototype.normalizeY = function( val ) {
-    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-};
-
-Martin.prototype.normalizePercentX = function( val ) {
-    return ( val / 100 ) * this.canvas.width;
-};
-
-Martin.prototype.normalizePercentY = function( val ) {
-    return ( val / 100 ) * this.canvas.height;
 };
 
 // Set the fill, stroke, alpha for a new shape
@@ -276,6 +261,10 @@ Martin.Layer = function(base, arg) {
     this.canvas.width = base.width();
     this.canvas.height = base.height();
     this.context = this.canvas.getContext('2d');
+    this.scale = {
+        x: 1,
+        y: 1
+    };
 
     if ( typeof arg === 'string' ) {
         this.type = arg;
@@ -285,6 +274,23 @@ Martin.Layer = function(base, arg) {
 
     return this;
 
+};
+
+// Normalize X and Y values
+Martin.Layer.prototype.normalizeX = function( val ) {
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
+};
+
+Martin.Layer.prototype.normalizeY = function( val ) {
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
+};
+
+Martin.Layer.prototype.normalizePercentX = function( val ) {
+    return ( val / 100 ) * this.canvas.width;
+};
+
+Martin.Layer.prototype.normalizePercentY = function( val ) {
+    return ( val / 100 ) * this.canvas.height;
 };
 
 // Loop through the image data
@@ -507,19 +513,22 @@ Martin.Element.prototype.renderElement = function() {
 
 Martin.Element.prototype.image = function() {
 
-    var context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
-    context.drawImage(obj.original, obj.x || 0, obj.y || 0);
+    context.drawImage(
+        obj.original,
+        0, 0, obj.original.naturalWidth, obj.original.naturalHeight,
+        0, 0, layer.width(), layer.height()
+    );
 
     return this;
 };
 
 Martin.Element.prototype.background = function() {
 
-    var base = this.base,
-        context = this.layer.context,
-        color = typeof this.data === 'string' ? this.data : this.data.color,
+    var color = typeof this.data === 'string' ? this.data : this.data.color,
         obj = {};
 
     obj.color = color;
@@ -531,20 +540,20 @@ Martin.Element.prototype.background = function() {
 
 Martin.Element.prototype.line = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
     context.beginPath();
 
     context.moveTo(
-        base.normalizeX( obj.x || 0 ),
-        base.normalizeY( obj.y || 0 )
+        layer.normalizeX( obj.x || 0 ),
+        layer.normalizeY( obj.y || 0 )
     );
 
     context.lineTo(
-        base.normalizeX( obj.height || base.width() ),
-        base.normalizeY( obj.width || base.height() )
+        layer.normalizeX( obj.height || layer.width() ),
+        layer.normalizeY( obj.width || layer.height() )
     );
 
     if ( !obj.strokeWidth ) obj.strokeWidth = 1;
@@ -560,17 +569,17 @@ Martin.Element.prototype.line = function() {
 
 Martin.Element.prototype.rect = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
     context.beginPath();
 
     context.rect(
-        base.normalizeX( obj.x || 0 ),
-        base.normalizeY( obj.y || 0 ),
-        base.normalizeX( obj.width || this.base.width() ),
-        base.normalizeY( obj.height || this.base.height() )
+        layer.normalizeX( obj.x || 0 ),
+        layer.normalizeY( obj.y || 0 ),
+        layer.normalizeX( obj.width || layer.width() ),
+        layer.normalizeY( obj.height || layer.height() )
     );
 
     Martin.setContext( context, obj );
@@ -582,11 +591,11 @@ Martin.Element.prototype.rect = function() {
 
 Martin.Element.prototype.circle = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data,
-        centerX = base.normalizeX( obj.x || 0 ),
-        centerY = base.normalizeY( obj.y || 0 );
+        centerX = layer.normalizeX( obj.x || 0 ),
+        centerY = layer.normalizeY( obj.y || 0 );
 
     context.beginPath();
 
@@ -600,52 +609,54 @@ Martin.Element.prototype.circle = function() {
 
 };
 
-Martin.Element.prototype.ellipse = function(canvas, obj) {
+Martin.Element.prototype.ellipse = function() {
 
     if ( obj.radiusX === obj.radiusY ) {
         obj.radius = obj.radiusX;
         return this.circle( canvas, obj );
     }
 
-    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
-        centerY = canvas.normalizeY( obj.offsetY || 0 ),
+    var layer = this.layer,
+        context = layer.context,
+        centerX = layer.normalizeX( obj.offsetX || 0 ),
+        centerY = layer.normalizeY( obj.offsetY || 0 ),
         scale;
 
-    this.context.beginPath();
+    context.beginPath();
 
     if ( obj.radiusX > obj.radiusY ) {
 
         scale = obj.radiusX / obj.radiusY;
 
-        this.context.scale( scale, 1 );
+        context.scale( this.scale.x * scale, this.scale.y );
 
-        this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
+        context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
 
-        this.context.scale( 1 / scale, 1 );
+        context.scale( this.scale.x / scale, this.scale.y );
 
     } else {
 
         scale = obj.radiusY / obj.radiusX;
 
-        this.context.scale( 1, scale );
+        context.scale( this.scale.x, this.scale.y * scale );
 
-        this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
+        context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
 
-        this.context.scale( 1, 1 / scale );
+        context.scale( this.scale.x, this.scale.y / scale );
 
     }
 
-    Martin.setContext( this.context, obj );
+    Martin.setContext( context, obj );
 
-    this.context.closePath();
+    context.closePath();
 
     return this;
 }
 
 Martin.Element.prototype.polygon = function() {
 
-    var base = this.base,
-        context = this.layer.context,
+    var layer = this.layer,
+        context = layer.context,
         obj = this.data;
 
     context.beginPath();
@@ -654,8 +665,8 @@ Martin.Element.prototype.polygon = function() {
 
         var x = obj.points[i][0],
             y = obj.points[i][1],
-            toX = canvas.normalizeX( x ),
-            toY = canvas.normalizeY( y );
+            toX = layer.normalizeX( x ),
+            toY = layer.normalizeY( y );
 
         if ( i === 0 ) context.moveTo( toX, toY );
 
@@ -665,8 +676,8 @@ Martin.Element.prototype.polygon = function() {
 
     // close the path
     context.lineTo(
-        base.normalizeX(obj.points[0][0]),
-        base.normalizeY(obj.points[0][1])
+        layer.normalizeX(obj.points[0][0]),
+        layer.normalizeY(obj.points[0][1])
     );
 
     Martin.setContext( context, obj );
@@ -678,8 +689,8 @@ Martin.Element.prototype.polygon = function() {
 
 Martin.Element.prototype.text = function() {
 
-	var base = this.base,
-        context = this.layer.context,
+	var layer = this.layer,
+        context = layer.context,
         obj = this.data,
 		size,
         style,
@@ -763,8 +774,8 @@ Martin.Element.prototype.text = function() {
 	context.textAlign = obj.align || 'left';
 	context.fillText(
 		obj.text || '',
-		base.normalizeX(obj.x || 0),
-		base.normalizeY(obj.y || 0)
+		layer.normalizeX(obj.x || 0),
+		layer.normalizeY(obj.y || 0)
 	);
 
 	return this;
@@ -1265,9 +1276,24 @@ Martin.Effect.prototype.decrease = function(amt) {
 
 	Martin.prototype[which] = function( val, resize ) {
 
+		// if no value given, return the corresponding value
+		if ( !val ) return this.canvas[which];
+
+		// Update height or width of all the layers' canvases
+		// and update their contexts
+		this.canvas[which] = val;
+		this.layers.forEach(function(layer) {
+			layer[which](val, resize);
+		});
+
+		return this;
+
+	};
+
+	Martin.Layer.prototype[which] = function(val, resize) {
+
 		var ratio;
 
-		// if no value given, return the corresponding value
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
@@ -1276,28 +1302,16 @@ Martin.Effect.prototype.decrease = function(amt) {
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;
 
-		// update dimensions of base canvas
-		this.canvas[which] = val;
+		if ( which === 'width' ) this.scale.x *= ratio;
+		if ( which === 'height' ) this.scale.y *= ratio;
+
 		this.context.scale(
-			which === 'width' ? ratio : 1,
-			which === 'height' ? ratio : 1
+			this.scale.x,
+			this.scale.y
 		);
 
-		// Update height or width of all the layers' canvases
-		// and update their contexts
-		this.layers.forEach(function(layer, i) {
-
-			layer.canvas[which] = val;
-			layer.context.scale(
-				which === 'width' ? ratio : 1,
-				which === 'height' ? ratio : 1
-			);
-
-			layer.renderLayer();
-
-		});
+		this.base.render();
 
 		return this;
-
 	};
 });

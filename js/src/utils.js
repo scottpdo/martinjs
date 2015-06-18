@@ -53,7 +53,9 @@ Martin.prototype.render = function(cb) {
         layer.renderLayer();
     });
 
-    if (cb) cb();
+    if (cb) return cb();
+
+    return this;
 };
 
 // Return's a data URL of all the working layers
@@ -74,25 +76,8 @@ Martin.prototype.convertToImage = function() {
         this.deleteLayer(i);
     }, this);
 
-    this.container.appendChild( img );
+    if ( this.container ) this.container.appendChild( img );
 
-};
-
-// Normalize X and Y values
-Martin.prototype.normalizeX = function( val ) {
-    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
-};
-
-Martin.prototype.normalizeY = function( val ) {
-    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-};
-
-Martin.prototype.normalizePercentX = function( val ) {
-    return ( val / 100 ) * this.canvas.width;
-};
-
-Martin.prototype.normalizePercentY = function( val ) {
-    return ( val / 100 ) * this.canvas.height;
 };
 
 // Set the fill, stroke, alpha for a new shape
