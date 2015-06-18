@@ -1,15 +1,11 @@
 # Utilities
 
-### .convertToImage(`preserve = false`)
+### .toDataURL()
 
-Merges all the layers.
-
-If `preserve` is set to `true`, the layers will all remain intact (and able to be further edited), and it returns a data URL representing the merged layers. This can be set as the `src` of some image, opened as a link in a new tab, or downloaded.
-
-If `preserve` is set to `false` or left empty, this will merge and destroy the existing layers and replace the working canvas with an image whose `src` is the above data URL.
+Similar to the native canvas `.toDataURL()` method, this returns a data URL (beginning with `data:img/png;base64,`) that can be set as the `src` of some image, opened in a new tab, or downloaded.
 
 ```js
-canvas.convertToImage(true);
+canvas.toDataURL();
 ```
 
 Returns:
@@ -18,7 +14,13 @@ Returns:
 data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAEsCAYAAADtt+XCAAAgAElEQ…AhmOkBkzZBB5jvYB+rK1vlMqtQ1ArpK8ABM2mg9b9244b8P3MPH12RU3nkAAAAAElFTkSuQmCC
 ```
 
-<hr>
+### .convertToImage()
+
+Replaces the working canvas and layers with an image whose `src` is the data URL returned by the `.toDataURL()` method.
+
+If `preserve` is set to `true`, the layers will all remain intact (and able to be further edited), and it returns a data URL representing the merged layers. This can be set as the `src` of some image, opened as a link in a new tab, or downloaded.
+
+If `preserve` is set to `false` or left empty, this will merge and destroy the existing layers and replace the working canvas with an image whose `src` is the above data URL.
 
 ```js
 canvas.convertToImage();

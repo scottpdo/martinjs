@@ -3,121 +3,89 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-    Version: 0.1.3.1-beta
 
     ----------------------------------------
 
     MARTIN
-    _version
     .makeCanvas()
-    .handleLoad()
+    _version
 */
 
-// The great initializer.
-window.Martin = function( id, init ) {
+// The great initializer. Pass in a string to select element by ID,
+// or an HTMLElement
+window.Martin = function( val ) {
 
-    if ( !(this instanceof Martin) ) return new Martin( id, init );
+    if ( !(this instanceof Martin) ) return new Martin( val );
 
-    // Set the original element.
-    this.original = document.getElementById( id );
-
-    if ( !this.original || !id ) {
-
-        throw new Error('Must provide a <canvas> or <img> element.');
+    // Set the original element, if there is one
+    this.original = null;
+    if ( typeof val === 'string' ) {
+        this.original = document.getElementById(val);
+    } else if ( val instanceof HTMLElement ) {
+        this.original = val;
     }
 
     // Now prepare yourself...
-    var callback = this.handleLoad;
-    this.makeCanvas(callback.bind(this), init);
+    return this.makeCanvas();
 
 };
-
-Martin._version = '0.1.3.1-beta';
 
 // Convert an image to a canvas or just return the canvas.
-Martin.prototype.makeCanvas = function(callback, init) {
+Martin.prototype.makeCanvas = function() {
 
-    if ( this.original.tagName === 'IMG' ) {
+    this.canvas = document.createElement('canvas');
+    this.context = this.canvas.getContext('2d');
 
-        var _this = this,
-            pixelData;
+    // Create an empty layer
+    this.newLayer();
 
-        // run this once we are sure the image has loaded
-        var d = function() {
+    if ( this.original ) {
 
-            var canvas = document.createElement('canvas');
+        if ( this.original.tagName === 'IMG' ) {
 
-            canvas.width = _this.original.naturalWidth;
-            canvas.height = _this.original.naturalHeight;
+            var canvas = this.canvas,
+                context = this.context,
+                original = this.original;
 
-            canvas.getContext('2d').drawImage( _this.original, 0, 0 );
+            function d() {
 
-            _this.original.parentNode.insertBefore( canvas, _this.original );
-            _this.original.parentNode.removeChild( _this.original );
-            _this.canvas = canvas;
-            _this.context = canvas.getContext('2d');
+                canvas.width = original.naturalWidth;
+                canvas.height = original.naturalHeight;
 
-            return callback(init);
-        };
+                this.width(canvas.width);
+                this.height(canvas.height);
 
-        // if loaded, return
-        if ( this.original.complete ) return d();
+                original.parentNode.insertBefore( canvas, original );
+                original.parentNode.removeChild( original );
 
-        // if it hasn't loaded, wait for that event
-        this.original.onload = d;
+                // Give that layer some image data
+                new Martin.Element('image', this, {
+                    original: original
+                });
+            }
 
+            // This should only fire once! Fire if the image is complete,
+            // or add a handler for once it has finished loading.
+            if ( original.complete ) return d.call(this);
+            original.onload = d.bind(this);
 
+        } else if ( this.original.tagName === 'CANVAS' ) {
 
-    } else if ( this.original.tagName === 'CANVAS' ) {
-
-        this.canvas = this.original;
-        this.context = this.original.getContext('2d');
-        return callback(init);
-
+            this.canvas = this.original;
+            this.context = this.original.getContext('2d');
+        }
     }
+
+    // only render and execute callback immediately
+    // if the original is not an image
+    this.render();
+
+    return this;
 };
 
-// Function to handle the element's load.
-// Will only be fired once the <img> is ready (or right away for <canvas>).
-Martin.prototype.handleLoad = function(init) {
-
-    // Refer to the original parent container
-    var originalContainer = this.canvas.parentNode;
-
-    // Create a new container (with data-martin)
-    // that will house everything in the DOM from here on out
-    this.container = document.createElement('div');
-    this.container.setAttribute('data-martin', '');
-
-    // Insert the new container into the DOM
-    originalContainer.insertBefore( this.container, this.canvas );
-
-    // And move the canvas into the new container
-    this.container.appendChild( this.canvas );
-
-    // Position the container relatively so that we can absolutely
-    // position any children within it. Also set dimensions.
-    this.container.style.position = 'relative';
-    this.container.style.width = this.canvas.width + 'px';
-    this.container.style.height = this.canvas.height + 'px';
-
-    // Create a stylesheet that will declare position all children of [data-martin]
-    var style = document.createElement('style');
-    style.innerHTML = '[data-martin] *{position:absolute;bottom:0;left:0;}';
-    document.head.appendChild(style);
-
-    // Set the layers (currently just this.canvas)
-    this.layers = [{
-        canvas: this.canvas,
-        context: this.context
-    }];
-
-    this.currentLayer = 0;
-
-    // Now we are ready and can initialize
-    return init(this);
-
-};
+// DON'T EDIT THIS LINE.
+// Automatically updated w/ Gulp
+Martin._version = '0.2.3-beta';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -170,35 +138,77 @@ Martin.hexToRGB = function( hex ) {
     usage and not the public-facing API, the exception being Martin.extend.
 
     extend()
+    .render()
+    .toDataURL()
     .convertToImage()
     .normalizeX()
     .normalizeY()
     .normalizePercentX()
     .normalizePercentY()
-    .setContext()
+    setContext()
     .loop()
     .putImageData()
 */
 
+Martin.utils = {};
+
 // Extend Martin with plugins, if you want
-Martin.extend = function( obj ) {
+Martin.utils.extend = function( obj ) {
     for ( var method in obj ) {
         Martin.prototype[method] = obj[method];
     }
 };
 
-// Get the dataURL of the merged layers of the canvas (without affecting
-// the layers), or smash them all into one layer and turn that into an image
-Martin.prototype.convertToImage = function(preserve) {
+Martin.extend = Martin.utils.extend;
 
-    if ( preserve ) return this.mergeLayers(preserve);
+Martin.utils.forEach = function(arr, cb) {
+    if (arr) {
+        arr.forEach(cb);
+    }
+};
 
-    this.mergeLayers();
+Martin.prototype.remove = function() {
+    var canvas = this.canvas,
+        parent = canvas.parentNode;
+    parent.removeChild(this.canvas);
+    return this;
+};
 
-    var img = document.createElement('img');
-    img.src = this.layers[0].canvas.toDataURL();
+// Render: looping through layers, loop through elements
+// and render each (with optional callback)
+Martin.prototype.render = function(cb) {
+    Martin.utils.forEach(this.layers, function(layer, i) {
+        layer.clearLayer();
+        Martin.utils.forEach(layer.elements, function(element) {
+            element.renderElement();
+        });
+        Martin.utils.forEach(layer.effects, function(effect) {
+            effect.renderEffect();
+        });
+        layer.renderLayer();
+    });
 
-    this.container.removeChild( this.layers[0].canvas );
+    if (cb) cb();
+};
+
+// Return's a data URL of all the working layers
+Martin.prototype.toDataURL = function() {
+    return this.canvas.toDataURL();
+};
+
+// Get the dataURL of the merged layers of the canvas,
+// then turn that into one image
+Martin.prototype.convertToImage = function() {
+
+    var dataURL = this.toDataURL(),
+        img = document.createElement('img');
+
+    img.src = dataURL;
+
+    this.layers.forEach(function(layer, i){
+        this.deleteLayer(i);
+    }, this);
+
     this.container.appendChild( img );
 
 };
@@ -209,9 +219,7 @@ Martin.prototype.normalizeX = function( val ) {
 };
 
 Martin.prototype.normalizeY = function( val ) {
-    val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-    // Flip it upside down (a la Cartesian)
-    return this.canvas.height - val;
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
 };
 
 Martin.prototype.normalizePercentX = function( val ) {
@@ -223,30 +231,69 @@ Martin.prototype.normalizePercentY = function( val ) {
 };
 
 // Set the fill, stroke, alpha for a new shape
-Martin.prototype.setContext = function( obj ) {
+Martin.setContext = function( context, obj ) {
 
-    var c = this.context;
+    context.save();
 
-    c.save();
+    context.fillStyle = obj.color || '#000';
+    context.fill();
 
-    c.fillStyle = obj.color || '#000';
-    c.fill();
+    context.globalAlpha = obj.alpha || 1;
 
-    c.globalAlpha = obj.alpha || 1;
+    context.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
+    context.lineCap = obj.cap ? obj.cap : 'square';
+    context.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
+    context.stroke();
 
-    c.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
-    c.lineCap = obj.cap ? obj.cap : 'square';
-    c.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
-    c.stroke();
+    context.restore();
 
-    c.restore();
+};
+
+/*
+
+    Martin.Layer constructor
+
+    Methods:
+    .getImageData()
+    .renderLayer()
+    .clearLayer()
+    .addElement()
+
+    Methods for working with Layers
+
+    .newLayer()
+    .duplicateLayer()
+    .deleteLayer()
+    .clearLayer()
+    .layer()
+*/
+
+// ----- Layer constructor
+Martin.Layer = function(base, arg) {
+
+    this.base = base;
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = base.width();
+    this.canvas.height = base.height();
+    this.context = this.canvas.getContext('2d');
+
+    if ( typeof arg === 'string' ) {
+        this.type = arg;
+    } else {
+        for ( var i in arg ) this[i] = arg[i];
+    }
+
+    return this;
 
 };
 
 // Loop through the image data
-Martin.prototype.loop = function(cb, put) {
+Martin.Layer.prototype.loop = function(cb, put) {
 
-    var imageData = this.context.getImageData( 0, 0, this.width(), this.height() ),
+    var width = this.base.width(),
+        height = this.base.height();
+
+    var imageData = this.context.getImageData( 0, 0, width, height ),
         pixels = imageData.data,
         len = pixels.length,
         n,
@@ -260,8 +307,8 @@ Martin.prototype.loop = function(cb, put) {
 
         // xy coordinates
         n = i / 4;
-        x = n % this.width();
-        y = this.height() - Math.floor(n / this.width());
+        x = n % width;
+        y = Math.floor(n / height);
 
         // rgba values
         r = pixels[i];
@@ -272,8 +319,8 @@ Martin.prototype.loop = function(cb, put) {
         // pass an object corresponding to the pixel to the callback
         pixel = { r: r, g: g, b: b, a: a };
 
-        // execute the callback within the context of this instance
-        output = cb.call( this, x, y, pixel );
+        // execute the callback within the context of this layer's, uh... context
+        output = cb.call( this.context, x, y, pixel );
 
         // reassign the actual rgba values of the pixel based on the output from the loop
         pixels[i] = output.r;
@@ -289,74 +336,77 @@ Martin.prototype.loop = function(cb, put) {
     return this;
 };
 
+Martin.Layer.prototype.getImageData = function() {
+    var imageData = this.context ? this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) : null;
+    return imageData;
+};
+
 // Simple shell for putting image data
-Martin.prototype.putImageData = function(imageData) {
+Martin.Layer.prototype.putImageData = function(imageData) {
     this.context.putImageData( imageData, 0, 0 );
     return this;
 };
 
-/*
-    .newLayer()
-    .duplicateLayer()
-    .deleteLayer()
-    .clearLayer()
-    .switchToLayer()
-    .mergeLayers()
-*/
+Martin.Layer.prototype.renderLayer = function() {
+    var base = this.base,
+        imageData = this.getImageData();
+    // only draw if there is a context for the base --
+    // if the <img> or <canvas> hasn't fully initialized
+    // this won't run
+    if ( base.context ) base.context.drawImage( this.canvas, 0, 0 );
+};
 
+Martin.Layer.prototype.clearLayer = function() {
+    this.context.clearRect(0, 0, this.base.width(), this.base.height());
+};
+
+// ----- Add an element to a layer
+Martin.Layer.prototype.addElement = function(element) {
+    if (this.elements) {
+        this.elements.push(element);
+    } else {
+        this.elements = [element];
+    }
+    return element;
+};
 
 // Create a new (top-most) layer and switch to that layer.
-// Optional: include pixel data for the new layer
-Martin.prototype.newLayer = function(arg, data) {
+// Optional: include pixel data and elements for the new layer
+Martin.prototype.newLayer = function(arg, data, elements) {
 
-    var newCanvas = document.createElement('canvas'),
-        layerObject = {};
+    var newLayer = new Martin.Layer(this, arg, data, elements);
 
-    newCanvas.width = this.canvas.width;
-    newCanvas.height = this.canvas.height;
-
-    this.container.appendChild( newCanvas );
-
-    // Don't forget to set the new context and currentlayer
-    this.context = newCanvas.getContext('2d');
-    this.currentLayer = this.layers.length;
-
-    // if there is data for the new layer, put it now
-    if ( data ) this.context.putImageData(data, 0, 0);
-
-    layerObject.canvas = newCanvas;
-    layerObject.context = this.context;
-
-    if ( typeof arg === 'string' ) {
-        layerObject.type = arg;
+    // if no layers yet (initializing),
+    // the layers are just this new layer,
+    // and the new layer's context should be the base's
+    if ( !this.layers ) {
+        this.layers = [newLayer];
+        newLayer.canvas = newLayer.base.canvas;
+        newLayer.context = newLayer.base.context;
     } else {
-        for ( var i in arg ) layerObject[i] = arg[i];
+        this.layers.push(newLayer);
     }
 
-    this.layers.push(layerObject);
+    // Don't forget to set the new context and currentlayer
+    this.currentLayerIndex = this.layers.length;
+    this.currentLayer = newLayer;
 
-    return this;
+    this.render();
+
+    return newLayer;
 
 };
 
 Martin.prototype.duplicateLayer = function() {
-    this.newLayer( '', this.context.imageData );
+    this.newLayer( '', this.context.imageData, this.elements );
     return this;
 };
 
 Martin.prototype.deleteLayer = function( num ) {
 
-    // don't delete if the only layer
-    if ( this.layers.length > 1 ) {
+    num = num || this.currentLayerIndex;
 
-        num = num || this.currentLayer;
-
-        this.container.removeChild(this.layers[num].canvas);
-        this.layers.splice(num, 1);
-
-    } else {
-        throw new Error("Can't delete the only layer.");
-    }
+    this.layers.splice(num, 1);
 
     return this;
 
@@ -365,164 +415,203 @@ Martin.prototype.deleteLayer = function( num ) {
 // Clear a layer of pixel data but don't delete it
 Martin.prototype.clearLayer = function(which) {
 
-    var original = this.currentLayer;
+    var original = this.currentLayerIndex;
 
-    if ( which ) this.switchToLayer(which);
+    if ( which ) this.layer(which);
 
     this.context.clearRect(0, 0, this.width(), this.height());
 
-    this.switchToLayer(original);
+    this.layer(original);
 };
 
-Martin.prototype.switchToLayer = function( num ) {
+// Switch the context and return the requested later
+Martin.prototype.layer = function( num ) {
 
     this.context = this.layers[num || 0].context;
-    this.currentLayer = num || 0;
+    this.currentLayer = this.layers[num || 0];
+    this.currentLayerIndex = num || 0;
 
-    return this;
-
-};
-
-// If `preserve` is true, returns a dataURL of the merged image data,
-// otherwise actually merges all the layers onto the lowest layer
-Martin.prototype.mergeLayers = function( preserve ) {
-
-    var layers = this.layers,
-        aboveLayer,
-        belowLayer,
-        belowLayerContext,
-        aboveCanvas;
-
-    function mergeDown(index) {
-
-        if ( index > 0 ) {
-
-            belowLayer = layers[index - 1];
-            belowLayerContext = belowLayer.context;
-
-            aboveLayer = layers[index];
-            aboveCanvas = layers[index].canvas;
-
-            // put the new data onto the target layer
-            belowLayerContext.drawImage( aboveCanvas, 0, 0 );
-
-            // Remove the old layer from the DOM and update the this.layers array
-            this.container.removeChild( layers[index].canvas );
-            layers.pop();
-
-            return mergeDown.call( this, index - 1 );
-        }
-    }
-
-    if ( preserve ) {
-
-        var i = 0;
-
-        belowLayer = document.createElement('canvas');
-        belowLayerContext = belowLayer.getContext('2d');
-
-        belowLayer.setAttribute('width', this.width());
-        belowLayer.setAttribute('height', this.height());
-
-        while ( i < layers.length ) {
-
-            belowLayerContext.drawImage( layers[i].canvas, 0, 0 );
-
-            i++;
-        }
-        
-    } else {
-        mergeDown.call( this, layers.length - 1 );
-    }
-
-    return preserve ? belowLayer.toDataURL() : this;
+    return this.layers[num || 0];
 
 };
 
 /*
+
+    Martin.Element constructor
+
+    Elements:
+    .background()
     .line()
     .rect()
     .circle()
     .ellipse()
     .polygon()
+    .text()
+
+    Element methods:
+    .layerIndex()
+    .remove()
+    .bump()
+    .bumpUp()
+    .bumpDown()
+    .bumpToTop()
+    .bumpToBottom()
+    .moveTo()
+
+    Finally:
+    - Loop through Elements and
+      create a corresponding method on the main Martin instance
 */
 
-// Lines
-Martin.prototype.line = function( obj ) {
 
-    this.context.beginPath();
+Martin.Element = function(type, canvas, obj) {
 
-    this.context.moveTo( this.normalizeX(obj.startX), this.normalizeY(obj.startY) );
+    if ( Martin.Element.prototype.hasOwnProperty(type) ) {
 
-    this.context.lineTo( this.normalizeX(obj.endX), this.normalizeY(obj.endY) );
+        // adds a new canvas within the current layer
+        var layer = canvas.currentLayer;
+
+        // base refers to the instance of Martin
+        this.base = canvas;
+
+        this.data = obj;
+        this.type = type;
+        this.layer = layer;
+
+        layer.addElement(this);
+
+        // automatically push backgrounds to the bottom of the layer
+        if ( this.type === 'background' ) this.bumpToBottom();
+
+        this.base.render();
+
+        return this;
+
+    } else {
+
+        throw new Error('Given type is not an allowed element.');
+    }
+};
+
+Martin.Element.prototype.renderElement = function() {
+    // render the element
+    this[this.type]();
+    // apply any effects
+    if ( this.effects ) {
+        this.effects.forEach(function(effect) {
+            // TODO
+        });
+    }
+    return this;
+};
+
+Martin.Element.prototype.image = function() {
+
+    var context = this.layer.context,
+        obj = this.data;
+
+    context.drawImage(obj.original, obj.x || 0, obj.y || 0);
+
+    return this;
+};
+
+Martin.Element.prototype.background = function() {
+
+    var base = this.base,
+        context = this.layer.context,
+        color = typeof this.data === 'string' ? this.data : this.data.color,
+        obj = {};
+
+    obj.color = color;
+    this.data = obj;
+
+	return this.rect();
+};
+
+
+Martin.Element.prototype.line = function() {
+
+    var base = this.base,
+        context = this.layer.context,
+        obj = this.data;
+
+    context.beginPath();
+
+    context.moveTo(
+        base.normalizeX( obj.x || 0 ),
+        base.normalizeY( obj.y || 0 )
+    );
+
+    context.lineTo(
+        base.normalizeX( obj.height || base.width() ),
+        base.normalizeY( obj.width || base.height() )
+    );
 
     if ( !obj.strokeWidth ) obj.strokeWidth = 1;
     obj.stroke = obj.color ? obj.color : '#000';
 
-    this.setContext( obj );
+    Martin.setContext( context, obj );
+
+    context.closePath();
 
     return this;
 
 };
 
-// Create a rectangle
-Martin.prototype.rect = function( obj ) {
+Martin.Element.prototype.rect = function() {
 
-    if ( !obj.offsetX ) obj.offsetX = 0;
-    if ( !obj.offsetY ) obj.offsetY = 0;
+    var base = this.base,
+        context = this.layer.context,
+        obj = this.data;
 
-    this.context.beginPath();
+    context.beginPath();
 
-    this.context.rect(
-        this.normalizeX( obj.offsetX ),
-        this.normalizeY( obj.offsetY ),
-        this.normalizeX( obj.width ),
-        -this.canvas.height + this.normalizeY( obj.height ) // we don't *really* want to normalize the height here, just percentage-wise
+    context.rect(
+        base.normalizeX( obj.x || 0 ),
+        base.normalizeY( obj.y || 0 ),
+        base.normalizeX( obj.width || this.base.width() ),
+        base.normalizeY( obj.height || this.base.height() )
     );
 
-    this.setContext( obj );
+    Martin.setContext( context, obj );
 
-    this.context.closePath();
+    context.closePath();
 
     return this;
 };
 
-// Make a circle -- center X, center Y, radius, color
-Martin.prototype.circle = function( obj ) {
+Martin.Element.prototype.circle = function() {
 
-    if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
-    if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
+    var base = this.base,
+        context = this.layer.context,
+        obj = this.data,
+        centerX = base.normalizeX( obj.x || 0 ),
+        centerY = base.normalizeY( obj.y || 0 );
 
-    var centerX = this.normalizeX( obj.offsetX ),
-        centerY = this.normalizeY( obj.offsetY );
+    context.beginPath();
 
-    this.context.beginPath();
+    context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
 
-    this.context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
+    Martin.setContext( context, obj );
 
-    this.setContext( obj );
+    context.closePath();
 
     return this;
 
 };
 
-// Make an ellipse -- same as circle but with radii for both X and Y
-Martin.prototype.ellipse = function( obj ) {
-
-    if ( !obj.offsetX ) obj.offsetX = this.width() / 2;
-    if ( !obj.offsetY ) obj.offsetY = this.height() / 2;
+Martin.Element.prototype.ellipse = function(canvas, obj) {
 
     if ( obj.radiusX === obj.radiusY ) {
         obj.radius = obj.radiusX;
-        return this.circle( obj );
+        return this.circle( canvas, obj );
     }
 
-    var centerX = this.normalizeX( obj.offsetX ),
-        centerY = this.normalizeY( obj.offsetY );
+    var centerX = canvas.normalizeX( obj.offsetX || 0 ),
+        centerY = canvas.normalizeY( obj.offsetY || 0 ),
+        scale;
 
     this.context.beginPath();
-
-    var scale;
 
     if ( obj.radiusX > obj.radiusY ) {
 
@@ -532,6 +621,8 @@ Martin.prototype.ellipse = function( obj ) {
 
         this.context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
 
+        this.context.scale( 1 / scale, 1 );
+
     } else {
 
         scale = obj.radiusY / obj.radiusX;
@@ -540,47 +631,234 @@ Martin.prototype.ellipse = function( obj ) {
 
         this.context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
 
-    }
-
-    this.setContext( obj );
-
-    this.context.restore();
-
-    return this;
-
-};
-
-// Given an array of points i.e. [ [0, 10], [5, 20], [0, 15] ], draw a polygon.
-// Points are parsed as pixels if integers or percentage if of the form '10%'
-Martin.prototype.polygon = function( arr, obj ) {
-
-    if ( typeof obj === 'string' ) obj = { color: obj };
-
-    this.context.beginPath();
-
-    for (var i = 0; i < arr.length; i++) {
-
-        var toX = this.normalizeX( arr[i][0] ),
-            toY = this.normalizeY( arr[i][1] );
-
-        if ( i === 0 ) this.context.moveTo( toX, toY );
-
-        this.context.lineTo( toX, toY );
+        this.context.scale( 1, 1 / scale );
 
     }
 
-    // close the path
-    this.context.lineTo( this.normalizeX(arr[0][0]), this.normalizeY(arr[0][1]) );
-
-    this.setContext( obj );
+    Martin.setContext( this.context, obj );
 
     this.context.closePath();
 
     return this;
+}
+
+Martin.Element.prototype.polygon = function() {
+
+    var base = this.base,
+        context = this.layer.context,
+        obj = this.data;
+
+    context.beginPath();
+
+    for ( var i = 0; i < obj.points.length; i++ ) {
+
+        var x = obj.points[i][0],
+            y = obj.points[i][1],
+            toX = canvas.normalizeX( x ),
+            toY = canvas.normalizeY( y );
+
+        if ( i === 0 ) context.moveTo( toX, toY );
+
+        context.lineTo( toX, toY );
+
+    }
+
+    // close the path
+    context.lineTo(
+        base.normalizeX(obj.points[0][0]),
+        base.normalizeY(obj.points[0][1])
+    );
+
+    Martin.setContext( context, obj );
+
+    context.closePath();
+
+    return this;
+};
+
+Martin.Element.prototype.text = function() {
+
+	var base = this.base,
+        context = this.layer.context,
+        obj = this.data,
+		size,
+        style,
+        font,
+        fontOutput;
+
+    var clone = {};
+
+    // use custom getters and setters for these properties
+    style = obj.style || '';
+    size = obj.size || '';
+    font = obj.font || '';
+
+    function fontString(style, size, font) {
+        return (style ? style + ' ' : '') + (size || 16) + 'px ' + (font || 'sans-serif');
+    };
+
+    fontOutput = fontString(obj.style, obj.size, obj.font);
+
+    this.fontSize = function(size) {
+        if ( size ) {
+            this.data.size = size;
+            return size;
+        } else {
+            return this.data.size;
+        }
+    };
+
+    this.fontStyle = function(style) {
+        if ( style ) {
+            this.data.style = style;
+            return style;
+        }
+
+        return this.data.style;
+    };
+
+    this.font = function(font) {
+        if ( font ) {
+            this.data.font = font;
+            return font;
+        }
+
+        return this.data.style;
+    };
+
+    this.width = function() {
+        return context.measureText(obj.text || '').width;
+    };
+
+    Object.defineProperty(clone, 'theStyle', {
+        get: function() {
+            return style;
+        },
+        set: function(style) {
+            fontOutput = fontString(style, obj.size, obj.font);
+        }
+    });
+
+    Object.defineProperty(clone, 'theSize', {
+        get: function() {
+            return size;
+        },
+        set: function(size) {
+            fontOutput = fontString(obj.style, size, obj.font);
+        }
+    });
+
+    Object.defineProperty(clone, 'theFont', {
+        get: function() {
+            return font;
+        },
+        set: function(font) {
+            fontOutput = fontString(obj.style, obj.size, font);
+        }
+    });
+
+	context.font = fontOutput;
+	context.fillStyle = obj.color || '#000';
+	context.textBaseline = 'top';
+	context.textAlign = obj.align || 'left';
+	context.fillText(
+		obj.text || '',
+		base.normalizeX(obj.x || 0),
+		base.normalizeY(obj.y || 0)
+	);
+
+	return this;
+};
+
+// ----- Removing and moving elements within the stack in the layer
+
+Martin.Element.prototype.layerIndex = function() {
+    return this.layer.elements.indexOf(this);
+};
+
+Martin.Element.prototype.remove = function() {
+    this.layer.elements.splice(this.layerIndex(), 1);
+    this.base.render();
+    return this;
+};
+
+Martin.Element.prototype.bump = function(i) {
+    var layerIndex = this.layerIndex();
+    this.remove();
+    this.layer.elements.splice(layerIndex + i, 0, this);
+    this.base.render();
+    return this;
+};
+
+Martin.Element.prototype.bumpUp = function() {
+    return this.bump(1);
+};
+
+Martin.Element.prototype.bumpDown = function() {
+    return this.bump(-1);
+};
+
+Martin.Element.prototype.bumpToTop = function() {
+    this.remove();
+    this.layer.elements.push(this);
+    this.base.render();
+    return this;
+};
+
+Martin.Element.prototype.bumpToBottom = function() {
+    this.remove();
+    this.layer.elements.unshift(this);
+    this.base.render();
+    return this;
+};
+
+// ----- Move an element to new coordinates
+Martin.Element.prototype.moveTo = function(x, y) {
+
+    var data = this.data;
+
+    if ( this.type === 'line' ) {
+        data.endX += x - data.x;
+        data.endY += y - data.y;
+    } else if ( this.type === 'polygon' ) {
+        data.points.forEach(function(pt, i) {
+            if ( i > 0 ) {
+                var thisX = pt[0],
+                    thisY = pt[1];
+                data.points[i] = [
+                    thisX + (x - data.points[0][0]),
+                    thisY + (y - data.points[0][1])
+                ];
+            }
+        });
+        data.points[0] = [x, y];
+    }
+
+    data.x = x;
+    data.y = y;
+
+    this[this.type]();
+
+    this.base.render();
+
+    return this;
 
 };
 
+(function() {
+    var elements = ['background', 'line', 'rect', 'circle', 'ellipse', 'polygon', 'text'];
+
+    elements.forEach(function(el) {
+        Martin.prototype[el] = function(obj) {
+            return new Martin.Element(el, this, obj);
+        };
+    });
+})();
+
 /*
+
+    Martin.Effect constructor
+
     .desaturate()
     .saturate()
     .lighten()
@@ -596,120 +874,145 @@ Martin.prototype.polygon = function( arr, obj ) {
         Twitter:	@quasimondo
 */
 
+Martin.Effect = function(type, canvas, amount) {
+
+    if ( Martin.Effect.prototype.hasOwnProperty(type) ) {
+
+        var layer = canvas.currentLayer;
+
+        this.base = canvas;
+        this.type = type;
+        this.inverse = false; // some effects are just the inverse of another
+        this.layer = layer;
+
+        this.amount = amount;
+
+        layer.addEffect(this);
+
+        this.base.render();
+
+        return this;
+
+    } else {
+
+        throw new Error('Given effect is not an allowed effect.');
+    }
+};
+
+// Add an effect
+(function() {
+    var addEffect = function(effect) {
+        if (this.effects) {
+            this.effects.push(effect);
+        } else {
+            this.effects = [effect];
+        }
+        return effect;
+    };
+    // TODO: effect can be added to element
+    // Martin.Element.prototype.addEffect = addEffect;
+    Martin.Layer.prototype.addEffect = addEffect;
+})();
+
+Martin.Effect.prototype.renderEffect = function() {
+    return this[this.type]();
+};
+
+// for inverse effects
+Martin.Effect.prototype.invert = function(inverse) {
+    this.inverse = true;
+    return this[inverse]();
+};
+
 // Desaturate
-Martin.prototype.desaturate = function(amt, all) {
-    var _this = this;
+Martin.Effect.prototype.desaturate = function() {
+
+    var layer = this.layer,
+        amt = this.amount;
+
+    if ( this.inverse ) amt *= -1;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
 
-    function desaturate(layer) {
+    layer.loop(function(x, y, pixel) {
 
-        _this.switchToLayer(layer);
+        var r = pixel.r,
+            g = pixel.g,
+            b = pixel.b;
 
-        _this.loop(function(x, y, pixel) {
+        var grayscale = r * 0.3 + g * 0.59 + b * 0.11;
+            r = (1 - amt) * r + amt * grayscale;        // red
+            g = (1 - amt) * g + amt * grayscale;        // green
+            b = (1 - amt) * b + amt * grayscale;        // blue
 
-            var r = pixel.r,
-                g = pixel.g,
-                b = pixel.b;
+        pixel.r = r;
+        pixel.g = g;
+        pixel.b = b;
 
-            var grayscale = r * 0.3 + g * 0.59 + b * 0.11;
-                r = (1 - amt) * r + amt * grayscale;        // red
-                g = (1 - amt) * g + amt * grayscale;        // green
-                b = (1 - amt) * b + amt * grayscale;        // blue
-
-            pixel.r = r;
-            pixel.g = g;
-            pixel.b = b;
-
-            return pixel;
-        });
-    }
-
-    // if not all, just current layer, otherwise all layers
-    if ( !all ) {
-        desaturate(this.currentLayer);
-    } else {
-        this.layers.forEach(function(layer, i) {
-            desaturate(i);
-        });
-    }
+        return pixel;
+    });
 
     return this;
 };
 
-Martin.prototype.saturate = function( amt, all ) {
-    return this.desaturate( -amt, all );
+Martin.Effect.prototype.saturate = function() {
+    return this.invert('desaturate');
 };
 
 // Lighten and darken. (Darken just returns the opposite of lighten).
 // Takes an input from 0 to 100. Higher values return pure white or black.
-Martin.prototype.lighten = function( amt, all ) {
+Martin.Effect.prototype.lighten = function() {
 
-    var _this = this;
+    var layer = this.layer,
+        amt = this.amount;
 
-    function makeLighten(layer) {
+    if ( this.inverse ) amt *= -1;
 
-        _this.switchToLayer(layer);
+    amt = amt / 100;
+    if ( amt > 1 ) amt = 1;
 
-        _this.loop(function(x, y, pixel) {
+    layer.loop(function(x, y, pixel) {
 
-            pixel.r += Math.round(amt * 255 / 100);
-            pixel.g += Math.round(amt * 255 / 100);
-            pixel.b += Math.round(amt * 255 / 100);
+        pixel.r += Math.round(amt * 255);
+        pixel.g += Math.round(amt * 255);
+        pixel.b += Math.round(amt * 255);
 
-            return pixel;
-        });
-    }
-
-    if ( !all ) {
-        makeLighten(this.currentLayer);
-    } else {
-        this.layers.forEach(function(layer, i) {
-            makeLighten(i);
-        });
-    }
+        return pixel;
+    });
 
     return this;
-
 };
 
-Martin.prototype.darken = function( amt ) {
-
-    this.lighten( -amt );
-
-    return this;
+Martin.Effect.prototype.darken = function() {
+    return this.invert('lighten');
 };
 
 // Fade uniform
-Martin.prototype.opacity = function( amt, all ) {
+Martin.Effect.prototype.opacity = function() {
 
-    var _this = this;
+    var layer = this.layer,
+        amt = this.amount;
 
-    function makeOpacity(layer) {
+    amt = amt / 100;
+    if ( amt > 1 ) amt = 1;
 
-        _this.switchToLayer(layer);
-
-        _this.loop(function(x, y, pixel) {
-            pixel.a *= amt;
-            return pixel;
-        });
-    }
-
-    if ( !all ) {
-        makeOpacity(this.currentLayer);
-    } else {
-        this.layers.forEach(function(layer, i) {
-            makeOpacity(i);
-        });
-    }
+    layer.loop(function(x, y, pixel) {
+        pixel.a *= amt;
+        return pixel;
+    });
 
     return this;
+};
 
+// simple stack maker
+Martin._BlurStack = function() {
+    this.r = this.g = this.b = this.a = 0;
+    this.next = null;
 };
 
 // helper functions for .blur()
-Martin.mul_shift_table = function(i) {
+Martin._BlurStack.mul_shift_table = function(i) {
     var mul_table = [1,171,205,293,57,373,79,137,241,27,391,357,41,19,283,265,497,469,443,421,25,191,365,349,335,161,155,149,9,278,269,261,505,245,475,231,449,437,213,415,405,395,193,377,369,361,353,345,169,331,325,319,313,307,301,37,145,285,281,69,271,267,263,259,509,501,493,243,479,118,465,459,113,446,55,435,429,423,209,413,51,403,199,393,97,3,379,375,371,367,363,359,355,351,347,43,85,337,333,165,327,323,5,317,157,311,77,305,303,75,297,294,73,289,287,71,141,279,277,275,68,135,67,133,33,262,260,129,511,507,503,499,495,491,61,121,481,477,237,235,467,232,115,457,227,451,7,445,221,439,218,433,215,427,425,211,419,417,207,411,409,203,202,401,399,396,197,49,389,387,385,383,95,189,47,187,93,185,23,183,91,181,45,179,89,177,11,175,87,173,345,343,341,339,337,21,167,83,331,329,327,163,81,323,321,319,159,79,315,313,39,155,309,307,153,305,303,151,75,299,149,37,295,147,73,291,145,289,287,143,285,71,141,281,35,279,139,69,275,137,273,17,271,135,269,267,133,265,33,263,131,261,130,259,129,257,1];
 
 
@@ -718,201 +1021,243 @@ Martin.mul_shift_table = function(i) {
     return [ mul_table[i], shg_table[i] ];
 };
 
-// simple stack maker
-Martin.BlurStack = function() {
-    this.r = this.g = this.b = this.a = 0;
-    this.next = null;
-};
-
 // And, what we've all been waiting for:
-Martin.prototype.blur = function( radius, all ) {
+Martin.Effect.prototype.blur = function() {
 
-    if ( isNaN(radius) || radius < 1 ) return this;
+    var layer = this.layer,
+        amt = this.amount;
 
-    var _this = this;
+    if ( isNaN(amt) || amt < 1 ) return this;
+    // Round to nearest pixel
+    amt = Math.round(amt);
 
     var iterations = 2,			// increase for smoother blurring
-        width = this.width(),
-        height = this.height(),
+        width = this.base.width(),
+        height = this.base.height(),
         widthMinus1 = width - 1,
         heightMinus1 = height - 1,
-        radiusPlus1 = radius + 1,
-        div = 2 * radius + 1,
-        mul_sum = Martin.mul_shift_table(radius)[0],
-        shg_sum = Martin.mul_shift_table(radius)[1];
+        radiusPlus1 = amt + 1,
+        div = 2 * amt + 1,
+        mul_sum = Martin._BlurStack.mul_shift_table(amt)[0],
+        shg_sum = Martin._BlurStack.mul_shift_table(amt)[1];
 
-    function makeBlur(layer, j) {
+    var it = iterations, // internal iterations in case doing multiple layers
+        imageData = layer.getImageData(),
+        pixels = imageData.data;
 
-        _this.switchToLayer(j);
+    var x, y, i, p, yp, yi, yw, r_sum, g_sum, b_sum, a_sum,
+        r_out_sum, g_out_sum, b_out_sum, a_out_sum,
+        r_in_sum, g_in_sum, b_in_sum, a_in_sum,
+        pr, pg, pb, pa;
 
-        var it = iterations, // internal iterations in case doing multiple layers
-            imageData = _this.context.getImageData( 0, 0, width, height ),
-            pixels = imageData.data;
+    var stackStart = new Martin._BlurStack(),
+        stack = stackStart,
+        stackEnd,
+        stackIn;
 
-        var x, y, i, p, yp, yi, yw, r_sum, g_sum, b_sum, a_sum,
-            r_out_sum, g_out_sum, b_out_sum, a_out_sum,
-            r_in_sum, g_in_sum, b_in_sum, a_in_sum,
-            pr, pg, pb, pa;
+    for ( i = 1; i < div; i++ ) {
+        stack = stack.next = new Martin._BlurStack();
+        if ( i === radiusPlus1 ) stackEnd = stack;
+    }
 
-        var stackStart = new Martin.BlurStack(),
-            stack = stackStart,
-            stackEnd,
-            stackIn;
+    stack.next = stackStart;
+    stackIn = null;
 
-        for ( i = 1; i < div; i++ ) {
-            stack = stack.next = new Martin.BlurStack();
-            if ( i === radiusPlus1 ) stackEnd = stack;
-        }
+    // repeat for as many iterations as given
+    while ( it-- > 0 ) {
 
-        stack.next = stackStart;
-        stackIn = null;
+        yw = yi = 0;
 
-        // repeat for as many iterations as given
-        while ( it-- > 0 ) {
+        // loop through rows from top down
+        for ( y = height; --y > -1; ) {
 
-            yw = yi = 0;
+            // start summing pixel values
+            r_sum = radiusPlus1 * ( pr = pixels[yi] );
+            g_sum = radiusPlus1 * ( pg = pixels[yi + 1] );
+            b_sum = radiusPlus1 * ( pb = pixels[yi + 2] );
+            a_sum = radiusPlus1 * ( pa = pixels[yi + 3] );
 
-            // loop through rows from top down
-            for ( y = height; --y > -1; ) {
+            stack = stackStart;
 
-                // start summing pixel values
-                r_sum = radiusPlus1 * ( pr = pixels[yi] );
-                g_sum = radiusPlus1 * ( pg = pixels[yi + 1] );
-                b_sum = radiusPlus1 * ( pb = pixels[yi + 2] );
-                a_sum = radiusPlus1 * ( pa = pixels[yi + 3] );
+            for ( i = radiusPlus1; --i > -1; ) {
+                stack.r = pr;
+                stack.g = pg;
+                stack.b = pb;
+                stack.a = pa;
 
-                stack = stackStart;
-
-                for ( i = radiusPlus1; --i > -1; ) {
-                    stack.r = pr;
-                    stack.g = pg;
-                    stack.b = pb;
-                    stack.a = pa;
-
-                    stack = stack.next;
-                }
-
-                for ( i = 1; i < radiusPlus1; i++ ) {
-
-                    p = yi + (( widthMinus1 < i ? widthMinus1 : i ) << 2 );
-
-                    r_sum += ( stack.r = pixels[p]);
-                    g_sum += ( stack.g = pixels[p + 1]);
-                    b_sum += ( stack.b = pixels[p + 2]);
-                    a_sum += ( stack.a = pixels[p + 3]);
-
-                    stack = stack.next;
-                }
-
-                stackIn = stackStart;
-
-                for ( x = 0; x < width; x++ ) {
-                    pixels[yi++] = (r_sum * mul_sum) >>> shg_sum;
-                    pixels[yi++] = (g_sum * mul_sum) >>> shg_sum;
-                    pixels[yi++] = (b_sum * mul_sum) >>> shg_sum;
-                    pixels[yi++] = (a_sum * mul_sum) >>> shg_sum;
-
-                    p = ( yw + ( ( p = x + radius + 1 ) < widthMinus1 ? p : widthMinus1 ) ) << 2;
-
-                    r_sum -= stackIn.r - ( stackIn.r = pixels[p]);
-                    g_sum -= stackIn.g - ( stackIn.g = pixels[p + 1]);
-                    b_sum -= stackIn.b - ( stackIn.b = pixels[p + 2]);
-                    a_sum -= stackIn.a - ( stackIn.a = pixels[p + 3]);
-
-                    stackIn = stackIn.next;
-                }
-
-                // next row
-                yw += width;
+                stack = stack.next;
             }
+
+            for ( i = 1; i < radiusPlus1; i++ ) {
+
+                p = yi + (( widthMinus1 < i ? widthMinus1 : i ) << 2 );
+
+                r_sum += ( stack.r = pixels[p]);
+                g_sum += ( stack.g = pixels[p + 1]);
+                b_sum += ( stack.b = pixels[p + 2]);
+                a_sum += ( stack.a = pixels[p + 3]);
+
+                stack = stack.next;
+            }
+
+            stackIn = stackStart;
 
             for ( x = 0; x < width; x++ ) {
+                pixels[yi++] = (r_sum * mul_sum) >>> shg_sum;
+                pixels[yi++] = (g_sum * mul_sum) >>> shg_sum;
+                pixels[yi++] = (b_sum * mul_sum) >>> shg_sum;
+                pixels[yi++] = (a_sum * mul_sum) >>> shg_sum;
 
-                // with each column, divide yi by 4 (4 values per px)
-                yi = x << 2;
+                p = ( yw + ( ( p = x + amt + 1 ) < widthMinus1 ? p : widthMinus1 ) ) << 2;
 
-                r_sum = radiusPlus1 * ( pr = pixels[yi]);
-                g_sum = radiusPlus1 * ( pg = pixels[yi + 1]);
-                b_sum = radiusPlus1 * ( pb = pixels[yi + 2]);
-                a_sum = radiusPlus1 * ( pa = pixels[yi + 3]);
+                r_sum -= stackIn.r - ( stackIn.r = pixels[p]);
+                g_sum -= stackIn.g - ( stackIn.g = pixels[p + 1]);
+                b_sum -= stackIn.b - ( stackIn.b = pixels[p + 2]);
+                a_sum -= stackIn.a - ( stackIn.a = pixels[p + 3]);
 
-                stack = stackStart;
-
-                for ( i = 0; i < radiusPlus1; i++ ) {
-                    stack.r = pr;
-                    stack.g = pg;
-                    stack.b = pb;
-                    stack.a = pa;
-                    stack = stack.next;
-                }
-
-                yp = width;
-
-                for ( i = 1; i <= radius; i++ ) {
-                    yi = ( yp + x ) << 2;
-
-                    r_sum += ( stack.r = pixels[yi]);
-                    g_sum += ( stack.g = pixels[yi + 1]);
-                    b_sum += ( stack.b = pixels[yi + 2]);
-                    a_sum += ( stack.a = pixels[yi + 3]);
-
-                    stack = stack.next;
-
-                    if ( i < heightMinus1 ) yp += width;
-                }
-
-                yi = x;
-                stackIn = stackStart;
-
-                for ( y = 0; y < height; y++ ) {
-
-                    p = yi << 2;
-
-                    pixels[p + 3] = pa =(a_sum * mul_sum) >>> shg_sum;
-
-                    if ( pa > 0 ) {
-                        pa = 255 / pa;
-                        pixels[p]   = ((r_sum * mul_sum) >>> shg_sum ) * pa;
-                        pixels[p + 1] = ((g_sum * mul_sum) >>> shg_sum ) * pa;
-                        pixels[p + 2] = ((b_sum * mul_sum) >>> shg_sum ) * pa;
-                    } else {
-                        pixels[p] = pixels[p + 1] = pixels[p + 2] = 0;
-                    }
-
-                    p = ( x + (( ( p = y + radiusPlus1) < heightMinus1 ? p : heightMinus1 ) * width )) << 2;
-
-                    r_sum -= stackIn.r - ( stackIn.r = pixels[p]);
-                    g_sum -= stackIn.g - ( stackIn.g = pixels[p + 1]);
-                    b_sum -= stackIn.b - ( stackIn.b = pixels[p + 2]);
-                    a_sum -= stackIn.a - ( stackIn.a = pixels[p + 3]);
-
-                    stackIn = stackIn.next;
-
-                    yi += width;
-                }
+                stackIn = stackIn.next;
             }
+
+            // next row
+            yw += width;
         }
 
-        _this.putImageData( imageData );
+        for ( x = 0; x < width; x++ ) {
+
+            // with each column, divide yi by 4 (4 values per px)
+            yi = x << 2;
+
+            r_sum = radiusPlus1 * ( pr = pixels[yi]);
+            g_sum = radiusPlus1 * ( pg = pixels[yi + 1]);
+            b_sum = radiusPlus1 * ( pb = pixels[yi + 2]);
+            a_sum = radiusPlus1 * ( pa = pixels[yi + 3]);
+
+            stack = stackStart;
+
+            for ( i = 0; i < radiusPlus1; i++ ) {
+                stack.r = pr;
+                stack.g = pg;
+                stack.b = pb;
+                stack.a = pa;
+                stack = stack.next;
+            }
+
+            yp = width;
+
+            for ( i = 1; i <= amt; i++ ) {
+                yi = ( yp + x ) << 2;
+
+                r_sum += ( stack.r = pixels[yi]);
+                g_sum += ( stack.g = pixels[yi + 1]);
+                b_sum += ( stack.b = pixels[yi + 2]);
+                a_sum += ( stack.a = pixels[yi + 3]);
+
+                stack = stack.next;
+
+                if ( i < heightMinus1 ) yp += width;
+            }
+
+            yi = x;
+            stackIn = stackStart;
+
+            for ( y = 0; y < height; y++ ) {
+
+                p = yi << 2;
+
+                pixels[p + 3] = pa =(a_sum * mul_sum) >>> shg_sum;
+
+                if ( pa > 0 ) {
+                    pa = 255 / pa;
+                    pixels[p]   = ((r_sum * mul_sum) >>> shg_sum ) * pa;
+                    pixels[p + 1] = ((g_sum * mul_sum) >>> shg_sum ) * pa;
+                    pixels[p + 2] = ((b_sum * mul_sum) >>> shg_sum ) * pa;
+                } else {
+                    pixels[p] = pixels[p + 1] = pixels[p + 2] = 0;
+                }
+
+                p = ( x + (( ( p = y + radiusPlus1) < heightMinus1 ? p : heightMinus1 ) * width )) << 2;
+
+                r_sum -= stackIn.r - ( stackIn.r = pixels[p]);
+                g_sum -= stackIn.g - ( stackIn.g = pixels[p + 1]);
+                b_sum -= stackIn.b - ( stackIn.b = pixels[p + 2]);
+                a_sum -= stackIn.a - ( stackIn.a = pixels[p + 3]);
+
+                stackIn = stackIn.next;
+
+                yi += width;
+            }
+        }
     }
 
-    if ( !all ) {
-        makeBlur(null, this.currentLayer);
-    } else {
-        this.layers.forEach(makeBlur);
-    }
+    layer.putImageData( imageData );
 
     return this;
 };
+
+// Adjust the amount of an Effect
+Martin.Effect.prototype.increase = function(amt) {
+
+    if ( this.inverse ) amt = -(amt || 1);
+
+    this.amount += amt || 1;
+    this.base.render();
+    return this;
+};
+
+Martin.Effect.prototype.decrease = function(amt) {
+    return this.increase(-amt || -1);
+};
+
+(function(){
+    var effects = ['desaturate', 'saturate', 'lighten', 'darken', 'opacity', 'blur'];
+
+    effects.forEach(function(el) {
+        Martin.prototype[el] = function(amt) {
+            return new Martin.Effect(el, this, amt);
+        };
+    });
+})();
+
+(function(){
+    var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mousedown', 'mouseup'];
+
+    events.forEach(function(evt){
+        Martin.prototype[evt] = function(cb) {
+
+            function callback(e) {
+                cb(e);
+                this.render();
+            }
+
+            this.canvas.addEventListener(evt, callback.bind(this));
+            return this;
+        };
+    });
+
+    Martin.prototype.on = function(evt, cb) {
+
+        evt = evt.split(' ');
+
+        function callback(e) {
+            cb(e);
+            this.render();
+        }
+
+        evt.forEach(function(ev) {
+            if ( events.indexOf(ev) > -1 ) {
+                this.canvas.addEventListener(ev, callback.bind(this));
+            }
+        }, this);
+
+        return this;
+    };
+})();
 
 /*
 	Need to find a place for the rest of these important methods.
 
 	.width()
 	.height()
-	.write()
-	.background()
-	.gradient()
 */
 
 // Set or change dimensions.
@@ -920,171 +1265,39 @@ Martin.prototype.blur = function( radius, all ) {
 
 	Martin.prototype[which] = function( val, resize ) {
 
+		var ratio;
+
 		// if no value given, return the corresponding value
 		if ( !val ) return this.canvas[which];
 
-		var imageData,
-			pixels,
-			oldHeight,
-			ratio,
-			dummyCanvas,
-			dummyContext;
-
+		// normalize the value
 		if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
 
-		oldHeight = this.canvas.height;
-
-		// Update the container
-		this.container.style[which] = val + 'px';
-
 		// get the ratio, in case we're resizing
-		ratio = val / this.canvas[which];
+		ratio = resize ? val / this.canvas[which] : 1;
+
+		// update dimensions of base canvas
+		this.canvas[which] = val;
+		this.context.scale(
+			which === 'width' ? ratio : 1,
+			which === 'height' ? ratio : 1
+		);
 
 		// Update height or width of all the layers' canvases
 		// and update their contexts
-		for ( var i = this.layers.length - 1; i >= 0; i-- ) {
+		this.layers.forEach(function(layer, i) {
 
-			imageData = this.layers[i].context.getImageData(
-				0,
-				which === 'height' && !resize ? this.canvas.height - val : 0,
-				this.canvas.width,
-				this.canvas.height
+			layer.canvas[which] = val;
+			layer.context.scale(
+				which === 'width' ? ratio : 1,
+				which === 'height' ? ratio : 1
 			);
 
-			dummyCanvas = document.createElement('canvas');
-			dummyContext = dummyCanvas.getContext('2d');
+			layer.renderLayer();
 
-			dummyCanvas.setAttribute('width', this.canvas.width);
-			dummyCanvas.setAttribute('height', this.canvas.height);
-
-			dummyContext.putImageData(
-				this.layers[i].context.getImageData(
-					0,
-					0,
-					this.canvas.width,
-					this.canvas.height
-				),
-				0,
-				0
-			);
-
-			this.layers[i].canvas.setAttribute(which, val);
-
-			if ( resize ) {
-
-				this.layers[i].context.scale(
-					which === 'width' ? ratio : 1,
-					which === 'height' ? ratio : 1
-				);
-			}
-
-			this.layers[i].context.drawImage(dummyCanvas, 0, which === 'height' && !resize ? val - oldHeight : 0);
-
-		}
-
-		// Since we might have increased dimensions, if a background
-		// was already set, make sure that the new size receives that background
-		if ( this.layers[0].type === 'background' ) this.background( this.layers[0].fill );
+		});
 
 		return this;
 
 	};
-
 });
-
-Martin.prototype.write = function( arg1, arg2 ) {
-
-	var text, obj;
-
-	if ( typeof arg1 === 'string' ) {
-		text = arg1;
-		obj = arg2;
-	} else {
-		obj = arg1;
-		text = obj.text || '';
-	}
-
-	if ( !obj ) obj = {};
-
-	var size = obj.size || 16;
-
-	var fontString = size + 'px ';
-	fontString += obj.font ? '"' + obj.font + '"' : 'sans-serif';
-
-	this.context.font = fontString;
-	this.context.fillStyle = obj.color || '#000';
-	this.context.textBaseline = 'top';
-	this.context.textAlign = obj.align || 'left';
-	this.context.fillText(
-		text,
-		this.normalizeX(obj.offsetX || 0),
-		obj.offsetY ? this.normalizeY(obj.offsetY) - size : this.canvas.height - size
-	);
-
-	return this;
-};
-
-// Method for giving a canvas a background color.
-// Only target semi-transparent pixels, and use a weighted
-// average to calculate the outcome.
-Martin.prototype.background = function( color ) {
-
-	var originalLayer = this.currentLayer,
-		bump = 0;
-
-	// first time background
-	if ( this.layers[0].type !== 'background' ) {
-
-		bump = 1; // we bump all other layers
-
-		this.newLayer({
-			type: 'background',
-			fill: color
-		});
-
-		// now get that background we just created
-		var background = this.layers.pop(),
-			bottom = this.container.firstChild;
-
-		// reassign our layers
-		for ( var l = this.layers.length; l >= 0; l-- ) {
-
-			this.layers[l] = this.layers[l - 1] || background;
-
-		}
-
-		this.switchToLayer(0);
-		this.container.insertBefore(background.canvas, bottom);
-
-	// if we're redoing the background, just switch to that
-	// background layer and work it
-	} else {
-		this.layers[0].fill = color;
-		this.switchToLayer(0);
-	}
-
-	var rgb = Martin.hexToRGB( color ),
-		r = rgb.r,
-		g = rgb.g,
-		b = rgb.b;
-
-	var imageData = this.context.getImageData( 0, 0, this.canvas.width, this.canvas.height ),
-		pixels = imageData.data,
-		len = pixels.length;
-
-	for ( var i = 0; i < len; i += 4 ) {
-
-		pixels[i]		= r;
-		pixels[i + 1]	= g;
-		pixels[i + 2]	= b;
-		pixels[i + 3]	= 255;
-
-	}
-
-	this.putImageData( imageData );
-
-	this.switchToLayer(originalLayer + bump);
-
-	return this;
-
-};

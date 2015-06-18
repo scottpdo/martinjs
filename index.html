@@ -12,57 +12,47 @@
     </style>
 
     <script src="js/dist/martin.js"></script>
-    <script src="js/src/martin.gradient.js"></script>
-    <script src="js/src/martin.watermark.js"></script>
 
 </head>
 
 <body>
     <div class="section">
-        <p>Source Image</p>
-        <img id="src" src="docs/images/marty-full.jpg">
-    </div>
-
-    <div class="section">
-        <p>New layer, draw circle on that layer</p>
-        <p id="new-layer-layer-count" style="font-weight: bold;"></p>
-        <img id="new-layer" src="docs/images/marty-full.jpg">
-    </div>
-
-    <div class="section">
-        <p>New layer, draw circle on that layer,
-        switch to bottom layer, draw rectangle</p>
-        <p id="switch-layer-active-layer" style="font-weight: bold;"></p>
-        <img id="switch-layer" src="docs/images/marty-full.jpg">
+        <img id="img" src="docs/images/marty-full.jpg">
     </div>
 
     <script>
+    var canvas = Martin('img');
+    var effect = canvas.blur(100);
+    var int = setInterval(function() {
+        if ( effect.amount > 0 ) {
+            effect.decrease();
+        } else {
+            clearInterval(int);
+        }
+    }, 10);
 
-    Martin('new-layer', function(canvas) {
-        canvas.newLayer();
-        canvas.circle({
-            color: '#fff',
-            radius: 100
-        });
+    canvas.newLayer();
+    canvas.background('#005');
+    var opacity = canvas.opacity(100);
+    var int2 = setInterval(function() {
+        if ( opacity.amount > 0 ) {
+            opacity.decrease();
+        } else {
+            clearInterval(int2);
+        }
+    }, 10);
 
-        document.getElementById('new-layer-layer-count').innerHTML = 'Layer count: ' + canvas.layers.length;
+    canvas.newLayer();
+    var text = canvas.text({
+        font: 'Futura',
+        text: 'THIS IS MARTIN.JS',
+        align: 'center',
+        x: '50%',
+        y: 20,
+        color: '#fff',
+        size: 66
     });
-
-    Martin('switch-layer', function(canvas) {
-        canvas.newLayer();
-        canvas.circle({
-            color: '#fff',
-            radius: 100
-        });
-        canvas.switchToLayer(0);
-        canvas.rect({
-            color: '#f00',
-            width: canvas.width(),
-            height: 100,
-            offsetY: '50%'
-        });
-        document.getElementById('switch-layer-active-layer').innerHTML = 'Current layer: Layer ' + canvas.currentLayer;
-    });
+    </script>
 
     </script>
 </body>

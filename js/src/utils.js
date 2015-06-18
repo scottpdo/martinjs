@@ -3,35 +3,77 @@
     usage and not the public-facing API, the exception being Martin.extend.
 
     extend()
+    .render()
+    .toDataURL()
     .convertToImage()
     .normalizeX()
     .normalizeY()
     .normalizePercentX()
     .normalizePercentY()
-    .setContext()
+    setContext()
     .loop()
     .putImageData()
 */
 
+Martin.utils = {};
+
 // Extend Martin with plugins, if you want
-Martin.extend = function( obj ) {
+Martin.utils.extend = function( obj ) {
     for ( var method in obj ) {
         Martin.prototype[method] = obj[method];
     }
 };
 
-// Get the dataURL of the merged layers of the canvas (without affecting
-// the layers), or smash them all into one layer and turn that into an image
-Martin.prototype.convertToImage = function(preserve) {
+Martin.extend = Martin.utils.extend;
 
-    if ( preserve ) return this.mergeLayers(preserve);
+Martin.utils.forEach = function(arr, cb) {
+    if (arr) {
+        arr.forEach(cb);
+    }
+};
 
-    this.mergeLayers();
+Martin.prototype.remove = function() {
+    var canvas = this.canvas,
+        parent = canvas.parentNode;
+    parent.removeChild(this.canvas);
+    return this;
+};
 
-    var img = document.createElement('img');
-    img.src = this.layers[0].canvas.toDataURL();
+// Render: looping through layers, loop through elements
+// and render each (with optional callback)
+Martin.prototype.render = function(cb) {
+    Martin.utils.forEach(this.layers, function(layer, i) {
+        layer.clearLayer();
+        Martin.utils.forEach(layer.elements, function(element) {
+            element.renderElement();
+        });
+        Martin.utils.forEach(layer.effects, function(effect) {
+            effect.renderEffect();
+        });
+        layer.renderLayer();
+    });
 
-    this.container.removeChild( this.layers[0].canvas );
+    if (cb) cb();
+};
+
+// Return's a data URL of all the working layers
+Martin.prototype.toDataURL = function() {
+    return this.canvas.toDataURL();
+};
+
+// Get the dataURL of the merged layers of the canvas,
+// then turn that into one image
+Martin.prototype.convertToImage = function() {
+
+    var dataURL = this.toDataURL(),
+        img = document.createElement('img');
+
+    img.src = dataURL;
+
+    this.layers.forEach(function(layer, i){
+        this.deleteLayer(i);
+    }, this);
+
     this.container.appendChild( img );
 
 };
@@ -42,9 +84,7 @@ Martin.prototype.normalizeX = function( val ) {
 };
 
 Martin.prototype.normalizeY = function( val ) {
-    val = ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-    // Flip it upside down (a la Cartesian)
-    return this.canvas.height - val;
+    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
 };
 
 Martin.prototype.normalizePercentX = function( val ) {
@@ -56,74 +96,20 @@ Martin.prototype.normalizePercentY = function( val ) {
 };
 
 // Set the fill, stroke, alpha for a new shape
-Martin.prototype.setContext = function( obj ) {
+Martin.setContext = function( context, obj ) {
 
-    var c = this.context;
+    context.save();
 
-    c.save();
+    context.fillStyle = obj.color || '#000';
+    context.fill();
 
-    c.fillStyle = obj.color || '#000';
-    c.fill();
+    context.globalAlpha = obj.alpha || 1;
 
-    c.globalAlpha = obj.alpha || 1;
+    context.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
+    context.lineCap = obj.cap ? obj.cap : 'square';
+    context.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
+    context.stroke();
 
-    c.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
-    c.lineCap = obj.cap ? obj.cap : 'square';
-    c.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
-    c.stroke();
+    context.restore();
 
-    c.restore();
-
-};
-
-// Loop through the image data
-Martin.prototype.loop = function(cb, put) {
-
-    var imageData = this.context.getImageData( 0, 0, this.width(), this.height() ),
-        pixels = imageData.data,
-        len = pixels.length,
-        n,
-        x,
-        y,
-        r, g, b, a,
-        pixel,
-        output;
-
-    for ( var i = 0; i < len; i += 4 ) {
-
-        // xy coordinates
-        n = i / 4;
-        x = n % this.width();
-        y = this.height() - Math.floor(n / this.width());
-
-        // rgba values
-        r = pixels[i];
-        g = pixels[i + 1];
-        b = pixels[i + 2];
-        a = pixels[i + 3];
-
-        // pass an object corresponding to the pixel to the callback
-        pixel = { r: r, g: g, b: b, a: a };
-
-        // execute the callback within the context of this instance
-        output = cb.call( this, x, y, pixel );
-
-        // reassign the actual rgba values of the pixel based on the output from the loop
-        pixels[i] = output.r;
-        pixels[i + 1] = output.g;
-        pixels[i + 2] = output.b;
-        pixels[i + 3] = output.a;
-
-    }
-
-    // explicitly declare if image data from callback is not to be used
-    if ( put !== false ) this.context.putImageData( imageData, 0, 0 );
-
-    return this;
-};
-
-// Simple shell for putting image data
-Martin.prototype.putImageData = function(imageData) {
-    this.context.putImageData( imageData, 0, 0 );
-    return this;
 };

@@ -3,118 +3,86 @@
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-    Version: 0.1.3.1-beta
 
     ----------------------------------------
 
     MARTIN
-    _version
     .makeCanvas()
-    .handleLoad()
+    _version
 */
 
-// The great initializer.
-window.Martin = function( id, init ) {
+// The great initializer. Pass in a string to select element by ID,
+// or an HTMLElement
+window.Martin = function( val ) {
 
-    if ( !(this instanceof Martin) ) return new Martin( id, init );
+    if ( !(this instanceof Martin) ) return new Martin( val );
 
-    // Set the original element.
-    this.original = document.getElementById( id );
-
-    if ( !this.original || !id ) {
-
-        throw new Error('Must provide a <canvas> or <img> element.');
+    // Set the original element, if there is one
+    this.original = null;
+    if ( typeof val === 'string' ) {
+        this.original = document.getElementById(val);
+    } else if ( val instanceof HTMLElement ) {
+        this.original = val;
     }
 
     // Now prepare yourself...
-    var callback = this.handleLoad;
-    this.makeCanvas(callback.bind(this), init);
+    return this.makeCanvas();
 
 };
-
-Martin._version = '0.1.3.1-beta';
 
 // Convert an image to a canvas or just return the canvas.
-Martin.prototype.makeCanvas = function(callback, init) {
+Martin.prototype.makeCanvas = function() {
 
-    if ( this.original.tagName === 'IMG' ) {
+    this.canvas = document.createElement('canvas');
+    this.context = this.canvas.getContext('2d');
 
-        var _this = this,
-            pixelData;
+    // Create an empty layer
+    this.newLayer();
 
-        // run this once we are sure the image has loaded
-        var d = function() {
+    if ( this.original ) {
 
-            var canvas = document.createElement('canvas');
+        if ( this.original.tagName === 'IMG' ) {
 
-            canvas.width = _this.original.naturalWidth;
-            canvas.height = _this.original.naturalHeight;
+            var canvas = this.canvas,
+                context = this.context,
+                original = this.original;
 
-            canvas.getContext('2d').drawImage( _this.original, 0, 0 );
+            function d() {
 
-            _this.original.parentNode.insertBefore( canvas, _this.original );
-            _this.original.parentNode.removeChild( _this.original );
-            _this.canvas = canvas;
-            _this.context = canvas.getContext('2d');
+                canvas.width = original.naturalWidth;
+                canvas.height = original.naturalHeight;
 
-            return callback(init);
-        };
+                this.width(canvas.width);
+                this.height(canvas.height);
 
-        // if loaded, return
-        if ( this.original.complete ) return d();
+                original.parentNode.insertBefore( canvas, original );
+                original.parentNode.removeChild( original );
 
-        // if it hasn't loaded, wait for that event
-        this.original.onload = d;
+                // Give that layer some image data
+                new Martin.Element('image', this, {
+                    original: original
+                });
+            }
 
+            // This should only fire once! Fire if the image is complete,
+            // or add a handler for once it has finished loading.
+            if ( original.complete ) return d.call(this);
+            original.onload = d.bind(this);
 
+        } else if ( this.original.tagName === 'CANVAS' ) {
 
-    } else if ( this.original.tagName === 'CANVAS' ) {
-
-        this.canvas = this.original;
-        this.context = this.original.getContext('2d');
-        return callback(init);
-
+            this.canvas = this.original;
+            this.context = this.original.getContext('2d');
+        }
     }
+
+    // only render and execute callback immediately
+    // if the original is not an image
+    this.render();
+
+    return this;
 };
 
-// Function to handle the element's load.
-// Will only be fired once the <img> is ready (or right away for <canvas>).
-Martin.prototype.handleLoad = function(init) {
-
-    // Refer to the original parent container
-    var originalContainer = this.canvas.parentNode;
-
-    // Create a new container (with data-martin)
-    // that will house everything in the DOM from here on out
-    this.container = document.createElement('div');
-    this.container.setAttribute('data-martin', '');
-
-    // Insert the new container into the DOM
-    originalContainer.insertBefore( this.container, this.canvas );
-
-    // And move the canvas into the new container
-    this.container.appendChild( this.canvas );
-
-    // Position the container relatively so that we can absolutely
-    // position any children within it. Also set dimensions.
-    this.container.style.position = 'relative';
-    this.container.style.width = this.canvas.width + 'px';
-    this.container.style.height = this.canvas.height + 'px';
-
-    // Create a stylesheet that will declare position all children of [data-martin]
-    var style = document.createElement('style');
-    style.innerHTML = '[data-martin] *{position:absolute;bottom:0;left:0;}';
-    document.head.appendChild(style);
-
-    // Set the layers (currently just this.canvas)
-    this.layers = [{
-        canvas: this.canvas,
-        context: this.context
-    }];
-
-    this.currentLayer = 0;
-
-    // Now we are ready and can initialize
-    return init(this);
-
-};
+// DON'T EDIT THIS LINE.
+// Automatically updated w/ Gulp
+Martin._version = '0.2.3-beta';
