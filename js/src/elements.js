@@ -26,7 +26,6 @@
       create a corresponding method on the main Martin instance
 */
 
-
 Martin.Element = function(type, canvas, obj) {
 
     if ( Martin.Element.prototype.hasOwnProperty(type) ) {
@@ -57,29 +56,35 @@ Martin.Element = function(type, canvas, obj) {
 };
 
 Martin.Element.prototype.renderElement = function() {
+
+    var layer = this.layer,
+        context = layer.context;
+
+    // scale the context
+    context.scale(
+        layer.scale.x,
+        layer.scale.y
+    );
+
     // render the element
     this[this.type]();
-    // apply any effects
-    if ( this.effects ) {
-        this.effects.forEach(function(effect) {
-            // TODO
-        });
-    }
+
+    // undo scaling
+    context.scale(
+        1 / layer.scale.x,
+        1 / layer.scale.y
+    );
+
     return this;
 };
 
 Martin.Element.prototype.image = function() {
 
-    var base = this.base,
-        layer = this.layer,
+    var layer = this.layer,
         context = layer.context,
         obj = this.data;
 
-    context.drawImage(
-        obj.original,
-        0, 0, obj.original.naturalWidth, obj.original.naturalHeight,
-        0, 0, layer.width(), layer.height()
-    );
+    context.drawImage( obj.original, 0, 0 );
 
     return this;
 };
@@ -92,7 +97,7 @@ Martin.Element.prototype.background = function() {
     obj.color = color;
     this.data = obj;
 
-	return this.rect();
+    return this.rect();
 };
 
 
@@ -110,14 +115,17 @@ Martin.Element.prototype.line = function() {
     );
 
     context.lineTo(
-        layer.normalizeX( obj.height || layer.width() ),
-        layer.normalizeY( obj.width || layer.height() )
+        layer.normalizeX( obj.endX ),
+        layer.normalizeY( obj.endY )
     );
+
+    obj.width = Math.abs(obj.endX - obj.x);
+    obj.height = Math.abs(obj.endY - obj.y);
 
     if ( !obj.strokeWidth ) obj.strokeWidth = 1;
     obj.stroke = obj.color ? obj.color : '#000';
 
-    Martin.setContext( context, obj );
+    layer.setContext( obj );
 
     context.closePath();
 
@@ -140,7 +148,7 @@ Martin.Element.prototype.rect = function() {
         layer.normalizeY( obj.height || layer.height() )
     );
 
-    Martin.setContext( context, obj );
+    layer.setContext( obj );
 
     context.closePath();
 
@@ -159,7 +167,7 @@ Martin.Element.prototype.circle = function() {
 
     context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
 
-    Martin.setContext( context, obj );
+    layer.setContext( obj );
 
     context.closePath();
 
@@ -169,16 +177,17 @@ Martin.Element.prototype.circle = function() {
 
 Martin.Element.prototype.ellipse = function() {
 
+    var layer = this.layer,
+        context = layer.context,
+        obj = this.data,
+        centerX = layer.normalizeX( obj.x || 0 ),
+        centerY = layer.normalizeY( obj.y || 0 ),
+        scale;
+
     if ( obj.radiusX === obj.radiusY ) {
         obj.radius = obj.radiusX;
         return this.circle( canvas, obj );
     }
-
-    var layer = this.layer,
-        context = layer.context,
-        centerX = layer.normalizeX( obj.offsetX || 0 ),
-        centerY = layer.normalizeY( obj.offsetY || 0 ),
-        scale;
 
     context.beginPath();
 
@@ -186,25 +195,25 @@ Martin.Element.prototype.ellipse = function() {
 
         scale = obj.radiusX / obj.radiusY;
 
-        context.scale( this.scale.x * scale, this.scale.y );
+        context.scale( scale, 1 );
 
         context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
 
-        context.scale( this.scale.x / scale, this.scale.y );
+        context.scale( 1 / scale, 1 );
 
     } else {
 
         scale = obj.radiusY / obj.radiusX;
 
-        context.scale( this.scale.x, this.scale.y * scale );
+        context.scale( 1, scale );
 
         context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
 
-        context.scale( this.scale.x, this.scale.y / scale );
+        context.scale( 1, 1 / scale );
 
     }
 
-    Martin.setContext( context, obj );
+    layer.setContext( obj );
 
     context.closePath();
 
@@ -238,7 +247,7 @@ Martin.Element.prototype.polygon = function() {
         layer.normalizeY(obj.points[0][1])
     );
 
-    Martin.setContext( context, obj );
+    layer.setContext( obj );
 
     context.closePath();
 
@@ -385,6 +394,10 @@ Martin.Element.prototype.bumpToBottom = function() {
 Martin.Element.prototype.moveTo = function(x, y) {
 
     var data = this.data;
+
+    // if no params given, move to 0, 0
+    x = x || 0;
+    y = y || 0;
 
     if ( this.type === 'line' ) {
         data.endX += x - data.x;

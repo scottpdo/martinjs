@@ -11,21 +11,17 @@ A working example is `martin-watermark` . Include it after the main Martin scrip
 
 Then use the plugin's new methods as you normally would when loading Martin:
 
-```
-function init(canvas) {
-    canvas.watermark('Photo credit: Scottland Donaldson');
-}
-
-Martin('image', init);
+```js
+canvas.watermark('Photo credit: Scottland Donaldson');
 ```
 
-<img id="martin-watermark" src="images/bunny.jpg" width="400" height="300">
+<img id="martin-watermark" src="images/bunny.jpg">
 
 ### .extend(`obj`)
 
 Give function names as keys and function as values. In your function, `this` is bound to the instance of Martin, and all existing methods are available for use. Example `martin-watermark` below:
 
-```
+```js
 Martin.extend({
 
     watermark: function(text, color, size) {
@@ -35,17 +31,16 @@ Martin.extend({
         color = color || '#fff';
         size = size || 12;
         var padding = 2;
-        var style = {
+        var data = {
+            text: text,
             align: 'right',
             color: color,
-            offsetX: this.canvas.width - padding,
-            offsetY: padding,
+            x: this.width() - padding,
+            y: this.height() - size - padding,
             size: size
         };
 
-        this.write(text, style);
-
-        return this;
+        return this.text(data);
     }
 
 });

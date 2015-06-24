@@ -1,200 +1,222 @@
 $(document).ready(function(){
 
-function init(canvas) {
+Martin('martin-height-200-crop').height(200);
+Martin('martin-height-200-resize').height(200, true);
+Martin('martin-height-400-resize').height(400, true);
+Martin('martin-width-200-crop').width(200);
+Martin('martin-width-200-resize').width(200, true);
+Martin('martin-width-500-resize').width(500, true);
 
-    canvas.rect({
-        offsetX: 130,
-        offsetY: 20,
-        width: 90,
-        height: 50,
+(function(){
+    var back = Martin('martin-background');
+    back.newLayer();
+    back.background('#f00');
+    back.opacity(50);
+})();
+
+line = Martin('martin-line').line({
+    x: 40,
+    y: 100,
+    endX: '95%',
+    endY: 30,
+    strokeWidth: 10,
+    color: '#fff',
+    cap: 'round'
+});
+
+Martin('martin-rect').rect({
+    x: '60%',
+    y: 20,
+    width: '40%',
+    height: 260,
+    color: '#ff0'
+});
+
+var poly = Martin('martin-polygon');
+poly.polygon({
+    points: [
+        ['20%', '10%'],
+        ['40%', '40%'],
+        ['20%', '40%']
+    ],
+    color: '#fff' // white
+});
+
+poly.polygon({
+    points: [
+        [300, 200],
+        [350, 200],
+        [300, 250],
+        [250, 250]
+    ],
+    color: '#00f', // blue fill
+    strokeWidth: 2,
+    stroke: '#000' // black stroke
+});
+
+Martin('martin-circle').circle({
+    x: 320,
+    y: 250,
+    radius: 35,
+    color: '#ef3'
+});
+
+Martin('martin-ellipse').ellipse({
+    x: 300,
+    y: 250,
+    radiusX: 100,
+    radiusY: 35,
+    color: '#ef3'
+});
+
+Martin('martin-text').text({
+    text: 'Hello, world!',
+    x: 140,
+    y: 220,
+    size: 20,
+    color: '#fe0',
+    font: 'Georgia'
+});
+
+(function() {
+    var canvas = Martin('martin-bump-up');
+    var circle1 = canvas.circle({
+        radius: 100,
+        color: '#f00'
+    });
+    var circle2 = canvas.circle({
+        x: 100,
+        radius: 100,
+        color: '#00f'
+    });
+    // circle 1 is now below circle 2
+    circle1.bumpUp();
+})();
+
+(function() {
+    var canvas = Martin('martin-move-to');
+    var circle1 = canvas.circle({
+        radius: 100,
+        x: '50%',
+        y: '50%',
+        color: '#f00'
+    });
+    var circle2 = canvas.circle({
+        radius: 60,
+        x: '50%',
+        y: '50%',
         color: '#fff'
     });
+    var t = 0;
+    (function bounce() {
+        t += Math.PI / 180;
+        circle1.moveTo( 0.5 * canvas.width(), 0.5 * canvas.height() + 30 * Math.sin(t) );
+        circle2.moveTo( 0.5 * canvas.width(), 0.5 * canvas.height() + 30 * Math.sin(t) );
+        requestAnimationFrame(bounce);
+    })();
+})();
 
-    canvas.write({
-        text: 'Hello!',
-        size: 18,
-        offsetX: 145,
-        offsetY: 35
+Martin('martin-saturate').saturate(100);
+Martin('martin-desaturate').desaturate(80);
+Martin('martin-lighten').lighten(25);
+Martin('martin-darken').darken(25);
+Martin('martin-opacity').opacity(50);
+Martin('martin-blur').blur(15);
+
+(function() {
+    var canvas = Martin('martin-flash');
+    var effect = canvas.lighten(0);
+    var increasing = true;
+    (function flash() {
+        var amount = effect.amount;
+        if ( increasing && amount < 100 ) {
+            effect.increase();
+        } else if ( increasing && amount === 100 ) {
+            increasing = false;
+            effect.decrease()
+
+        // .lighten() and .darken() are the inverses of each other,
+        // and so actually range between -100 and 100
+        } else if ( !increasing && amount > -100 ) {
+            effect.decrease();
+        } else {
+            increasing = true;
+            effect.increase();
+        }
+        requestAnimationFrame(flash);
+    })();
+})();
+
+(function() {
+    var canvas = Martin('martin-click');
+    var blurred = false,
+        effect = canvas.blur(0); // don't actually blur, but add an effect
+
+    canvas.click(function() {
+        if ( !blurred ) {
+            effect.increase(20);
+            blurred = true;
+        } else {
+            effect.decrease(20);
+            blurred = false;
+        }
+    });
+})();
+
+(function() {
+    var canvas = Martin('martin-mouseover');
+    var circle = canvas.circle({
+        x: Math.random() * canvas.width(),
+        y: Math.random() * canvas.height(),
+        radius: 50,
+        color: '#00f'
     });
 
-    canvas.desaturate(100).convertToImage();
-
-}
-
-if ( document.getElementById('image') ) Martin('image', init);
-
-function overview(canvas) {
-
-    canvas.rect({
-        offsetX: 150,
-        offsetY: 25,
-        width: 200,
-        height: 250,
-        color: '#33e' // blue
+    canvas.on('mouseover mouseout', function() {
+        // move the circle to random coordinates on the canvas
+        circle.moveTo( Math.random() * canvas.width(), Math.random() * canvas.height() );
     });
+})();
 
-}
+(function() {
+    var canvas = Martin('martin-mousedown');
+    function randomCircle() {
 
-if ( document.getElementById('martin-overview') ) Martin('martin-overview', overview);
+        // generate a random color and size
+        var hex = '0123456789abcdef';
+        var radius = Math.random() * 50,
+            r = hex[Math.floor(Math.random() * hex.length)],
+            g = hex[Math.floor(Math.random() * hex.length)],
+            b = hex[Math.floor(Math.random() * hex.length)];
 
-function cropHeight200(canvas) {
-    canvas.height(200);
-}
-
-function resizeHeight200(canvas) {
-    canvas.height(200, true);
-}
-
-function resizeHeight400(canvas) {
-    canvas.height(400, true);
-}
-
-if ( document.getElementById('martin-height-200-crop') ) Martin('martin-height-200-crop', cropHeight200);
-if ( document.getElementById('martin-height-200-resize') ) Martin('martin-height-200-resize', resizeHeight200);
-if ( document.getElementById('martin-height-400-resize') ) Martin('martin-height-400-resize', resizeHeight400);
-
-function cropWidth200(canvas) {
-    canvas.width(200);
-}
-
-function resizeWidth200(canvas) {
-    canvas.width(200, true);
-}
-
-function resizeWidth500(canvas) {
-    canvas.width(500, true);
-}
-
-if ( document.getElementById('martin-width-200-crop') ) Martin('martin-width-200-crop', cropWidth200);
-if ( document.getElementById('martin-width-200-resize') ) Martin('martin-width-200-resize', resizeWidth200);
-if ( document.getElementById('martin-width-500-resize') ) Martin('martin-width-500-resize', resizeWidth500);
-
-function saturate(canvas) {
-    canvas.saturate(100);
-}
-
-if ( document.getElementById('martin-saturate') ) Martin('martin-saturate', saturate);
-
-function desaturate(canvas) {
-    canvas.desaturate(80);
-}
-
-if ( document.getElementById('martin-desaturate') ) Martin('martin-desaturate', desaturate);
-
-
-function lighten(canvas) {
-    canvas.lighten(25);
-}
-
-if ( document.getElementById('martin-lighten') ) Martin('martin-lighten', lighten);
-
-function darken(canvas) {
-    canvas.darken(25);
-}
-
-if ( document.getElementById('martin-darken') ) Martin('martin-darken', darken);
-
-function opacity(canvas) {
-    canvas.opacity(0.5);
-}
-
-if ( document.getElementById('martin-opacity') ) Martin('martin-opacity', opacity);
-
-function blur(canvas) {
-    canvas.blur(15);
-}
-
-if ( document.getElementById('martin-blur') ) Martin('martin-blur', blur);
-
-function background(canvas) {
-    canvas.opacity(0.5).background('#f00');
-}
-
-if ( document.getElementById('martin-background') ) Martin('martin-background', background);
-
-function line(canvas) {
-    canvas.line({
-        startX: 40,
-        startY: 100,
-        endX: '100%',
-        endY: 0,
-        strokeWidth: 10,
-        color: '#fff',
-        cap: 'round'
-    });
-}
-
-if ( document.getElementById('martin-line') ) Martin('martin-line', line);
-
-function rect(canvas) {
-    canvas.rect({
-        offsetX: '60%',
-        offsetY: 20,
-        width: '40%',
-        height: 260,
-        color: '#ff0'
-    });
-}
-
-if ( document.getElementById('martin-rect') ) Martin('martin-rect', rect);
-
-function polygon(canvas) {
-    canvas.polygon([ ['20%', '10%'], ['40%', '40%'], ['20%', '40%'] ], '#fff');
-    canvas.polygon(
-        [
-            [300, 200],
-            [350, 200],
-            [300, 250],
-            [250, 250]
-        ], {
-            color: '#00f',
-            strokeWidth: 4,
-            stroke: '#000'
+        canvas.circle({
+            radius: radius,
+            color: '#' + r + g + b,
+            x: Math.random() * canvas.width(),
+            y: Math.random() * canvas.height()
         });
-}
+    }
+    // fire once for good measure :-)
+    randomCircle();
+    canvas.on('mousedown mouseup', randomCircle);
+})();
 
-if ( document.getElementById('martin-polygon') ) Martin('martin-polygon', polygon);
-
-function circle(canvas) {
-    canvas.circle({
-        offsetX: 300,
-        offsetY: 250,
-        radius: 35,
-        color: '#ef3'
+(function() {
+    var canvas = Martin('martin-mousemove');
+    var text = canvas.text({
+        text: 'Follow that mouse!',
+        x: '50%',
+        y: '50%',
+        color: '#fff',
+        size: 24,
+        align: 'center'
     });
-}
 
-if ( document.getElementById('martin-circle') ) Martin('martin-circle', circle);
-
-function ellipse(canvas) {
-    canvas.ellipse({
-        offsetX: 300,
-        offsetY: 250,
-        radiusX: 100,
-        radiusY: 35,
-        color: '#ef3'
+    canvas.mousemove(function(e) {
+        text.moveTo(e.offsetX, e.offsetY);
     });
-}
+})();
 
-if ( document.getElementById('martin-ellipse') ) Martin('martin-ellipse', ellipse);
-
-function write(canvas) {
-    canvas.write('Hello World!', { color: '#fff' });
-    canvas.write({
-        text: 'The sky is blue.',
-        offsetX: 220,
-        offsetY: 220,
-        size: 20,
-        color: '#fff'
-    });
-}
-
-if ( document.getElementById('martin-write') ) Martin('martin-write', write);
-
-function watermark(canvas) {
-    canvas.watermark('Photo credit: Scottland Donaldson');
-}
-
-if ( document.getElementById('martin-watermark')) Martin('martin-watermark', watermark);
+Martin('martin-watermark').watermark('Photo credit: Scottland Donaldson');
 
 });

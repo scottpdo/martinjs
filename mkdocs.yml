@@ -3,9 +3,10 @@ pages:
 - [index.md, Home]
 - [overview.md, Overview]
 - [utilities.md, Utilities]
-- [photos.md, Photo Manipulation]
-- [drawing.md, Drawing]
-- [text.md, Text]
+- [layers.md, Layers]
+- [elements.md, Elements]
+- [effects.md, Effects]
+- [events.md, Events]
 - [plugins.md, Plugins]
 - [demos.md, Demos]
 theme: readthedocs

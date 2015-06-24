@@ -85,4 +85,4 @@ Martin.prototype.makeCanvas = function() {
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.3-beta';
+Martin._version = '0.2.4';

@@ -1,35 +1,33 @@
 $(document).ready(function(){
 
-function sepia(canvas) {
+(function() {
+    var canvas = Martin('demo-sepia');
+    canvas.darken(10);
+    canvas.desaturate(100);
 
-    canvas.darken(10).opacity(0.6).desaturate(100).background('#ea0');
-
-    canvas.newLayer().rect({
-        offsetX: 0,
-        offsetY: 0,
+    canvas.newLayer();
+    canvas.background('#ea0');
+    canvas.opacity(40);
+    canvas.rect({
         width: '100%',
         height: '15%'
-    }).opacity(0.5);
+    });
 
-    canvas.newLayer().write({
+    canvas.newLayer();
+    canvas.text({
         text: 'The loneliest bunny in the west.',
-        offsetX: '50%',
-        offsetY: 13,
+        x: '50%',
+        y: 13,
         align: 'center',
         color: '#fff'
     });
 
-    canvas.convertToImage();
-}
+})();
 
-if ( document.getElementById('demo-sepia') ) Martin('demo-sepia', sepia);
-
-function checkerboard(canvas) {
-
-    // .canvas refers to the actual <canvas> element
-    var c = canvas.canvas,
-        w = c.width,
-        h = c.height,
+(function() {
+    var canvas = Martin('demo-checkerboard');
+    var w = canvas.width(),
+        h = canvas.height(),
         iter = 0;
 
     var size = 40,
@@ -45,8 +43,8 @@ function checkerboard(canvas) {
             if ( iter % 2 === 0 ) {
 
                 canvas.rect({
-                    offsetX: i * size,
-                    offsetY: j * size,
+                    x: i * size,
+                    y: j * size,
                     height: size,
                     width: size
                 });
@@ -55,39 +53,6 @@ function checkerboard(canvas) {
         }
     }
 
-    canvas.convertToImage();
-}
-
-if ( document.getElementById('demo-checkerboard') ) Martin('demo-checkerboard', checkerboard);
-
-function textShadow(canvas) {
-
-    canvas.background('#aaa');
-
-    var colors = [
-        '000', '880', 'ff0'
-    ];
-
-    var offsets = [
-        { x: 206, y: 74 },
-        { x: 203, y: 77 },
-        { x: 200, y: 80 }
-    ];
-
-    for ( var i = 0; i < 3; i++ ) {
-        canvas.write({
-            text: 'Hello World!',
-            offsetX: offsets[i].x,
-            offsetY: offsets[i].y,
-            align: 'center',
-            color: '#' + colors[i],
-            size: 40
-        });
-    }
-
-    canvas.convertToImage();
-}
-
-if ( document.getElementById('demo-text-shadow') ) Martin('demo-text-shadow', textShadow);
+})();
 
 });

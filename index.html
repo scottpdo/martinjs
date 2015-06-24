@@ -33,14 +33,17 @@
     }, 10);
 
     canvas.newLayer();
-    canvas.background('#005');
 
-    canvas.circle({
+    canvas.ellipse({
         x: '50%',
         y: '50%',
-        radius: 200,
+        radiusX: 200,
+        radiusY: 100,
         color: '#f00'
     });
+
+    // should go underneath the ellipse
+    canvas.background('#005');
 
     var opacity = canvas.opacity(100);
     var int2 = setInterval(function() {
@@ -62,6 +65,10 @@
         y: 20,
         color: '#fff',
         size: 66
+    });
+
+    canvas.click(function() {
+        canvas.width(canvas.width() - 1);
     });
     </script>
 

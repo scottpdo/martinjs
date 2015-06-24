@@ -1,5 +1,5 @@
 (function(){
-    var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mousedown', 'mouseup'];
+    var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mouseout', 'mousedown', 'mouseup'];
 
     events.forEach(function(evt){
         Martin.prototype[evt] = function(cb) {
