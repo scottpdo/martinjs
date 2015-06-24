@@ -1,4 +1,4 @@
-(function(){
+(function() {
 
     var watermark = function(text, color, size) {
 
@@ -7,17 +7,17 @@
         color = color || '#fff';
         size = size || 12;
         var padding = 2;
-        var style = {
+        var data = {
+            text: text,
             align: 'right',
             color: color,
-            offsetX: this.canvas.width - padding,
-            offsetY: padding,
+            x: this.width() - padding,
+            y: this.height() - size - padding,
             size: size
         };
 
-        this.write(text, style);
+        return this.text(data);
 
-        return this;
     };
 
     Martin.extend({ watermark: watermark });
