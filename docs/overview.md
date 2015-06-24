@@ -1,29 +1,15 @@
 # Overview
 
-## How Martin Works
+## How Martin.js Works
 
-Martin uses layers, similar to working with images in Photoshop. When you load a canvas or image element, it is set to layer 0, and you can start editing or drawing from there.
+In order to make the most of Martin.js, you'll need to understand these three classes:
 
-Whenever you edit a layer, that layer's pixel data is altered. In the example below, when we draw a blue rectangle directly on top of the working layer, the pixels representing the bunny are replaced by the blue rectangle. The bunny is gone forever.
+1. **Layers**
+2. **Elements**
+3. **Effects**
 
-<img src="images/bunny.jpg" width="400" height="300">
+Similar to working with images in Photoshop, you can set up multiple layers in Martin.js and work on them individually. If one layer is "above" another, then you only see on the lower layer what's not covered by the higher layer.
 
-```
-function init(canvas) {
+**Layers** may contain **elements** and **effects**. An element is an image, geometric shape, or piece of text. An effect is a visual effect such as lightening or blurring that is placed on every element in the layer.
 
-    canvas.rect({
-        offsetX: 150,
-        offsetY: 25,
-        width: 200,
-        height: 250,
-        color: '#33e' // blue
-    });
-
-}
-
-Martin('image', init);
-```
-
-<img id="martin-overview" src="images/bunny.jpg" width="400" height="300">
-
-A better practice would be to create a new layer and work there. Then the pixel data on lower layers is still retrievable in case it's needed.
+When you initialize, a base layer is automatically created. If you initialize from an existing `<canvas>` or `<img>`, any existing image data is automatically put into an element on the base layer.

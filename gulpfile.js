@@ -1,9 +1,11 @@
-var VERSION = '0.2.3-beta';
+var VERSION = '0.2.4';
 
 var fs = require('fs'),
     gulp = require('gulp'),
     uglify = require('gulp-uglify'),
+    jslint = require('gulp-jslint'),
     concat = require('gulp-concat'),
+    rename = require('gulp-rename'),
     awspublish = require('gulp-awspublish'),
     browserSync = require('browser-sync').create(),
     shell = require('gulp-shell');
@@ -33,7 +35,11 @@ var paths = {
         'elements',
         'effects',
         'events',
-        'misc'
+        'dimensions'
+    ],
+    plugins: [
+        'watermark',
+        'gradient'
     ],
     jsCoreDist: 'js/dist',
     jsCoreDocs: 'docs/download',
@@ -41,7 +47,12 @@ var paths = {
 };
 
 paths.jsCoreIn.forEach(function(path, i) {
-    paths.jsCoreIn[i] = jsPrefix + paths.jsCoreIn[i] + '.js';
+    paths.jsCoreIn[i] = jsPrefix + path + '.js';
+});
+
+// looks for filename martin.PLUGIN.js
+paths.plugins.forEach(function(path, i) {
+    paths.plugins[i] = jsPrefix + 'martin.' + path + '.js'
 });
 
 function writeVersion(callback) {
@@ -112,6 +123,16 @@ function fullAndMin(dest) {
             .pipe(concat('martin.min.js'))
             .pipe(uglify())
             .pipe(gulp.dest( dest ));
+
+        gulp.src( paths.plugins )
+            .pipe(gulp.dest( dest ));
+
+        gulp.src( paths.plugins )
+            .pipe(uglify())
+            .pipe(rename(function(path) {
+                path.basename += '.min'
+            }))
+            .pipe(gulp.dest( dest ));
     }
 
     writeVersion(processFiles);
@@ -157,6 +178,7 @@ gulp.task('serve', ['js'], function() {
     });
 
     gulp.watch( paths.jsCoreIn, ['js'] ).on('change', reload);
+    gulp.watch( paths.plugins, ['js'] ).on('change', reload);
     gulp.watch( './test/test.js' ).on('change', reload);
     gulp.watch( paths.html ).on('change', reload);
 

@@ -1,18 +1,11 @@
 /*
-    For utility functions that do extend Martin prototype. Generally for internal
-    usage and not the public-facing API, the exception being Martin.extend.
+    For utility functions that do extend Martin prototype.
 
     extend()
+    .remove()
     .render()
     .toDataURL()
     .convertToImage()
-    .normalizeX()
-    .normalizeY()
-    .normalizePercentX()
-    .normalizePercentY()
-    setContext()
-    .loop()
-    .putImageData()
 */
 
 Martin.utils = {};
@@ -35,25 +28,32 @@ Martin.utils.forEach = function(arr, cb) {
 Martin.prototype.remove = function() {
     var canvas = this.canvas,
         parent = canvas.parentNode;
-    parent.removeChild(this.canvas);
+    if ( parent ) parent.removeChild(this.canvas);
     return this;
 };
 
 // Render: looping through layers, loop through elements
 // and render each (with optional callback)
 Martin.prototype.render = function(cb) {
+
     Martin.utils.forEach(this.layers, function(layer, i) {
-        layer.clearLayer();
+
+        layer.clear();
+
         Martin.utils.forEach(layer.elements, function(element) {
             element.renderElement();
         });
+
         Martin.utils.forEach(layer.effects, function(effect) {
             effect.renderEffect();
         });
-        layer.renderLayer();
+
+        layer.render();
     });
 
-    if (cb) cb();
+    if (cb) return cb();
+
+    return this;
 };
 
 // Return's a data URL of all the working layers
@@ -74,42 +74,6 @@ Martin.prototype.convertToImage = function() {
         this.deleteLayer(i);
     }, this);
 
-    this.container.appendChild( img );
-
-};
-
-// Normalize X and Y values
-Martin.prototype.normalizeX = function( val ) {
-    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentX( +val.slice(0, -1) ) : val;
-};
-
-Martin.prototype.normalizeY = function( val ) {
-    return ( typeof val === 'string' && val.slice(-1) === '%' ) ? this.normalizePercentY( +val.slice(0, -1) ) : val;
-};
-
-Martin.prototype.normalizePercentX = function( val ) {
-    return ( val / 100 ) * this.canvas.width;
-};
-
-Martin.prototype.normalizePercentY = function( val ) {
-    return ( val / 100 ) * this.canvas.height;
-};
-
-// Set the fill, stroke, alpha for a new shape
-Martin.setContext = function( context, obj ) {
-
-    context.save();
-
-    context.fillStyle = obj.color || '#000';
-    context.fill();
-
-    context.globalAlpha = obj.alpha || 1;
-
-    context.lineWidth = obj.strokeWidth ? obj.strokeWidth : 0;
-    context.lineCap = obj.cap ? obj.cap : 'square';
-    context.strokeStyle = obj.stroke ? obj.stroke : 'transparent';
-    context.stroke();
-
-    context.restore();
+    if ( this.container ) this.container.appendChild( img );
 
 };
