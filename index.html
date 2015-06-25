@@ -12,6 +12,7 @@
     </style>
 
     <script src="js/dist/martin.js"></script>
+    <script src="js/dist/martin.gradientmap.js"></script>
 
 </head>
 
@@ -22,7 +23,9 @@
 
     <script>
     var canvas = Martin('img');
-
+    // yellow to blue
+    canvas.gradientMap('#fe0', '#00f');
+    /*
     var effect = canvas.blur(100);
     var int = setInterval(function() {
         if ( effect.amount > 0 ) {
@@ -70,6 +73,7 @@
     canvas.click(function() {
         canvas.width(canvas.width() - 1);
     });
+    */
     </script>
 
     </script>
