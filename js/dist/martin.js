@@ -421,7 +421,7 @@ Martin.prototype.newLayer = function(arg) {
     }
 
     // Don't forget to set the new context and currentlayer
-    this.currentLayerIndex = this.layers.length;
+    this.currentLayerIndex = this.layers.length - 1;
     this.currentLayer = newLayer;
 
     this.render();
