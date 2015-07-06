@@ -21,16 +21,11 @@
     </div>
 
     <script>
-    var canvas = Martin('img');
+    var canvas = Martin('img', {
+        autorender: false
+    });
 
     var effect = canvas.blur(100);
-    var int = setInterval(function() {
-        if ( effect.amount > 0 ) {
-            effect.decrease();
-        } else {
-            clearInterval(int);
-        }
-    }, 10);
 
     canvas.newLayer();
 
@@ -46,13 +41,16 @@
     canvas.background('#005');
 
     var opacity = canvas.opacity(100);
-    var int2 = setInterval(function() {
+    (function render() {
+        if ( effect.amount > 0 ) {
+            effect.decrease();
+        }
         if ( opacity.amount > 0 ) {
             opacity.decrease();
-        } else {
-            clearInterval(int2);
         }
-    }, 10);
+        canvas.render();
+        requestAnimationFrame(render);
+    })();
 
     canvas.height(300, true);
 

@@ -56,6 +56,11 @@ Martin.prototype.render = function(cb) {
     return this;
 };
 
+// Autorender: Only render if the `autorender` option is not false
+Martin.prototype.autorender = function(cb) {
+    if ( this.options.autorender !== false ) return this.render(cb);
+};
+
 // Return's a data URL of all the working layers
 Martin.prototype.toDataURL = function() {
     return this.canvas.toDataURL();

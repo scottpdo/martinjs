@@ -32,7 +32,7 @@ Martin.Effect = function(type, canvas, amount) {
 
         layer.addEffect(this);
 
-        this.base.render();
+        this.base.autorender();
 
         return this;
 
@@ -343,7 +343,7 @@ Martin.Effect.prototype.increase = function(amt) {
     if ( this.inverse ) amt = -(amt || 1);
 
     this.amount += amt || 1;
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 

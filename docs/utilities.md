@@ -1,5 +1,9 @@
 # Utilities
 
+### .render()
+
+Renders the canvas. If you set `autorender: false` when including `options` , you must call this to see any changes made to the canvas.
+
 ### .toDataURL()
 
 Similar to the native canvas `.toDataURL()` method, this returns a data URL (beginning with `data:img/png;base64,`) that can be set as the `src` of some image, opened in a new tab, or downloaded.

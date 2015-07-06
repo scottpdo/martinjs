@@ -1,5 +1,119 @@
 $(document).ready(function(){
 
+(function() {
+    var canvas = Martin('martin-home-blur', { autorender: false }),
+        effect = canvas.blur(100);
+
+    canvas.darken(10);
+
+    canvas.newLayer();
+
+    var circle = canvas.circle({
+        x: '50%',
+        y: '50%',
+        radius: 120,
+        color: '#fff'
+    });
+    var circleOpacity = canvas.opacity(0);
+    canvas.blur(90);
+
+    canvas.mousemove(function(e) {
+        circle.moveTo(e.offsetX, e.offsetY);
+        canvas.render();
+    });
+
+    (function fadeIn() {
+        if ( effect.amount > 40 ) {
+            effect.decrease(2);
+        } else if ( effect.amount > 0 ) {
+            effect.decrease();
+        }
+        if ( circleOpacity.amount < 100 ) {
+            circleOpacity.increase();
+        }
+        canvas.render();
+        requestAnimationFrame(fadeIn);
+    })();
+
+    canvas.newLayer();
+
+    var text = canvas.text({
+        font: 'Futura',
+        text: 'THIS IS MARTIN.JS',
+        align: 'center',
+        x: '50%',
+        y: 20,
+        color: '#fff',
+        size: 66
+    });
+})();
+
+(function() {
+
+    var canvas = Martin('martin-autorender', {
+            autorender: false
+        }),
+        t = 0,
+        circles = [],
+        num = 60,
+        text,
+        offText = 'Automatic rendering is off (smooth).',
+        onText = 'Automatic rendering is on (janky).';
+
+    function x(i) {
+        return ( (100 * i) / num) + (50 / num) + '%';
+    }
+
+    function y(i, t) {
+
+        var heightOffset = canvas.height() / 4;
+
+        i *= 0.25;
+        t *= Math.PI / 40;
+
+        return 0.5 * canvas.height() + heightOffset * Math.sin(i + t);
+    }
+
+    function toggleText(t) {
+        return (t === onText) ? offText : onText;
+    }
+
+    canvas.width(500).height(200);
+
+    canvas.newLayer();
+    canvas.background('#ccc');
+
+    for ( var i = 0; i < num; i++ ) {
+        circles.push(canvas.circle({
+            radius: Math.round(canvas.width() / ( 2.5 * num ))
+        }));
+    }
+
+    text = canvas.text({
+        color: '#fff',
+        text: offText
+    });
+
+    (function moveCircles() {
+
+        circles.forEach(function(circle, i) {
+            circle.moveTo( x(i), y(i, t) );
+        });
+
+        if ( canvas.options.autorender === false ) canvas.render();
+
+        t++;
+
+        requestAnimationFrame(moveCircles);
+    })();
+
+    canvas.click(function() {
+        canvas.options.autorender = !canvas.options.autorender;
+        text.data.text = toggleText(text.data.text);
+    });
+
+})();
+
 Martin('martin-height-200-crop').height(200);
 Martin('martin-height-200-resize').height(200, true);
 Martin('martin-height-400-resize').height(400, true);
@@ -94,7 +208,7 @@ Martin('martin-text').text({
 })();
 
 (function() {
-    var canvas = Martin('martin-move-to');
+    var canvas = Martin('martin-move-to', { autorender: false });
     var circle1 = canvas.circle({
         radius: 100,
         x: '50%',
@@ -112,6 +226,7 @@ Martin('martin-text').text({
         t += Math.PI / 180;
         circle1.moveTo( 0.5 * canvas.width(), 0.5 * canvas.height() + 30 * Math.sin(t) );
         circle2.moveTo( 0.5 * canvas.width(), 0.5 * canvas.height() + 30 * Math.sin(t) );
+        canvas.render();
         requestAnimationFrame(bounce);
     })();
 })();
@@ -124,7 +239,7 @@ Martin('martin-opacity').opacity(50);
 Martin('martin-blur').blur(15);
 
 (function() {
-    var canvas = Martin('martin-flash');
+    var canvas = Martin('martin-flash', { autorender: false });
     var effect = canvas.lighten(0);
     var increasing = true;
     (function flash() {
@@ -143,6 +258,7 @@ Martin('martin-blur').blur(15);
             increasing = true;
             effect.increase();
         }
+        canvas.render();
         requestAnimationFrame(flash);
     })();
 })();
