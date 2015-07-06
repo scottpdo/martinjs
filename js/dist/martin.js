@@ -13,9 +13,9 @@
 
 // The great initializer. Pass in a string to select element by ID,
 // or an HTMLElement
-window.Martin = function( val ) {
+window.Martin = function( val, options ) {
 
-    if ( !(this instanceof Martin) ) return new Martin( val );
+    if ( !(this instanceof Martin) ) return new Martin( val, options );
 
     // Set the original element, if there is one
     this.original = null;
@@ -24,6 +24,8 @@ window.Martin = function( val ) {
     } else if ( val instanceof HTMLElement ) {
         this.original = val;
     }
+
+    this.options = options || {};
 
     // Now prepare yourself...
     return this.makeCanvas();
@@ -78,14 +80,14 @@ Martin.prototype.makeCanvas = function() {
 
     // only render and execute callback immediately
     // if the original is not an image
-    this.render();
+    this.autorender();
 
     return this;
 };
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.4';
+Martin._version = '0.2.5';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -189,6 +191,11 @@ Martin.prototype.render = function(cb) {
     if (cb) return cb();
 
     return this;
+};
+
+// Autorender: Only render if the `autorender` option is not false
+Martin.prototype.autorender = function(cb) {
+    if ( this.options.autorender !== false ) return this.render(cb);
 };
 
 // Return's a data URL of all the working layers
@@ -360,7 +367,9 @@ Martin.Layer.prototype.setContext = function( obj ) {
 
 
 Martin.Layer.prototype.getImageData = function() {
-    var imageData = this.context ? this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) : null;
+    var imageData = this.context && this.canvas.width > 0 && this.canvas.height > 0 ?
+        this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) :
+        null;
     return imageData;
 };
 
@@ -386,7 +395,7 @@ Martin.Layer.prototype.clear = function() {
 
 Martin.Layer.prototype.remove = function() {
     this.base.layers.splice(this.base.layers.indexOf(this), 1);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -424,7 +433,7 @@ Martin.prototype.newLayer = function(arg) {
     this.currentLayerIndex = this.layers.length - 1;
     this.currentLayer = newLayer;
 
-    this.render();
+    this.autorender();
 
     return newLayer;
 
@@ -488,7 +497,7 @@ Martin.Element = function(type, canvas, obj) {
         // automatically push backgrounds to the bottom of the layer
         if ( this.type === 'background' ) this.bumpToBottom();
 
-        this.base.render();
+        this.base.autorender();
 
         return this;
 
@@ -799,7 +808,7 @@ Martin.Element.prototype.layerIndex = function() {
 
 Martin.Element.prototype.remove = function() {
     this.layer.elements.splice(this.layerIndex(), 1);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -807,7 +816,7 @@ Martin.Element.prototype.bump = function(i) {
     var layerIndex = this.layerIndex();
     this.remove();
     this.layer.elements.splice(layerIndex + i, 0, this);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -822,14 +831,14 @@ Martin.Element.prototype.bumpDown = function() {
 Martin.Element.prototype.bumpToTop = function() {
     this.remove();
     this.layer.elements.push(this);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
 Martin.Element.prototype.bumpToBottom = function() {
     this.remove();
     this.layer.elements.unshift(this);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -864,7 +873,7 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
     this[this.type]();
 
-    this.base.render();
+    this.base.autorender();
 
     return this;
 
@@ -914,7 +923,7 @@ Martin.Effect = function(type, canvas, amount) {
 
         layer.addEffect(this);
 
-        this.base.render();
+        this.base.autorender();
 
         return this;
 
@@ -1225,7 +1234,7 @@ Martin.Effect.prototype.increase = function(amt) {
     if ( this.inverse ) amt = -(amt || 1);
 
     this.amount += amt || 1;
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -1251,7 +1260,7 @@ Martin.Effect.prototype.decrease = function(amt) {
 
             function callback(e) {
                 cb(e);
-                this.render();
+                this.autorender();
             }
 
             this.canvas.addEventListener(evt, callback.bind(this));
@@ -1265,7 +1274,7 @@ Martin.Effect.prototype.decrease = function(amt) {
 
         function callback(e) {
             cb(e);
-            this.render();
+            this.autorender();
         }
 
         evt.forEach(function(ev) {
@@ -1324,7 +1333,7 @@ Martin.Effect.prototype.decrease = function(amt) {
 			this.canvas[which] = val;
 		}
 
-		this.base.render();
+		this.base.autorender();
 
 		return this;
 	};

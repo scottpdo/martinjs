@@ -45,7 +45,7 @@ Martin.Element = function(type, canvas, obj) {
         // automatically push backgrounds to the bottom of the layer
         if ( this.type === 'background' ) this.bumpToBottom();
 
-        this.base.render();
+        this.base.autorender();
 
         return this;
 
@@ -356,7 +356,7 @@ Martin.Element.prototype.layerIndex = function() {
 
 Martin.Element.prototype.remove = function() {
     this.layer.elements.splice(this.layerIndex(), 1);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -364,7 +364,7 @@ Martin.Element.prototype.bump = function(i) {
     var layerIndex = this.layerIndex();
     this.remove();
     this.layer.elements.splice(layerIndex + i, 0, this);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -379,14 +379,14 @@ Martin.Element.prototype.bumpDown = function() {
 Martin.Element.prototype.bumpToTop = function() {
     this.remove();
     this.layer.elements.push(this);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
 Martin.Element.prototype.bumpToBottom = function() {
     this.remove();
     this.layer.elements.unshift(this);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -421,7 +421,7 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
     this[this.type]();
 
-    this.base.render();
+    this.base.autorender();
 
     return this;
 

@@ -6,7 +6,7 @@
 
             function callback(e) {
                 cb(e);
-                this.render();
+                this.autorender();
             }
 
             this.canvas.addEventListener(evt, callback.bind(this));
@@ -20,7 +20,7 @@
 
         function callback(e) {
             cb(e);
-            this.render();
+            this.autorender();
         }
 
         evt.forEach(function(ev) {

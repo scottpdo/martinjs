@@ -209,6 +209,9 @@ Move an element in space on the canvas. `x` and `y` must be numbers (will be rea
 For circles and ellipses, movement is relative to the center. For rectangles, relative to upper left. For lines, relative to the line's starting point. For polygons, relative to the first declared point. For text, the position depends on the alignment (left, center, or right).
 
 ```js
+// Since this example involves animating elements, be sure to
+// instantiate with `autorender: false`
+
 var circle1 = canvas.circle({
     radius: 100,
     x: '50%',
@@ -236,6 +239,10 @@ var t = 0;
     // move both circles
     circle1.moveTo( 0.5 * canvas.width(), 0.5 * canvas.height() + 30 * Math.sin(t) );
     circle2.moveTo( 0.5 * canvas.width(), 0.5 * canvas.height() + 30 * Math.sin(t) );
+
+    // since the canvas is not automatically rendering,
+    // force it to render here
+    canvas.render();
 
     // call the function again on the next animation frame
     // see: https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame

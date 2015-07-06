@@ -145,7 +145,9 @@ Martin.Layer.prototype.setContext = function( obj ) {
 
 
 Martin.Layer.prototype.getImageData = function() {
-    var imageData = this.context ? this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) : null;
+    var imageData = this.context && this.canvas.width > 0 && this.canvas.height > 0 ?
+        this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) :
+        null;
     return imageData;
 };
 
@@ -171,7 +173,7 @@ Martin.Layer.prototype.clear = function() {
 
 Martin.Layer.prototype.remove = function() {
     this.base.layers.splice(this.base.layers.indexOf(this), 1);
-    this.base.render();
+    this.base.autorender();
     return this;
 };
 
@@ -209,7 +211,7 @@ Martin.prototype.newLayer = function(arg) {
     this.currentLayerIndex = this.layers.length - 1;
     this.currentLayer = newLayer;
 
-    this.render();
+    this.autorender();
 
     return newLayer;
 

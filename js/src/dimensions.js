@@ -44,7 +44,7 @@
 			this.canvas[which] = val;
 		}
 
-		this.base.render();
+		this.base.autorender();
 
 		return this;
 	};

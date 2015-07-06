@@ -1,55 +1,11 @@
-<img id="img" style="opacity: 0;" src="images/marty-banner.png">
-
-<script>
-var canvas = Martin('img'),
-    effect = canvas.blur(100);
-
-canvas.darken(10);
-
-canvas.newLayer();
-
-var circle = canvas.circle({
-    x: '50%',
-    y: '50%',
-    radius: 120,
-    color: '#fff'
-});
-var circleOpacity = canvas.opacity(0);
-canvas.blur(90);
-
-canvas.mousemove(function(e) {
-    circle.moveTo(e.offsetX, e.offsetY);
-});
-
-(function fadeIn() {
-    if ( effect.amount > 0 ) {
-        effect.decrease();
-    }
-    if ( circleOpacity.amount < 100 ) {
-        circleOpacity.increase();
-    }
-    requestAnimationFrame(fadeIn);
-})();
-
-canvas.newLayer();
-
-var text = canvas.text({
-    font: 'Futura',
-    text: 'THIS IS MARTIN.JS',
-    align: 'center',
-    x: '50%',
-    y: 20,
-    color: '#fff',
-    size: 66
-});
-</script>
+<img id="martin-home-blur" style="opacity: 0;" src="images/marty-banner.png">
 
 Martin.js is a JavaScript library for working with HTML5 canvas. Martin supports jQuery-like chained methods, and makes photo manipulation, drawing, and animation in browser easy for developers and users.
 
-You can download Martin (v0.2.4) here:
+You can download Martin (v0.2.5) here:
 
 - [Full version, annotated (33 kb)](download/martin.js)
-- [Minified (15 kb)](download/martin.min.js)
+- [Minified (16 kb)](download/martin.min.js)
 
 Or through Bower:
 
@@ -71,10 +27,10 @@ First, make sure you've included the source file, ideally in the `<head>` of the
 
 Set up a canvas like this:
 ```js
-var canvas = Martin('el');
+var canvas = Martin('el', options);
 ```
 
-`el` can be the ID of an existing `<canvas>` or `<img>` element, an element itself, or nothing (in which case you will work on a virtual/buffer canvas).
+`el` can be the ID of an existing `<canvas>` or `<img>` element, an element itself, or nothing (in which case you will work on a virtual/buffer canvas). If you include `options` , it must be an object with `key: value` pairs that describe how you want to instantiate.
 
 <hr>
 

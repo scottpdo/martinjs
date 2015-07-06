@@ -18,11 +18,9 @@ Martin.extend({
                 var i = 0;
 
                 var out = layer.loop(function(x, y, pixel) {
-                    // if ( i < 100 ) { console.log(pixel.r); }
                     pixel.r = Math.round(min.r + (pixel.r / 256) * (max.r - min.r));
                     pixel.g = Math.round(min.g + (pixel.g / 256) * (max.g - min.g));
                     pixel.b = Math.round(min.b + (pixel.b / 256) * (max.b - min.b));
-                    // if ( i < 100 ) { console.log(pixel.r); }
                     i++;
                     return pixel;
                 });

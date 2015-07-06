@@ -13,9 +13,9 @@
 
 // The great initializer. Pass in a string to select element by ID,
 // or an HTMLElement
-window.Martin = function( val ) {
+window.Martin = function( val, options ) {
 
-    if ( !(this instanceof Martin) ) return new Martin( val );
+    if ( !(this instanceof Martin) ) return new Martin( val, options );
 
     // Set the original element, if there is one
     this.original = null;
@@ -24,6 +24,8 @@ window.Martin = function( val ) {
     } else if ( val instanceof HTMLElement ) {
         this.original = val;
     }
+
+    this.options = options || {};
 
     // Now prepare yourself...
     return this.makeCanvas();
@@ -78,11 +80,11 @@ Martin.prototype.makeCanvas = function() {
 
     // only render and execute callback immediately
     // if the original is not an image
-    this.render();
+    this.autorender();
 
     return this;
 };
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.4';
+Martin._version = '0.2.5';
