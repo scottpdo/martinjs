@@ -12,6 +12,7 @@
     </style>
 
     <script src="js/dist/martin.js"></script>
+    <script src="js/dist/martin.gradientmap.js"></script>
 
 </head>
 
@@ -21,54 +22,9 @@
     </div>
 
     <script>
-    var canvas = Martin('img', {
-        autorender: false
-    });
-
-    var effect = canvas.blur(100);
-
-    canvas.newLayer();
-
-    canvas.ellipse({
-        x: '50%',
-        y: '50%',
-        radiusX: 200,
-        radiusY: 100,
-        color: '#f00'
-    });
-
-    // should go underneath the ellipse
-    canvas.background('#005');
-
-    var opacity = canvas.opacity(100);
-    (function render() {
-        if ( effect.amount > 0 ) {
-            effect.decrease();
-        }
-        if ( opacity.amount > 0 ) {
-            opacity.decrease();
-        }
-        canvas.render();
-        requestAnimationFrame(render);
-    })();
-
-    canvas.height(300, true);
-
-    canvas.newLayer();
-    var text = canvas.text({
-        font: 'Futura',
-        text: 'THIS IS MARTIN.JS',
-        align: 'center',
-        x: '50%',
-        y: 20,
-        color: '#fff',
-        size: 66
-    });
-
-    canvas.click(function() {
-        canvas.width(canvas.width() - 1);
-    });
-    </script>
+    var canvas = Martin('img');
+    // yellow to blue
+    canvas.gradientMap('#fe0', '#00f');
 
     </script>
 </body>

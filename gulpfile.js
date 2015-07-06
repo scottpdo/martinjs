@@ -39,7 +39,8 @@ var paths = {
     ],
     plugins: [
         'watermark',
-        'gradient'
+        'gradient',
+        'gradientmap'
     ],
     jsCoreDist: 'js/dist',
     jsCoreDocs: 'docs/download',
