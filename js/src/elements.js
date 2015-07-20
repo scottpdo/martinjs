@@ -19,6 +19,7 @@
     .bumpDown()
     .bumpToTop()
     .bumpToBottom()
+    .update()
     .moveTo()
 
     Finally:
@@ -388,6 +389,25 @@ Martin.Element.prototype.bumpToBottom = function() {
     this.layer.elements.unshift(this);
     this.base.autorender();
     return this;
+};
+
+// ----- Update an element with new data
+Martin.Element.prototype.update = function(arg1, arg2) {
+
+    var key, value, data;
+
+    if ( arg2 ) {
+        key = arg1;
+        value = arg2;
+        this.data[key] = value;
+    } else {
+        for ( key in arg1 ) {
+            value = arg1[key];
+            this.data[key] = value;
+        }
+    }
+
+    this.base.autorender();
 };
 
 // ----- Move an element to new coordinates

@@ -87,7 +87,7 @@ Martin.prototype.makeCanvas = function() {
 
 // DON'T EDIT THIS LINE.
 // Automatically updated w/ Gulp
-Martin._version = '0.2.5';
+Martin._version = '0.2.6';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -471,6 +471,7 @@ Martin.prototype.layer = function( num ) {
     .bumpDown()
     .bumpToTop()
     .bumpToBottom()
+    .update()
     .moveTo()
 
     Finally:
@@ -842,6 +843,25 @@ Martin.Element.prototype.bumpToBottom = function() {
     return this;
 };
 
+// ----- Update an element with new data
+Martin.Element.prototype.update = function(arg1, arg2) {
+
+    var key, value, data;
+
+    if ( arg2 ) {
+        key = arg1;
+        value = arg2;
+        this.data[key] = value;
+    } else {
+        for ( key in arg1 ) {
+            value = arg1[key];
+            this.data[key] = value;
+        }
+    }
+
+    this.base.autorender();
+};
+
 // ----- Move an element to new coordinates
 Martin.Element.prototype.moveTo = function(x, y) {
 
@@ -906,31 +926,37 @@ Martin.Element.prototype.moveTo = function(x, y) {
         Contact: 	mario@quasimondo.com
         Website:	http://www.quasimondo.com/StackBlurForCanvas
         Twitter:	@quasimondo
+
+    Effect methods:
+    .layerIndex()
+    .increase()
+    .decrease()
+    .remove()
 */
 
-Martin.Effect = function(type, canvas, amount) {
+Martin.registerEffect = function(name, cb) {
+    Martin.prototype[name] = function(data) {
+        Martin.Effect.prototype[name] = cb.bind(this, data);
+        return new Martin.Effect(name, this, data);
+    };
+};
 
-    if ( Martin.Effect.prototype.hasOwnProperty(type) ) {
+Martin.Effect = function(type, canvas, data) {
 
-        var layer = canvas.currentLayer;
+    var layer = canvas.currentLayer;
 
-        this.base = canvas;
-        this.type = type;
-        this.inverse = false; // some effects are just the inverse of another
-        this.layer = layer;
+    this.base = canvas;
+    this.type = type;
+    this.inverse = false; // some effects are just the inverse of another
+    this.layer = layer;
 
-        this.amount = amount;
+    this.data = data;
 
-        layer.addEffect(this);
+    layer.addEffect(this);
 
-        this.base.autorender();
+    this.base.autorender();
 
-        return this;
-
-    } else {
-
-        throw new Error('Given effect is not an allowed effect.');
-    }
+    return this;
 };
 
 // Add an effect
@@ -962,7 +988,7 @@ Martin.Effect.prototype.invert = function(inverse) {
 Martin.Effect.prototype.desaturate = function() {
 
     var layer = this.layer,
-        amt = this.amount;
+        amt = this.data;
 
     if ( this.inverse ) amt *= -1;
 
@@ -999,7 +1025,7 @@ Martin.Effect.prototype.saturate = function() {
 Martin.Effect.prototype.lighten = function() {
 
     var layer = this.layer,
-        amt = this.amount;
+        amt = this.data;
 
     if ( this.inverse ) amt *= -1;
 
@@ -1026,7 +1052,7 @@ Martin.Effect.prototype.darken = function() {
 Martin.Effect.prototype.opacity = function() {
 
     var layer = this.layer,
-        amt = this.amount;
+        amt = this.data;
 
     amt = amt / 100;
     if ( amt > 1 ) amt = 1;
@@ -1059,7 +1085,7 @@ Martin._BlurStack.mul_shift_table = function(i) {
 Martin.Effect.prototype.blur = function() {
 
     var layer = this.layer,
-        amt = this.amount;
+        amt = this.data;
 
     if ( isNaN(amt) || amt < 1 ) return this;
     // Round to nearest pixel
@@ -1228,12 +1254,24 @@ Martin.Effect.prototype.blur = function() {
     return this;
 };
 
-// Adjust the amount of an Effect
+Martin.Effect.prototype.layerIndex = function() {
+    return this.layer.effects.indexOf(this);
+};
+
+Martin.Effect.prototype.remove = function() {
+    this.layer.effects.splice(this.layerIndex(), 1);
+    this.base.autorender();
+    return this;
+};
+
+// Adjust the intensity of an Effect (linear effects only)
 Martin.Effect.prototype.increase = function(amt) {
 
     if ( this.inverse ) amt = -(amt || 1);
 
-    this.amount += amt || 1;
+    if ( typeof this.data === 'number' ) {
+        this.data += amt || 1;
+    }
     this.base.autorender();
     return this;
 };
@@ -1246,8 +1284,8 @@ Martin.Effect.prototype.decrease = function(amt) {
     var effects = ['desaturate', 'saturate', 'lighten', 'darken', 'opacity', 'blur'];
 
     effects.forEach(function(el) {
-        Martin.prototype[el] = function(amt) {
-            return new Martin.Effect(el, this, amt);
+        Martin.prototype[el] = function(data) {
+            return new Martin.Effect(el, this, data);
         };
     });
 })();
