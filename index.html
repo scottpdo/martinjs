@@ -27,9 +27,10 @@
     var effect = canvas.gradientMap({
         start: '#00f',
         end: '#fe0'
-    });
+    }),
+    blur = canvas.blur(0);
     canvas.click(function() {
-        effect.remove();
+        blur.increase();
     });
 
     </script>

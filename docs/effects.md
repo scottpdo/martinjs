@@ -66,15 +66,15 @@ canvas.blur(15);
 
 <hr>
 
-All of the above methods return the effect, on which can be called other, effect-specific methods. **Any effect's intensity/amount can be retrieved as a key on the effect: `var intensity = effect.amount`** .
+All of the above methods return the `Effect`, on which can be called other, `Effect`-specific methods. **Any of the above `Effects`' intensity/amount can be retrieved as a key on the effect: `var intensity = effect.data`** .
 
 ### .increase(`amount = 1`)
 
-Intensifies the effect by `amount` (a number, relative to the effect's current intensity). If `amount` is left empty, increases the intensity by 1.
+Intensifies the `Effect` by `amount` (a number, relative to the effect's current intensity). If `amount` is left empty, increases the intensity by 1.
 
 ### .decrease(`amount = 1`)
 
-Decreases the effect's intensity by `amount` (a number, relative to the effect's current intensity). If `amount` is left empty, decreases the intensity by 1.
+Decreases the `Effect`'s intensity by `amount` (a number, relative to the effect's current intensity). If `amount` is left empty, decreases the intensity by 1.
 
 ```js
 var effect = canvas.lighten(0);
@@ -99,3 +99,66 @@ var increasing = true;
 })();
 ```
 <img id="martin-flash" src="images/bunny.jpg">
+
+`Effects` can also be removed from their layer by calling:
+
+### .remove()
+
+```js
+var effect = canvas.lighten(50);
+
+// When the user clicks the canvas, remove the effect
+canvas.click(function() {
+    effect.remove();
+});
+```
+
+<img id="martin-effect-remove" src="images/bunny.jpg">
+
+New `Effects` can also be registered with:
+
+### Martin.registerEffect(`name`, `cb`)
+
+`name` should be a string that will allow the new `Effect` to be called with `canvas.name()`.
+
+`cb` should be a callback function that describes how the `Effect` manipulates the canvas. The best way to use this is to use the `Layer.loop()` function.
+
+```js
+// Register an effect with a name and a callback function that takes a
+// single parameter, data, which will dictate how the effect interacts with the canvas
+Martin.registerEffect('myNewEffect', function(data) {
+
+    // `this` refers to the instance of Martin when called,
+    // and `this.currentLayer` is the working layer of the canvas
+    this.currentLayer.loop(function(x, y, pixel) {
+
+        // x and y are the pixel's coordinates, from the upper-left, starting with 0
+        // pixel is an object with keys r, g, b, a representing its
+        // red, green, blue, and alpha values, all clamped between 0 and 255
+        pixel.r;
+        pixel.g;
+        pixel.b;
+        pixel.a;
+
+        // These values can be mutated
+        pixel.r = 200;
+        pixel.g += 5 + data.a;
+        pixel.b -= Math.round(data.b / 2);
+
+        // To make sure the changes are saved, return the
+        // pixel object at the end.
+        return pixel;
+    });
+
+    // To make the effect chainable, finish it off with...
+    return this;
+});
+
+// After having registered the new effect, call it on the instance of Martin
+canvas.myNewEffect({
+    a: 100,
+    b: 100
+});
+```
+
+<img id="martin-my-new-effect" src="images/bunny.jpg">

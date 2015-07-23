@@ -2,7 +2,7 @@ $(document).ready(function(){
 
 (function() {
     var canvas = Martin('martin-home-blur', { autorender: false }),
-        effect = canvas.blur(100);
+        effect = canvas.blur(60);
 
     canvas.darken(10);
 
@@ -15,7 +15,7 @@ $(document).ready(function(){
         color: '#fff'
     });
     var circleOpacity = canvas.opacity(0);
-    canvas.blur(90);
+    canvas.blur(60);
 
     canvas.mousemove(function(e) {
         circle.moveTo(e.offsetX, e.offsetY);
@@ -23,12 +23,12 @@ $(document).ready(function(){
     });
 
     (function fadeIn() {
-        if ( effect.amount > 40 ) {
+        if ( effect.data > 30 ) {
             effect.decrease(2);
-        } else if ( effect.amount > 0 ) {
+        } else if ( effect.data > 0 ) {
             effect.decrease();
         }
-        if ( circleOpacity.amount < 100 ) {
+        if ( circleOpacity.data < 100 ) {
             circleOpacity.increase();
         }
         canvas.render();
@@ -261,6 +261,37 @@ Martin('martin-blur').blur(15);
         canvas.render();
         requestAnimationFrame(flash);
     })();
+})();
+
+(function() {
+    var canvas = Martin('martin-effect-remove');
+    var effect = canvas.lighten(50);
+    canvas.click(function() {
+        effect.remove();
+    });
+})();
+
+(function() {
+
+    Martin.registerEffect('myNewEffect', function(data) {
+
+        this.currentLayer.loop(function(x, y, pixel) {
+
+            pixel.r = 100;
+            pixel.g += 5 + data.a;
+            pixel.b -= Math.round(data.b / 2);
+
+            return pixel;
+        });
+    });
+
+    // After having registered the new effect, call it on the instance of Martin
+    var canvas = Martin('martin-my-new-effect');
+
+    canvas.myNewEffect({
+        a: 100,
+        b: 100
+    });
 })();
 
 (function() {
