@@ -18,12 +18,9 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
     "test",
-    "tests",
     "docs",
     "images",
-    "site",
     "index.html",
     "mkdocs.yml",
     "README.md"
