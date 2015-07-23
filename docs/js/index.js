@@ -264,6 +264,37 @@ Martin('martin-blur').blur(15);
 })();
 
 (function() {
+    var canvas = Martin('martin-effect-remove');
+    var effect = canvas.lighten(50);
+    canvas.click(function() {
+        effect.remove();
+    });
+})();
+
+(function() {
+
+    Martin.registerEffect('myNewEffect', function(data) {
+
+        this.currentLayer.loop(function(x, y, pixel) {
+
+            pixel.r = 100;
+            pixel.g += 5 + data.a;
+            pixel.b -= Math.round(data.b / 2);
+
+            return pixel;
+        });
+    });
+
+    // After having registered the new effect, call it on the instance of Martin
+    var canvas = Martin('martin-my-new-effect');
+
+    canvas.myNewEffect({
+        a: 100,
+        b: 100
+    });
+})();
+
+(function() {
     var canvas = Martin('martin-click');
     var blurred = false,
         effect = canvas.blur(0); // don't actually blur, but add an effect

@@ -19,6 +19,10 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
   <script type="text/javascript" src="./js/highlight.pack.js"></script>
   <script src="./js/theme.js"></script>
+  <script src="./download/martin.gradient.js"></script>
+  <script src="./download/martin.gradient.min.js"></script>
+  <script src="./download/martin.gradientmap.js"></script>
+  <script src="./download/martin.gradientmap.min.js"></script>
   <script src="./download/martin.js"></script>
   <script src="./download/martin.min.js"></script>
   <script src="./download/martin.watermark.js"></script>
@@ -63,21 +67,28 @@
     
         
             <li class="toctree-l1 ">
-                <a class="" href="photos/">Photo Manipulation</a>
+                <a class="" href="layers/">Layers</a>
             </li>
         
 
     
         
             <li class="toctree-l1 ">
-                <a class="" href="drawing/">Drawing</a>
+                <a class="" href="elements/">Elements</a>
             </li>
         
 
     
         
             <li class="toctree-l1 ">
-                <a class="" href="text/">Text</a>
+                <a class="" href="effects/">Effects</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="events/">Events</a>
             </li>
         
 
@@ -125,55 +136,81 @@
 </div>
           <div role="main">
             <div class="section">
-              <div style="float: right;"><iframe src="https://ghbtns.com/github-btn.html?user=scottdonaldson&repo=martin&type=star&count=true" frameborder="0" scrolling="0" width="90" height="20"></iframe><iframe src="https://ghbtns.com/github-btn.html?user=scottdonaldson&repo=martin&type=watch&count=true&v=2" frameborder="0" scrolling="0" width="90" height="20"></iframe></div>
-
-<h1 id="martinjs">Martin.js</h1>
-<p>Martin is a JavaScript library for working with HTML5 canvas. Martin supports jQuery-like chained methods, and makes photo manipulation and drawing in browser easy for developers and users.</p>
-<p><strong>Martin is in pre-release beta, so features are subject to change.</strong></p>
-<p>You can download Martin (v0.1.3-beta) here:</p>
+              <p><img id="martin-home-blur" style="opacity: 0;" src="./images/marty-banner.png"></p>
+<p>Martin.js is a JavaScript library for working with HTML5 canvas. Martin supports jQuery-like chained methods, and makes photo manipulation, drawing, and animation in browser easy for developers and users.</p>
+<p>You can download Martin (v0.2.5) here:</p>
 <ul>
-<li><a href="./download/martin.js">Full version, annotated (29 kb)</a></li>
-<li><a href="./download/martin.min.js">Minified (13 kb)</a></li>
+<li><a href="./download/martin.js">Full version, annotated (33 kb)</a></li>
+<li><a href="./download/martin.min.js">Minified (16 kb)</a></li>
 </ul>
 <p>Or through Bower:</p>
 <pre><code class="js">bower install martinjs --save
 </code></pre>
 
 <p>- Scottland / <a href="https://twitter.com/scottpdonaldson">@scottpdonaldson</a></p>
-<h2 id="loading-martin">Loading Martin</h2>
-<p>Given an <code>&lt;img&gt;</code> or <code>&lt;canvas&gt;</code> element with <code>id="id"</code> , Martin is called with: <code>Martin('id', init)</code></p>
-<p>In your callback function <code>init</code> , the first argument refers to the instance of Martin, on which you can call the available methods.</p>
+<hr>
+
+<h2 id="initializing">Initializing</h2>
+<p>First, make sure you've included the source file, ideally in the <code>&lt;head&gt;</code> of the page, but always before you call <code>Martin</code>.</p>
+<pre><code class="html">&lt;script src=&quot;path/to/martin.min.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+
+<p>Set up a canvas like this:</p>
+<pre><code class="js">var canvas = Martin('el', options);
+</code></pre>
+
+<p><code>el</code> can be the ID of an existing <code>&lt;canvas&gt;</code> or <code>&lt;img&gt;</code> element, an element itself, or nothing (in which case you will work on a virtual/buffer canvas). If you include <code>options</code> , it must be an object with <code>key: value</code> pairs that describe how you want to instantiate.</p>
+<hr>
+
 <h2 id="example">Example</h2>
-<pre><code>&lt;img id=&quot;image&quot; src=&quot;bunny.jpg&quot;&gt;
+<pre><code class="html">&lt;img id=&quot;image&quot; src=&quot;bunny.jpg&quot;&gt;
 </code></pre>
 
-<p><img src="./images/bunny.jpg"></p>
-<pre><code>function init(canvas) {
+<p><img id="home-example" src="./images/bunny.jpg"></p>
+<p>We're going to take the original image, draw a white rectangle on it, write "Hello!" over the rectangle, and then desaturate it all by 100% -- turning it black and white.</p>
+<pre><code class="js">var canvas = Martin('image');
 
-    canvas.rect({
-        offsetX: 130,
-        offsetY: 20,
-        width: 90,
-        height: 50,
-        color: '#fff'
-    });
+canvas.rect({
+    x: 100,
+    y: 200,
+    width: 90,
+    height: 50,
+    color: '#fff'
+});
 
-    canvas.write({
-        text: 'Hello!',
-        size: 18,
-        offsetX: 145,
-        offsetY: 35
-    });
+canvas.text({
+    text: 'Hello!',
+    align: 'center',
+    size: 18,
+    x: 145,
+    y: 215
+});
 
-    canvas.desaturate(100).convertToImage();
-
-}
-
-Martin('image', init);
+canvas.desaturate(100);
 </code></pre>
 
-<p><img id="image" src="./images/bunny.jpg" width="400" height="300"></p>
-<p>It's an image! Go ahead - drag it to your desktop.</p>
+<script>
+var canvas = Martin('home-example');
+
+canvas.rect({
+    x: 100,
+    y: 200,
+    width: 90,
+    height: 50,
+    color: '#fff'
+});
+
+canvas.text({
+    text: 'Hello!',
+    align: 'center',
+    size: 18,
+    x: 145,
+    y: 215
+});
+
+canvas.desaturate(100);
+</script>
+
 
             </div>
           </div>
