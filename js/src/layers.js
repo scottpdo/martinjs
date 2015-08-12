@@ -74,45 +74,50 @@ Martin.Layer.prototype.loop = function(cb, put) {
     var width = this.base.width(),
         height = this.base.height();
 
-    var imageData = this.getImageData(),
-        pixels = imageData.data,
-        len = pixels.length,
-        n,
-        x,
-        y,
+    var imageData, pixels, len,
+        n, x, y,
         r, g, b, a,
         pixel,
         output;
 
-    for ( var i = 0; i < len; i += 4 ) {
+    imageData = this.getImageData();
 
-        // xy coordinates
-        n = i / 4;
-        x = n % width;
-        y = Math.floor(n / height);
+    if ( imageData ) {
 
-        // rgba values
-        r = pixels[i];
-        g = pixels[i + 1];
-        b = pixels[i + 2];
-        a = pixels[i + 3];
+        pixels = imageData.data;
+        len = pixels.length;
 
-        // pass an object corresponding to the pixel to the callback
-        pixel = { r: r, g: g, b: b, a: a };
+        for ( var i = 0; i < len; i += 4 ) {
 
-        // execute the callback within the context of this layer's, uh... context
-        output = cb.call( this.context, x, y, pixel );
+            // xy coordinates
+            n = i / 4;
+            x = n % width;
+            y = Math.floor(n / height);
 
-        // reassign the actual rgba values of the pixel based on the output from the loop
-        pixels[i] = output.r;
-        pixels[i + 1] = output.g;
-        pixels[i + 2] = output.b;
-        pixels[i + 3] = output.a;
+            // rgba values
+            r = pixels[i];
+            g = pixels[i + 1];
+            b = pixels[i + 2];
+            a = pixels[i + 3];
+
+            // pass an object corresponding to the pixel to the callback
+            pixel = { r: r, g: g, b: b, a: a };
+
+            // execute the callback within the context of this layer's, uh... context
+            output = cb.call( this.context, x, y, pixel );
+
+            // reassign the actual rgba values of the pixel based on the output from the loop
+            pixels[i] = output.r;
+            pixels[i + 1] = output.g;
+            pixels[i + 2] = output.b;
+            pixels[i + 3] = output.a;
+
+        }
+
+        // explicitly declare if image data from callback is not to be used
+        if ( put !== false ) this.putImageData( imageData );
 
     }
-
-    // explicitly declare if image data from callback is not to be used
-    if ( put !== false ) this.putImageData( imageData );
 
     return this;
 };

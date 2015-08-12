@@ -25,6 +25,8 @@ Martin.utils.forEach = function(arr, cb) {
     }
 };
 
+Martin.utils.noop = function() {};
+
 Martin.prototype.remove = function() {
     var canvas = this.canvas,
         parent = canvas.parentNode;
@@ -59,6 +61,7 @@ Martin.prototype.render = function(cb) {
 // Autorender: Only render if the `autorender` option is not false
 Martin.prototype.autorender = function(cb) {
     if ( this.options.autorender !== false ) return this.render(cb);
+    return cb ? cb() : null;
 };
 
 // Return's a data URL of all the working layers
