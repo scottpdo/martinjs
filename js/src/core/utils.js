@@ -1,5 +1,5 @@
 /*
-    For utility functions that do extend Martin prototype.
+    For (mostly) utility functions that extend Martin prototype.
 
     extend()
     .remove()
@@ -8,35 +8,42 @@
     .convertToImage()
 */
 
-Martin.utils = {};
-
-// Extend Martin with plugins, if you want
-Martin.utils.extend = function( obj ) {
-    for ( var method in obj ) {
-        Martin.prototype[method] = obj[method];
-    }
-};
-
-Martin.extend = Martin.utils.extend;
-
-Martin.utils.forEach = function(arr, cb) {
+function forEach(arr, cb) {
     if (arr) {
         arr.forEach(cb);
     }
-};
+}
 
-Martin.utils.noop = function() {};
+function noop() {}
 
-Martin.prototype.remove = function() {
+Martin.utils.forEach = forEach;
+Martin.utils.noop = noop;
+
+var i,
+    func,
+    funcs = {
+
+// Extend Martin with plugins, if you want
+extend: function extend( obj ) {
+    for ( var method in obj ) {
+        if ( Martin.prototype.hasOwnProperty(method) ) {
+            throw new Error('Careful! This method already exists on the Martin prototype. Try a different name after checking the docs: http://martinjs.org');
+        } else {
+            Martin.prototype[method] = obj[method];
+        }
+    }
+},
+
+remove: function remove() {
     var canvas = this.canvas,
         parent = canvas.parentNode;
     if ( parent ) parent.removeChild(this.canvas);
     return this;
-};
+},
 
 // Render: looping through layers, loop through elements
 // and render each (with optional callback)
-Martin.prototype.render = function(cb) {
+render: function render(cb) {
 
     Martin.utils.forEach(this.layers, function(layer, i) {
 
@@ -56,22 +63,22 @@ Martin.prototype.render = function(cb) {
     if (cb) return cb();
 
     return this;
-};
+},
 
 // Autorender: Only render if the `autorender` option is not false
-Martin.prototype.autorender = function(cb) {
+autorender: function autorender(cb) {
     if ( this.options.autorender !== false ) return this.render(cb);
     return cb ? cb() : null;
-};
+},
 
 // Return's a data URL of all the working layers
-Martin.prototype.toDataURL = function() {
+toDataURL: function toDataURL() {
     return this.canvas.toDataURL();
-};
+},
 
 // Get the dataURL of the merged layers of the canvas,
 // then turn that into one image
-Martin.prototype.convertToImage = function() {
+convertToImage: function convertToImage() {
 
     var dataURL = this.toDataURL(),
         img = document.createElement('img');
@@ -84,4 +91,10 @@ Martin.prototype.convertToImage = function() {
 
     if ( this.container ) this.container.appendChild( img );
 
+}
+
 };
+
+for ( func in funcs ) {
+    Martin.prototype[func] = funcs[func];
+}

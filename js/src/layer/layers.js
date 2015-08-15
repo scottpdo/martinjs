@@ -35,6 +35,18 @@ Martin.Layer = function(base, arg) {
         y: 1
     };
 
+    this.elements = [];
+    this.effects = [];
+
+    // if no layers yet (initializing),
+    // the layers are just this new layer,
+    // and the new layer's context should be the base's
+    if ( !this.base.layers ) {
+        this.base.layers = [];
+    }
+    this.stack = this.base.layers;
+    this.stack.push(this);
+
     if ( typeof arg === 'string' ) {
         this.type = arg;
     } else {
@@ -44,6 +56,8 @@ Martin.Layer = function(base, arg) {
     return this;
 
 };
+
+Martin.Layer.prototype = Object.create(Martin.Object.prototype);
 
 // Normalize X and Y values
 Martin.Layer.prototype.normalizeX = function( val ) {
@@ -182,35 +196,10 @@ Martin.Layer.prototype.remove = function() {
     return this;
 };
 
-// ----- Add an element to a layer
-Martin.Layer.prototype.addElement = function(element) {
-
-    if ( !(element instanceof Martin.Element ) ) {
-        throw new Error('When adding an element to a layer, it must be created from Martin.Element.');
-    }
-
-    if (this.elements) {
-        this.elements.push(element);
-    } else {
-        this.elements = [element];
-    }
-
-    return this;
-};
-
 // Create a new (top-most) layer and switch to that layer.
 Martin.prototype.newLayer = function(arg) {
 
     var newLayer = new Martin.Layer(this, arg);
-
-    // if no layers yet (initializing),
-    // the layers are just this new layer,
-    // and the new layer's context should be the base's
-    if ( !this.layers ) {
-        this.layers = [newLayer];
-    } else {
-        this.layers.push(newLayer);
-    }
 
     // Don't forget to set the new context and currentlayer
     this.currentLayerIndex = this.layers.length - 1;

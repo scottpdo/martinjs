@@ -27,11 +27,31 @@
     var effect = canvas.gradientMap({
         start: '#00f',
         end: '#fe0'
-    }),
-    blur = canvas.blur(0);
-    canvas.click(function() {
-        blur.increase();
     });
+
+    var desaturate = canvas.desaturate(50);
+
+    var dark = canvas.darken(20);
+
+    canvas.newLayer();
+
+    var circle = canvas.circle({
+        color: '#f00',
+        radius: 50,
+        x: canvas.width() / 2,
+        y: canvas.height() / 2
+    });
+
+    circle.lighten(90);
+
+    circle.update({
+        x: canvas.width() / 4,
+        y: canvas.height() / 4
+    });
+
+    canvas.blur(20);
+
+    canvas.render();
 
     </script>
 </body>

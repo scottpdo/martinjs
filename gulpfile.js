@@ -1,5 +1,3 @@
-var VERSION = '0.2.7';
-
 var fs = require('fs'),
     gulp = require('gulp'),
     uglify = require('gulp-uglify'),
@@ -16,30 +14,26 @@ var reload = browserSync.reload;
 var bower = require('./bower.json'),
     aws = require('./aws.json');
 
-function writeBowerVersion() {
-    bower.version = VERSION;
-    fs.writeFile('./bower.json', JSON.stringify(bower, null, '  '), function(err, data) {
-        if (err) return console.log(err);
-        console.log('Wrote version to bower.json');
-    });
-}
-
-var jsPrefix = 'js/src/';
+var jsPrefix = 'js/src/',
+    pluginsPrefix = 'js/src/plugins/';
 
 var paths = {
     jsCoreIn: [
-        'init',
-        'helpers',
-        'utils',
-        'layers',
-        'elements',
-        'effects',
-        'events',
-        'dimensions'
+        'start',
+        'core/init',
+        'core/version',
+        'core/helpers',
+        'core/utils',
+        'object/object',
+        'layer/layers',
+        'element/elements',
+        'effect/effects',
+        'event/events',
+        'core/dimensions',
+        'end'
     ],
     plugins: [
         'watermark',
-        'gradient',
         'gradientmap'
     ],
     jsCoreDist: 'js/dist',
@@ -53,30 +47,36 @@ paths.jsCoreIn.forEach(function(path, i) {
 
 // looks for filename martin.PLUGIN.js
 paths.plugins.forEach(function(path, i) {
-    paths.plugins[i] = jsPrefix + 'martin.' + path + '.js'
+    paths.plugins[i] = pluginsPrefix + 'martin.' + path + '.js'
 });
+
+function writeBowerVersion(version) {
+    bower.version = version;
+    fs.writeFile('./bower.json', JSON.stringify(bower, null, '  '), function(err, data) {
+        if (err) return console.log(err);
+        console.log('Wrote version to bower.json');
+    });
+}
 
 function writeVersion(callback) {
 
-    writeBowerVersion();
+    var versionFile = './js/src/core/version.js';
 
-    var init = './js/src/init.js';
-
-    fs.readFile(init, 'utf8', function read(err, data) {
+    fs.readFile(versionFile, 'utf8', function read(err, data) {
 
         var lines = data.split('\n'),
-            versionString = 'Martin._version = ';
+            versionString = 'Martin._version = ',
+            version;
+
         lines.forEach(function(line, i) {
             if ( line.indexOf(versionString) > -1 ) {
-                lines.splice(i, 1, versionString + "'" + VERSION + "'" + ';');
+                version = line.replace(versionString, '');
             }
         });
 
-        fs.writeFile(init, lines.join('\n'), function(err, data) {
-            if (err) return console.log(err);
-            console.log('Wrote version to init.js');
-            callback();
-        });
+        writeBowerVersion(version.replace(/["';]/g, ''));
+
+        callback();
     });
 }
 
@@ -131,7 +131,7 @@ function fullAndMin(dest) {
         gulp.src( paths.plugins )
             .pipe(uglify())
             .pipe(rename(function(path) {
-                path.basename += '.min'
+                path.basename = 'martin.' + path.basename + '.min'
             }))
             .pipe(gulp.dest( dest ));
     }

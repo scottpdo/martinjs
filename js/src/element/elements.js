@@ -13,12 +13,6 @@
 
     Element methods:
     .layerIndex()
-    .remove()
-    .bump()
-    .bumpUp()
-    .bumpDown()
-    .bumpToTop()
-    .bumpToBottom()
     .update()
     .moveTo()
 
@@ -41,7 +35,10 @@ Martin.Element = function(type, canvas, obj) {
         this.type = type;
         this.layer = layer;
 
-        layer.addElement(this);
+        this.effects = [];
+
+        this.stack = this.layer.elements;
+        this.stack.push(this);
 
         // automatically push backgrounds to the bottom of the layer
         if ( this.type === 'background' ) this.bumpToBottom();
@@ -55,6 +52,8 @@ Martin.Element = function(type, canvas, obj) {
         throw new Error('Given type is not an allowed element.');
     }
 };
+
+Martin.Element.prototype = Object.create(Martin.Object.prototype);
 
 Martin.Element.prototype.renderElement = function() {
 
@@ -347,48 +346,6 @@ Martin.Element.prototype.text = function() {
 	);
 
 	return this;
-};
-
-// ----- Removing and moving elements within the stack in the layer
-
-Martin.Element.prototype.layerIndex = function() {
-    return this.layer.elements.indexOf(this);
-};
-
-Martin.Element.prototype.remove = function() {
-    this.layer.elements.splice(this.layerIndex(), 1);
-    this.base.autorender();
-    return this;
-};
-
-Martin.Element.prototype.bump = function(i) {
-    var layerIndex = this.layerIndex();
-    this.remove();
-    this.layer.elements.splice(layerIndex + i, 0, this);
-    this.base.autorender();
-    return this;
-};
-
-Martin.Element.prototype.bumpUp = function() {
-    return this.bump(1);
-};
-
-Martin.Element.prototype.bumpDown = function() {
-    return this.bump(-1);
-};
-
-Martin.Element.prototype.bumpToTop = function() {
-    this.remove();
-    this.layer.elements.push(this);
-    this.base.autorender();
-    return this;
-};
-
-Martin.Element.prototype.bumpToBottom = function() {
-    this.remove();
-    this.layer.elements.unshift(this);
-    this.base.autorender();
-    return this;
 };
 
 // ----- Update an element with new data
