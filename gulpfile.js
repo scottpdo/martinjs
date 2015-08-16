@@ -34,7 +34,8 @@ var paths = {
     ],
     plugins: [
         'watermark',
-        'gradientmap'
+        'gradientmap',
+        'tile'
     ],
     jsCoreDist: 'js/dist',
     jsCoreDocs: 'docs/download',
@@ -47,7 +48,7 @@ paths.jsCoreIn.forEach(function(path, i) {
 
 // looks for filename martin.PLUGIN.js
 paths.plugins.forEach(function(path, i) {
-    paths.plugins[i] = pluginsPrefix + 'martin.' + path + '.js'
+    paths.plugins[i] = pluginsPrefix + path + '.js'
 });
 
 function writeBowerVersion(version) {
@@ -126,6 +127,9 @@ function fullAndMin(dest) {
             .pipe(gulp.dest( dest ));
 
         gulp.src( paths.plugins )
+            .pipe(rename(function(path) {
+                path.basename = 'martin.' + path.basename
+            }))
             .pipe(gulp.dest( dest ));
 
         gulp.src( paths.plugins )
