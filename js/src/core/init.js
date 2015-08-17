@@ -26,10 +26,12 @@ Martin.prototype.makeCanvas = function() {
                 original.parentNode.insertBefore( canvas, original );
                 original.parentNode.removeChild( original );
 
-                // Give that layer some image data
-                new Martin.Element('image', this, {
-                    original: original
+                // Give that layer some image data (see src/element/image.js)
+                Martin.registerElement('image', function(img) {
+                    this.context.drawImage( img, 0, 0 );
                 });
+
+                this.image(original);
             }
 
             // This should only fire once! Fire if the image is complete,

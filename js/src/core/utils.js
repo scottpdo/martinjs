@@ -45,19 +45,23 @@ remove: function remove() {
 // and render each (with optional callback)
 render: function render(cb) {
 
-    Martin.utils.forEach(this.layers, function(layer, i) {
+    var ctx = this.context;
+
+    ctx.clearRect(0, 0, this.width(), this.height());
+
+    Martin.utils.forEach(this.layers, function(layer) {
 
         layer.clear();
 
-        Martin.utils.forEach(layer.elements, function(element) {
-            element.renderElement();
+        Martin.utils.forEach(layer.elements, function renderElement(element) {
+            element.renderElement && element.renderElement();
         });
 
-        Martin.utils.forEach(layer.effects, function(effect) {
-            effect.renderEffect();
+        Martin.utils.forEach(layer.effects, function renderEffect(effect) {
+            effect.renderEffect && effect.renderEffect();
         });
 
-        layer.render();
+        ctx.drawImage(layer.canvas, 0, 0);
     });
 
     if (cb) return cb();

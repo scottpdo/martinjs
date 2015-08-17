@@ -1,25 +1,23 @@
-(function() {
+Martin.registerElement('watermark', function(data) {
 
-    var watermark = function(text, color, size) {
 
-        // default to the copyright symbol
-        text = text || '\u00A9';
-        color = color || '#fff';
-        size = size || 12;
-        var padding = 2;
-        var data = {
-            text: text,
-            align: 'right',
-            color: color,
-            x: this.width() - padding,
-            y: this.height() - size - padding,
-            size: size
-        };
+    var padding = 2,
+        size = data.size || this.data.size || 12;
 
-        return this.text(data);
-
+    data = {
+        text: data.text || '\u00A9', // default to the copyright symbol
+        align: data.align || 'right',
+        color: data.color || '#fff',
+        x: data.x || this.base.width() - padding,
+        y: data.y || this.base.height() - size - padding,
+        size: size
     };
 
-    Martin.extend({ watermark: watermark });
+    this.data = data;
 
-})();
+    if ( !this._textElement ) {
+        this._textElement = this.layer.text(data);
+    } else {
+        this._textElement.update(data);
+    }
+});
