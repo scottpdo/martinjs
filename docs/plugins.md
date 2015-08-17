@@ -22,9 +22,52 @@ Martin.registerElement('myNewElement', function(data) {
 ```js
 Martin.registerElement('star', function(data) {
     // let data.size be the radius of the star
-    var size = data.size;
+    var size = data.size,
+        centerX = data.x,
+        centerY = data.y;
+
+    var context = this.context;
+
+    // convert these angles to radians
+    var angles = [54, 126, 198, 270, 342];
+    angles = angles.map(Martin.degToRad);
+
+    angles.forEach(function(angle, i) {
+
+        // find the angle that is halfway between the current and next angle
+        var next = angles[i + 1] || angle + Martin.degToRad(72),
+            average = 0.5 * (angle + next);
+
+        // draw a long line to the first point
+        context.lineTo(centerX + Math.cos(angle) * size, centerY + Math.sin(angle) * size);
+        // and a short line to the second
+        context.lineTo(centerX + Math.cos(average) * size / 2.5, centerY + Math.sin(average) * size / 2.5);
+    });
+
+    // once we're done, bring our line back to the first point
+    context.lineTo(centerX + Math.cos(angles[0]) * size, centerY + Math.sin(angles[0]) * size);
+    // and close the path
+    context.closePath();
 });
+
+// since this is an element, it can take all of the usual
+// attributes that are applied to elements
+var star = canvas.star({
+    color: '#f00',
+    stroke: '#000',
+    strokeWidth: 10,
+    size: 50,
+    x: '50%',
+    y: '50%'
+});
+
+// it can also be updated just like any other element
+canvas.mousemove(function(e) {
+    star.moveTo(e.offsetX, e.offsetY);
+})
 ```
+
+<canvas id="martin-plugins-star" width="500" height="300"></canvas>
 
 New `Effects` can be registered with:
 

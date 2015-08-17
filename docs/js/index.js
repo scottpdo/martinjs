@@ -387,6 +387,44 @@ Martin('martin-invert').invert();
     });
 })();
 
-// Martin('martin-watermark').watermark('Photo credit: Scottland Donaldson');
+(function() {
+    Martin.registerElement('star', function(data) {
+        // let data.size be the radius of the star
+        var size = data.size,
+            centerX = data.x,
+            centerY = data.y;
+
+        var context = this.context;
+
+        var angles = [54, 126, 198, 270, 342];
+        angles = angles.map(Martin.degToRad);
+
+        angles.forEach(function(angle, i) {
+
+            var next = angles[i + 1] || angle + Martin.degToRad(72),
+                average = 0.5 * (angle + next);
+
+            context.lineTo(centerX + Math.cos(angle) * size, centerY + Math.sin(angle) * size);
+            context.lineTo(centerX + Math.cos(average) * size / 2.5, centerY + Math.sin(average) * size / 2.5);
+        });
+
+        context.lineTo(centerX + Math.cos(angles[0]) * size, centerY + Math.sin(angles[0]) * size);
+        context.closePath();
+    });
+
+    var canvas = Martin('martin-plugins-star');
+    var star = canvas.star({
+        color: '#f00',
+        stroke: '#000',
+        strokeWidth: 10,
+        size: 50,
+        x: '50%',
+        y: '50%'
+    });
+
+    canvas.mousemove(function(e) {
+        star.moveTo(e.offsetX, e.offsetY);
+    })
+})();
 
 });
