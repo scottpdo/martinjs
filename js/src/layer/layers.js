@@ -14,7 +14,6 @@
     .render()
     .clear()
     .remove()
-    .addElement()
 
     Methods for working with Layers
 

@@ -1,16 +1,18 @@
 # Elements
 
-**From the working canvas**, an element will be returned from the following methods. Elements are added to the top of the current layer.
+**From the working canvas or a layer**, an element will be returned from the following methods. Elements are added to the top of the current layer, but may be reordered.
 
 ### .background(`color`)
 
-Fills the background of the current layer with `color` .
+Fills the background of the current layer with `color` . The background is automatically bumped to the bottom on its layer, so even if you call it after adding other elements to a layer, it will appear as the background.
 
 ```js
 // create a new layer, give it a red background, set opacity to 50%
 canvas.newLayer();
 canvas.background('#f00');
 canvas.opacity(50);
+
+// acts as a red overlay on the base layer's image
 ```
 
 <img id="martin-background" src="images/bunny.jpg">
@@ -173,9 +175,9 @@ All of the above methods return the element, on which can be called other, eleme
 
 Removes the element from its layer. It can then be added to another layer by calling `otherLayer.addElement(element)` . Returns the element.
 
-### .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
+### .bump(`i`) / .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
 
-Move the element around in the layer's stack of elements. Returns the element.
+As with layers, elements can be reordered within their stack on the layer.
 
 In the below example, calling `circle1.bumpUp()` has the same effect as calling `circle1.bumpToTop()` , and `circle2.bumpDown()` .
 
@@ -196,7 +198,7 @@ circle1.bumpUp();
 
 <img id="martin-bump-up" src="images/bunny.jpg">
 
-**In the above example, calling `circle2.bump2Bottom()` would effectively hide `circle2` from the viewer.** The reason for this is that, when a working canvas is created from an image, an element is created from that image. So the element stack for the above canvas, after running the example code, looks like:
+**In the above example, calling `circle2.bump2Bottom()` would effectively hide `circle2` from the viewer.** The reason for this is that, when a working canvas is created from an image, an element is created from that image. So the element stack for the above layer, after running the example code, looks like:
 
 - 0: `image` (bunny)
 - 1: `circle` (blue circle)
@@ -251,3 +253,25 @@ var t = 0;
 ```
 
 <img id="martin-move-to" src="images/bunny.jpg">
+
+### element.update(`key`, `value`) or element.update(`data`)
+
+Updates data on an element and attempts to autorender the working canvas. If two parameters are passed, the first is taken as a key with the second its value. If an object is passed, checks each key-value pair and adds or updates on the element.
+
+```js
+// create a text element
+var text = canvas.text({
+    text: 'Hello, world!'
+});
+
+// update the text's text
+text.update('text', 'I am the new text!');
+
+// update the text's color and size
+text.update({
+    color: '#f00',
+    size: 40
+});
+```
+
+<canvas id="martin-update" width="400" height="150"></canvas>

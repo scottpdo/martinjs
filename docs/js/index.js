@@ -240,6 +240,19 @@ Martin('martin-text').text({
     })();
 })();
 
+(function() {
+    var canvas = Martin('martin-update');
+    canvas.background('#eee');
+    var text = canvas.text({
+        text: 'Hello, world!'
+    });
+    text.update('text', 'I am the new text!');
+    text.update({
+        color: '#f00',
+        size: 40
+    });
+})();
+
 Martin('martin-saturate').saturate(100);
 Martin('martin-desaturate').desaturate(80);
 Martin('martin-lighten').lighten(25);
