@@ -91,6 +91,8 @@ Martin.Element = function(type, caller, data) {
     };
 
     this.data = data;
+    if ( data.x ) this.data.x = layer.normalizeX(data.x);
+    if ( data.y ) this.data.y = layer.normalizeY(data.y);
     this.type = type;
     this.layer = layer;
 
