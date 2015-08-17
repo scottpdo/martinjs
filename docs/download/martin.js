@@ -64,7 +64,7 @@ Martin.prototype.makeCanvas = function() {
 
                 // Give that layer some image data (see src/element/image.js)
                 Martin.registerElement('image', function(img) {
-                    this.context.drawImage( img, 0, 0 );
+                    drawImage.call(this, img);
                 });
 
                 this.image(original);
@@ -666,8 +666,12 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
 };
 
-registerElement('image', function(img) {
+function drawImage(img) {
     this.context.drawImage( img, 0, 0 );
+}
+
+registerElement('image', function(img) {
+    drawImage.call(this, img);
 });
 
 function rect(data) {
@@ -1291,7 +1295,12 @@ Martin.registerEffect('invert', function() {
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
-		if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
+		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
+
+		// resize element canvases
+		Martin.utils.forEach(this.elements, function(element) {
+			element.canvas[which] = val;
+		});
 
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;

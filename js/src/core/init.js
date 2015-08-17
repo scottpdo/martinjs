@@ -28,7 +28,7 @@ Martin.prototype.makeCanvas = function() {
 
                 // Give that layer some image data (see src/element/image.js)
                 Martin.registerElement('image', function(img) {
-                    this.context.drawImage( img, 0, 0 );
+                    drawImage.call(this, img);
                 });
 
                 this.image(original);

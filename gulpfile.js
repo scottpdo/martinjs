@@ -105,13 +105,14 @@ function fullAndMin(dest) {
             .pipe(uglify())
             .pipe(gulp.dest( dest ));
 
-        gulp.src( paths.plugins )
-            .pipe(rename(function(path) {
-                path.basename = 'martin.' + path.basename
-            }))
-            .pipe(gulp.dest( dest ));
-
         if ( dest !== 'docs/download' ) {
+            
+            gulp.src( paths.plugins )
+                .pipe(rename(function(path) {
+                    path.basename = 'martin.' + path.basename
+                }))
+                .pipe(gulp.dest( dest ));
+
             gulp.src( paths.plugins )
                 .pipe(uglify())
                 .pipe(rename(function(path) {

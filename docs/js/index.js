@@ -374,6 +374,6 @@ Martin('martin-invert').invert();
     });
 })();
 
-Martin('martin-watermark').watermark('Photo credit: Scottland Donaldson');
+// Martin('martin-watermark').watermark('Photo credit: Scottland Donaldson');
 
 });
