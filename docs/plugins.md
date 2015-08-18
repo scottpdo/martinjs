@@ -69,6 +69,8 @@ canvas.mousemove(function(e) {
 
 <canvas id="martin-plugins-star" width="500" height="300"></canvas>
 
+<hr>
+
 New `Effects` can be registered with:
 
 ### Martin.registerEffect(`name`, `cb`)
