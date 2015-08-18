@@ -31,7 +31,12 @@
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
-		if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
+		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
+
+		// resize element canvases
+		Martin.utils.forEach(this.elements, function(element) {
+			element.canvas[which] = val;
+		});
 
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;

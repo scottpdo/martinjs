@@ -1,37 +1,3 @@
-/*
-    Martin.js: In-browser photo and image editing
-    Author: Scott Donaldson
-    Contact: scott.p.donaldson@gmail.com
-    Twitter: @scottpdonaldson
-
-    ----------------------------------------
-
-    MARTIN
-    .makeCanvas()
-    _version
-*/
-
-// The great initializer. Pass in a string to select element by ID,
-// or an HTMLElement
-window.Martin = function( val, options ) {
-
-    if ( !(this instanceof Martin) ) return new Martin( val, options );
-
-    // Set the original element, if there is one
-    this.original = null;
-    if ( typeof val === 'string' ) {
-        this.original = document.getElementById(val);
-    } else if ( val instanceof HTMLElement ) {
-        this.original = val;
-    }
-
-    this.options = options || {};
-
-    // Now prepare yourself...
-    return this.makeCanvas();
-
-};
-
 // Convert an image to a canvas or just return the canvas.
 Martin.prototype.makeCanvas = function() {
 
@@ -60,10 +26,12 @@ Martin.prototype.makeCanvas = function() {
                 original.parentNode.insertBefore( canvas, original );
                 original.parentNode.removeChild( original );
 
-                // Give that layer some image data
-                new Martin.Element('image', this, {
-                    original: original
+                // Give that layer some image data (see src/element/image.js)
+                Martin.registerElement('image', function(img) {
+                    drawImage.call(this, img);
                 });
+
+                this.image(original);
             }
 
             // This should only fire once! Fire if the image is complete,
@@ -84,7 +52,3 @@ Martin.prototype.makeCanvas = function() {
 
     return this;
 };
-
-// DON'T EDIT THIS LINE.
-// Automatically updated w/ Gulp
-Martin._version = '0.2.7';

@@ -1,12 +1,10 @@
 # Effects
 
-**From the working canvas**, an effect will be returned from the following methods. Effects are added to the working layer, and affect only the elements on that layer.
-
-All effects accept a number between 0 (no effect) and 100 inclusive, except for `.blur()` , which accepts a number up to 256.
+Martin.js comes with a number of built-in effects, which can be called from the working canvas (in which case it is added to the current layer), to a layer, or to a single element.
 
 ### .saturate(`amt`)
 
-Saturates the current layer, making colors appear more intense, by `amount` (number, 0-100).
+Makes colors appear more intense by `amount` (number, 0-100).
 
 ```
 canvas.saturate(100);
@@ -16,7 +14,7 @@ canvas.saturate(100);
 
 ### .desaturate(`amt`)
 
-Desaturate the current layer, making colors appear less intense, by `amount` (number, 0-100).
+Makes colors appear less intense by `amount` (number, 0-100).
 
 ```
 canvas.desaturate(80);
@@ -26,7 +24,7 @@ canvas.desaturate(80);
 
 ### .lighten(`amount`)
 
-Lightens the current layer by `amount` (number, 0-100).
+Lightens by `amount` (number, 0-100).
 
 ```
 canvas.lighten(25);
@@ -36,7 +34,7 @@ canvas.lighten(25);
 
 ### .darken(`amount`)
 
-Darkens the current layer by `amount` (number, 0-100).
+Darkens by `amount` (number, 0-100).
 
 ```
 canvas.darken(25);
@@ -46,7 +44,7 @@ canvas.darken(25);
 
 ### .opacity(`amount`)
 
-Sets the current layer opacity to `amount` (0-100).
+Sets the layer's or element's opacity to `amount` (0-100).
 
 ```
 canvas.opacity(50);
@@ -56,7 +54,7 @@ canvas.opacity(50);
 
 ### .blur(`amount`)
 
-Places an `amount` px blur on the current layer, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js).
+Places an `amount` px blur on the layer or element, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js).
 
 ```
 canvas.blur(15);
@@ -64,15 +62,25 @@ canvas.blur(15);
 
 <img id="martin-blur" src="images/bunny.jpg">
 
+### .invert()
+
+Inverts the layer or element's colors. Does not take any arguments.
+
+```
+canvas.invert();
+```
+
+<img id="martin-invert" src="images/bunny.jpg">
+
 <hr>
 
-All of the above methods return the `Effect`, on which can be called other, `Effect`-specific methods. **Any of the above `Effects`' intensity/amount can be retrieved as a key on the effect: `var intensity = effect.data`** .
+All of the above methods return the `Effect`, on which can be called other, `Effect`-specific methods. **Any of the above `Effect`'s intensity/amount can be retrieved as a key on the effect: `var intensity = effect.data`** .
 
-### .increase(`amount = 1`)
+### effect.increase(`amount = 1`)
 
 Intensifies the `Effect` by `amount` (a number, relative to the effect's current intensity). If `amount` is left empty, increases the intensity by 1.
 
-### .decrease(`amount = 1`)
+### effect.decrease(`amount = 1`)
 
 Decreases the `Effect`'s intensity by `amount` (a number, relative to the effect's current intensity). If `amount` is left empty, decreases the intensity by 1.
 
@@ -80,7 +88,7 @@ Decreases the `Effect`'s intensity by `amount` (a number, relative to the effect
 var effect = canvas.lighten(0);
 var increasing = true;
 (function flash() {
-    var amount = effect.amount;
+    var amount = effect.data;
     if ( increasing && amount < 100 ) {
         effect.increase();
     } else if ( increasing && amount === 100 ) {
@@ -115,50 +123,8 @@ canvas.click(function() {
 
 <img id="martin-effect-remove" src="images/bunny.jpg">
 
-New `Effects` can also be registered with:
+### .bump(`i`) / .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
 
-### Martin.registerEffect(`name`, `cb`)
+Like layers and elements, effects can also be reordered on their layer's or element's stack of effects.
 
-`name` should be a string that will allow the new `Effect` to be called with `canvas.name()`.
-
-`cb` should be a callback function that describes how the `Effect` manipulates the canvas. The best way to use this is to use the `Layer.loop()` function.
-
-```js
-// Register an effect with a name and a callback function that takes a
-// single parameter, data, which will dictate how the effect interacts with the canvas
-Martin.registerEffect('myNewEffect', function(data) {
-
-    // `this` refers to the instance of Martin when called,
-    // and `this.currentLayer` is the working layer of the canvas
-    this.currentLayer.loop(function(x, y, pixel) {
-
-        // x and y are the pixel's coordinates, from the upper-left, starting with 0
-        // pixel is an object with keys r, g, b, a representing its
-        // red, green, blue, and alpha values, all clamped between 0 and 255
-        pixel.r;
-        pixel.g;
-        pixel.b;
-        pixel.a;
-
-        // These values can be mutated
-        pixel.r = 200;
-        pixel.g += 5 + data.a;
-        pixel.b -= Math.round(data.b / 2);
-
-        // To make sure the changes are saved, return the
-        // pixel object at the end.
-        return pixel;
-    });
-
-    // To make the effect chainable, finish it off with...
-    return this;
-});
-
-// After having registered the new effect, call it on the instance of Martin
-canvas.myNewEffect({
-    a: 100,
-    b: 100
-});
-```
-
-<img id="martin-my-new-effect" src="images/bunny.jpg">
+&nbsp;

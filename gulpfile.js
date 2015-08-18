@@ -1,5 +1,3 @@
-var VERSION = '0.2.7';
-
 var fs = require('fs'),
     gulp = require('gulp'),
     uglify = require('gulp-uglify'),
@@ -16,31 +14,40 @@ var reload = browserSync.reload;
 var bower = require('./bower.json'),
     aws = require('./aws.json');
 
-function writeBowerVersion() {
-    bower.version = VERSION;
-    fs.writeFile('./bower.json', JSON.stringify(bower, null, '  '), function(err, data) {
-        if (err) return console.log(err);
-        console.log('Wrote version to bower.json');
-    });
-}
-
-var jsPrefix = 'js/src/';
+var jsPrefix = 'js/src/',
+    pluginsPrefix = 'js/src/plugins/';
 
 var paths = {
     jsCoreIn: [
-        'init',
-        'helpers',
-        'utils',
-        'layers',
-        'elements',
-        'effects',
-        'events',
-        'dimensions'
+        'start',
+        'core/init',
+        'core/version',
+        'core/helpers',
+        'core/utils',
+        'object/object',
+        'layer/layers',
+        'element/init',
+            'element/image',
+            'element/rect',
+            'element/line',
+            'element/circle',
+            'element/ellipse',
+            'element/polygon',
+            'element/text',
+        'effect/init',
+            'effect/desaturate',
+            'effect/lighten',
+            'effect/opacity',
+            'effect/blur',
+            'effect/invert',
+        'event/events',
+        'core/dimensions',
+        'end'
     ],
     plugins: [
         'watermark',
-        'gradient',
-        'gradientmap'
+        'gradientmap',
+        'tile'
     ],
     jsCoreDist: 'js/dist',
     jsCoreDocs: 'docs/download',
@@ -53,63 +60,36 @@ paths.jsCoreIn.forEach(function(path, i) {
 
 // looks for filename martin.PLUGIN.js
 paths.plugins.forEach(function(path, i) {
-    paths.plugins[i] = jsPrefix + 'martin.' + path + '.js'
+    paths.plugins[i] = pluginsPrefix + path + '.js'
 });
 
-function writeVersion(callback) {
-
-    writeBowerVersion();
-
-    var init = './js/src/init.js';
-
-    fs.readFile(init, 'utf8', function read(err, data) {
-
-        var lines = data.split('\n'),
-            versionString = 'Martin._version = ';
-        lines.forEach(function(line, i) {
-            if ( line.indexOf(versionString) > -1 ) {
-                lines.splice(i, 1, versionString + "'" + VERSION + "'" + ';');
-            }
-        });
-
-        fs.writeFile(init, lines.join('\n'), function(err, data) {
-            if (err) return console.log(err);
-            console.log('Wrote version to init.js');
-            callback();
-        });
+function writeBowerVersion(version) {
+    bower.version = version;
+    fs.writeFile('./bower.json', JSON.stringify(bower, null, '  '), function(err, data) {
+        if (err) return console.log(err);
+        console.log('Wrote version to bower.json');
     });
 }
 
-function writeTestSource() {
-    var test = './test/index.html';
-    fs.readFile(test, 'utf8', function read(err, data) {
+function writeVersion(callback) {
 
-        data = data.split('\n');
+    var versionFile = './js/src/core/version.js';
 
-        var start = '<!-- start JS core files -->',
-            end = '<!-- end JS core files -->',
-            startLine,
-            endLine,
-            newLines = [];
+    fs.readFile(versionFile, 'utf8', function read(err, data) {
 
-        data.forEach(function(line, i) {
-            if ( line.indexOf(start) > -1 ) { startLine = i; }
-            if ( line.indexOf(end) > -1 ) { endLine = i; }
+        var lines = data.split('\n'),
+            versionString = 'Martin._version = ',
+            version;
+
+        lines.forEach(function(line, i) {
+            if ( line.indexOf(versionString) > -1 ) {
+                version = line.replace(versionString, '');
+            }
         });
 
-        paths.jsCoreIn.forEach(function(path) {
-            newLines.push('<script src="../' + path + '"></script>');
-        });
+        writeBowerVersion(version.replace(/["';]/g, ''));
 
-        newLines = newLines.join('\n');
-
-        data.splice(startLine + 1, endLine - startLine - 1, newLines);
-        data = data.join('\n');
-
-        fs.writeFile(test, data, function(err, data) {
-            if (err) return console.log(err);
-            console.log('Wrote core JS files to the test spec.');
-        });
+        callback();
     });
 }
 
@@ -125,19 +105,24 @@ function fullAndMin(dest) {
             .pipe(uglify())
             .pipe(gulp.dest( dest ));
 
-        gulp.src( paths.plugins )
-            .pipe(gulp.dest( dest ));
+        if ( dest !== 'docs/download' ) {
+            
+            gulp.src( paths.plugins )
+                .pipe(rename(function(path) {
+                    path.basename = 'martin.' + path.basename
+                }))
+                .pipe(gulp.dest( dest ));
 
-        gulp.src( paths.plugins )
-            .pipe(uglify())
-            .pipe(rename(function(path) {
-                path.basename += '.min'
-            }))
-            .pipe(gulp.dest( dest ));
+            gulp.src( paths.plugins )
+                .pipe(uglify())
+                .pipe(rename(function(path) {
+                    path.basename = 'martin.' + path.basename + '.min'
+                }))
+                .pipe(gulp.dest( dest ));
+        }
     }
 
     writeVersion(processFiles);
-    writeTestSource();
 }
 
 gulp.task('js', function() {

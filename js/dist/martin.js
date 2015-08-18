@@ -7,13 +7,13 @@
     ----------------------------------------
 
     MARTIN
-    .makeCanvas()
-    _version
 */
+
+(function() {
 
 // The great initializer. Pass in a string to select element by ID,
 // or an HTMLElement
-window.Martin = function( val, options ) {
+function Martin( val, options ) {
 
     if ( !(this instanceof Martin) ) return new Martin( val, options );
 
@@ -31,6 +31,8 @@ window.Martin = function( val, options ) {
     return this.makeCanvas();
 
 };
+
+Martin.utils = {};
 
 // Convert an image to a canvas or just return the canvas.
 Martin.prototype.makeCanvas = function() {
@@ -60,10 +62,12 @@ Martin.prototype.makeCanvas = function() {
                 original.parentNode.insertBefore( canvas, original );
                 original.parentNode.removeChild( original );
 
-                // Give that layer some image data
-                new Martin.Element('image', this, {
-                    original: original
+                // Give that layer some image data (see src/element/image.js)
+                Martin.registerElement('image', function(img) {
+                    drawImage.call(this, img);
                 });
+
+                this.image(original);
             }
 
             // This should only fire once! Fire if the image is complete,
@@ -85,9 +89,7 @@ Martin.prototype.makeCanvas = function() {
     return this;
 };
 
-// DON'T EDIT THIS LINE.
-// Automatically updated w/ Gulp
-Martin._version = '0.2.7';
+Martin._version = '0.3.0';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -136,7 +138,7 @@ Martin.hexToRGB = function( hex ) {
 };
 
 /*
-    For utility functions that do extend Martin prototype.
+    For (mostly) utility functions that extend Martin prototype.
 
     extend()
     .remove()
@@ -145,70 +147,81 @@ Martin.hexToRGB = function( hex ) {
     .convertToImage()
 */
 
-Martin.utils = {};
-
-// Extend Martin with plugins, if you want
-Martin.utils.extend = function( obj ) {
-    for ( var method in obj ) {
-        Martin.prototype[method] = obj[method];
-    }
-};
-
-Martin.extend = Martin.utils.extend;
-
-Martin.utils.forEach = function(arr, cb) {
+function forEach(arr, cb) {
     if (arr) {
         arr.forEach(cb);
     }
-};
+}
 
-Martin.utils.noop = function() {};
+function noop() {}
 
-Martin.prototype.remove = function() {
+Martin.utils.forEach = forEach;
+Martin.utils.noop = noop;
+
+var i,
+    func,
+    funcs = {
+
+// Extend Martin with plugins, if you want
+extend: function extend( obj ) {
+    for ( var method in obj ) {
+        if ( Martin.prototype.hasOwnProperty(method) ) {
+            throw new Error('Careful! This method already exists on the Martin prototype. Try a different name after checking the docs: http://martinjs.org');
+        } else {
+            Martin.prototype[method] = obj[method];
+        }
+    }
+},
+
+remove: function remove() {
     var canvas = this.canvas,
         parent = canvas.parentNode;
     if ( parent ) parent.removeChild(this.canvas);
     return this;
-};
+},
 
 // Render: looping through layers, loop through elements
 // and render each (with optional callback)
-Martin.prototype.render = function(cb) {
+render: function render(cb) {
 
-    Martin.utils.forEach(this.layers, function(layer, i) {
+    var ctx = this.context;
+
+    ctx.clearRect(0, 0, this.width(), this.height());
+
+    Martin.utils.forEach(this.layers, function(layer) {
 
         layer.clear();
 
-        Martin.utils.forEach(layer.elements, function(element) {
-            element.renderElement();
+        Martin.utils.forEach(layer.elements, function renderElement(element) {
+            element.renderElement && element.renderElement();
         });
 
-        Martin.utils.forEach(layer.effects, function(effect) {
-            effect.renderEffect();
+        Martin.utils.forEach(layer.effects, function renderEffect(effect) {
+            effect.renderEffect && effect.renderEffect();
         });
 
-        layer.render();
+        ctx.drawImage(layer.canvas, 0, 0);
     });
 
     if (cb) return cb();
 
     return this;
-};
+},
 
 // Autorender: Only render if the `autorender` option is not false
-Martin.prototype.autorender = function(cb) {
+autorender: function autorender(cb) {
     if ( this.options.autorender !== false ) return this.render(cb);
     return cb ? cb() : null;
-};
+},
 
 // Return's a data URL of all the working layers
-Martin.prototype.toDataURL = function() {
+toDataURL: function toDataURL() {
     return this.canvas.toDataURL();
-};
+},
 
 // Get the dataURL of the merged layers of the canvas,
 // then turn that into one image
-Martin.prototype.convertToImage = function() {
+convertToImage: function convertToImage() {
 
     var dataURL = this.toDataURL(),
         img = document.createElement('img');
@@ -221,7 +234,137 @@ Martin.prototype.convertToImage = function() {
 
     if ( this.container ) this.container.appendChild( img );
 
+}
+
 };
+
+for ( func in funcs ) {
+    Martin.prototype[func] = funcs[func];
+}
+
+// shared methods for objects: layers, elements, effects
+
+Martin.Object = function() {};
+var ObjMethods,
+    ObjMethod;
+
+ObjMethods = {
+
+    loop: function(cb, put) {
+
+        var width = this.base.width(),
+            height = this.base.height();
+
+        var imageData, pixels, len,
+            n, x, y,
+            r, g, b, a,
+            pixel,
+            output;
+
+        imageData = this.getImageData();
+
+        if ( imageData ) {
+
+            pixels = imageData.data;
+            len = pixels.length;
+
+            for ( var i = 0; i < len; i += 4 ) {
+
+                // xy coordinates
+                n = i / 4;
+                x = n % width;
+                y = Math.floor(n / height);
+
+                // rgba values
+                r = pixels[i];
+                g = pixels[i + 1];
+                b = pixels[i + 2];
+                a = pixels[i + 3];
+
+                // pass an object corresponding to the pixel to the callback
+                pixel = { r: r, g: g, b: b, a: a };
+
+                // execute the callback within the context of this layer's, uh... context
+                output = cb.call( this.context, x, y, pixel );
+
+                // reassign the actual rgba values of the pixel based on the output from the loop
+                pixels[i] = output.r;
+                pixels[i + 1] = output.g;
+                pixels[i + 2] = output.b;
+                pixels[i + 3] = output.a;
+
+            }
+
+            // explicitly declare if image data from callback is not to be used
+            if ( put !== false ) this.putImageData( imageData );
+
+        }
+
+        return this;
+    },
+
+    getImageData: function() {
+        var imageData = this.context && this.canvas.width > 0 && this.canvas.height > 0 ?
+            this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) :
+            null;
+        return imageData;
+    },
+
+    // Simple shell for putting image data
+    putImageData: function(imageData) {
+        this.context.putImageData( imageData, 0, 0 );
+        return this;
+    },
+
+    clear: function clear() {
+        this.context.clearRect(0, 0, this.base.width(), this.base.height());
+        return this;
+    },
+
+    stackIndex: function() {
+        return this.stack.indexOf(this);
+    },
+
+    remove: function() {
+        this.stack.splice(this.stackIndex(), 1);
+        this.base.autorender();
+        return this;
+    },
+
+    bump: function(i) {
+        var index = this.stackIndex();
+        this.remove();
+        this.stack.splice(index + i, 0, this);
+        this.base.autorender();
+        return this;
+    },
+
+    bumpUp: function() {
+        return this.bump(1);
+    },
+
+    bumpDown: function() {
+        return this.bump(-1);
+    },
+
+    bumpToTop: function() {
+        this.remove();
+        this.stack.push(this);
+        this.base.autorender();
+        return this;
+    },
+
+    bumpToBottom: function() {
+        this.remove();
+        this.stack.unshift(this);
+        this.base.autorender();
+        return this;
+    },
+};
+
+for ( ObjMethod in ObjMethods ) {
+    Martin.Object.prototype[ObjMethod] = ObjMethods[ObjMethod];
+}
 
 /*
 
@@ -239,7 +382,6 @@ Martin.prototype.convertToImage = function() {
     .render()
     .clear()
     .remove()
-    .addElement()
 
     Methods for working with Layers
 
@@ -260,6 +402,18 @@ Martin.Layer = function(base, arg) {
         y: 1
     };
 
+    this.elements = [];
+    this.effects = [];
+
+    // if no layers yet (initializing),
+    // the layers are just this new layer,
+    // and the new layer's context should be the base's
+    if ( !this.base.layers ) {
+        this.base.layers = [];
+    }
+    this.stack = this.base.layers;
+    this.stack.push(this);
+
     if ( typeof arg === 'string' ) {
         this.type = arg;
     } else {
@@ -269,6 +423,8 @@ Martin.Layer = function(base, arg) {
     return this;
 
 };
+
+Martin.Layer.prototype = Object.create(Martin.Object.prototype);
 
 // Normalize X and Y values
 Martin.Layer.prototype.normalizeX = function( val ) {
@@ -293,62 +449,146 @@ Martin.Layer.prototype.normalizePercentY = function( val ) {
     return ( val / 100 ) * this.canvas.height;
 };
 
-// Loop through the image data
-Martin.Layer.prototype.loop = function(cb, put) {
+// Create a new (top-most) layer and switch to that layer.
+Martin.prototype.newLayer = function(arg) {
 
-    var width = this.base.width(),
-        height = this.base.height();
+    var newLayer = new Martin.Layer(this, arg);
 
-    var imageData, pixels, len,
-        n, x, y,
-        r, g, b, a,
-        pixel,
-        output;
+    this.currentLayer = newLayer;
 
-    imageData = this.getImageData();
+    this.autorender();
 
-    if ( imageData ) {
+    return newLayer;
 
-        pixels = imageData.data;
-        len = pixels.length;
+};
 
-        for ( var i = 0; i < len; i += 4 ) {
+// Switch the context and return the requested later
+Martin.prototype.layer = function( num ) {
 
-            // xy coordinates
-            n = i / 4;
-            x = n % width;
-            y = Math.floor(n / height);
+    this.currentLayer = this.layers[num || 0];
 
-            // rgba values
-            r = pixels[i];
-            g = pixels[i + 1];
-            b = pixels[i + 2];
-            a = pixels[i + 3];
+    return this.layers[num || 0];
 
-            // pass an object corresponding to the pixel to the callback
-            pixel = { r: r, g: g, b: b, a: a };
+};
 
-            // execute the callback within the context of this layer's, uh... context
-            output = cb.call( this.context, x, y, pixel );
+/*
 
-            // reassign the actual rgba values of the pixel based on the output from the loop
-            pixels[i] = output.r;
-            pixels[i + 1] = output.g;
-            pixels[i + 2] = output.b;
-            pixels[i + 3] = output.a;
+    Martin.Element constructor
 
-        }
+    Element methods:
+    .update()
+    .moveTo()
+*/
 
-        // explicitly declare if image data from callback is not to be used
-        if ( put !== false ) this.putImageData( imageData );
+function registerElement(name, cb) {
 
+    function attachRender(data) {
+
+        // create new element
+        var element = new Martin.Element(name, this, data);
+
+        // attach render function (callback) --
+        // execute with element's data
+        element.renderElement = function renderElement() {
+
+            var layer = this.layer,
+                context = this.context;
+
+            // clear any image data
+            this.clear();
+
+            // scale the context
+            context.scale(
+                layer.scale.x,
+                layer.scale.y
+            );
+
+            context.beginPath();
+
+            cb.call(element, this.data);
+
+            this.setContext(this.data);
+
+            context.closePath();
+
+            // undo scaling
+            context.scale(
+                1 / layer.scale.x,
+                1 / layer.scale.y
+            );
+
+            // render this element's effects
+            Martin.utils.forEach(this.effects, function(effect) {
+                effect.renderEffect && effect.renderEffect();
+            });
+
+            // draw to layer
+            layer.context.drawImage(this.canvas, 0, 0);
+        };
+
+        return element;
+    }
+
+    Martin.prototype[name] = function registerToBase(data) {
+        var el = attachRender.call(this, data);
+        this.autorender();
+        return el;
+    };
+
+    Martin.Layer.prototype[name] = function registerToLayer(data) {
+        var el = attachRender.call(this.base, data);
+        this.base.autorender();
+        return el;
+    };
+};
+
+Martin.registerElement = registerElement;
+
+Martin.Element = function(type, caller, data) {
+
+    var base = caller.base || caller,
+        layer = caller.currentLayer || caller;
+
+    // base refers to the instance of Martin
+    this.base = base;
+    this.canvas = document.createElement('canvas');
+    this.context = this.canvas.getContext('2d');
+
+    // TODO: bounding box
+    this.canvas.width = base.original ? (base.original.naturalWidth || base.original.width) : base.width();
+    this.canvas.height = base.original ? (base.original.naturalHeight || base.original.height) : base.height();
+
+    this.scale = {
+        x: 1,
+        y: 1
+    };
+
+    this.data = data;
+    if ( data.x ) this.data.x = layer.normalizeX(data.x);
+    if ( data.y ) this.data.y = layer.normalizeY(data.y);
+    this.type = type;
+    this.layer = layer;
+
+    this.effects = [];
+
+    this.stack = this.layer.elements;
+    this.stack.push(this);
+
+    // automatically push backgrounds to the bottom of the layer
+    if ( this.type === 'background' ) {
+        this.data = {
+            color: data
+        };
+        this.bumpToBottom();
     }
 
     return this;
 };
 
+Martin.Element.prototype = Object.create(Martin.Object.prototype);
+
 // Set the fill, stroke, alpha for a new shape
-Martin.Layer.prototype.setContext = function( obj ) {
+Martin.Element.prototype.setContext = function( obj ) {
 
     var context = this.context;
 
@@ -371,484 +611,6 @@ Martin.Layer.prototype.setContext = function( obj ) {
 
     context.restore();
 
-};
-
-
-Martin.Layer.prototype.getImageData = function() {
-    var imageData = this.context && this.canvas.width > 0 && this.canvas.height > 0 ?
-        this.context.getImageData(0, 0, this.canvas.width, this.canvas.height) :
-        null;
-    return imageData;
-};
-
-// Simple shell for putting image data
-Martin.Layer.prototype.putImageData = function(imageData) {
-    this.context.putImageData( imageData, 0, 0 );
-    return this;
-};
-
-Martin.Layer.prototype.render = function() {
-    var base = this.base,
-        imageData = this.getImageData();
-    // only draw if there is a context for the base --
-    // if the <img> or <canvas> hasn't fully initialized
-    // this won't run
-    if ( base.context ) base.context.drawImage( this.canvas, 0, 0 );
-};
-
-Martin.Layer.prototype.clear = function() {
-    this.context.clearRect(0, 0, this.base.width(), this.base.height());
-    return this;
-};
-
-Martin.Layer.prototype.remove = function() {
-    this.base.layers.splice(this.base.layers.indexOf(this), 1);
-    this.base.autorender();
-    return this;
-};
-
-// ----- Add an element to a layer
-Martin.Layer.prototype.addElement = function(element) {
-
-    if ( !(element instanceof Martin.Element ) ) {
-        throw new Error('When adding an element to a layer, it must be created from Martin.Element.');
-    }
-
-    if (this.elements) {
-        this.elements.push(element);
-    } else {
-        this.elements = [element];
-    }
-
-    return this;
-};
-
-// Create a new (top-most) layer and switch to that layer.
-Martin.prototype.newLayer = function(arg) {
-
-    var newLayer = new Martin.Layer(this, arg);
-
-    // if no layers yet (initializing),
-    // the layers are just this new layer,
-    // and the new layer's context should be the base's
-    if ( !this.layers ) {
-        this.layers = [newLayer];
-    } else {
-        this.layers.push(newLayer);
-    }
-
-    // Don't forget to set the new context and currentlayer
-    this.currentLayerIndex = this.layers.length - 1;
-    this.currentLayer = newLayer;
-
-    this.autorender();
-
-    return newLayer;
-
-};
-
-// Switch the context and return the requested later
-Martin.prototype.layer = function( num ) {
-
-    this.context = this.layers[num || 0].context;
-    this.currentLayer = this.layers[num || 0];
-    this.currentLayerIndex = num || 0;
-
-    return this.layers[num || 0];
-
-};
-
-/*
-
-    Martin.Element constructor
-
-    Elements:
-    .background()
-    .line()
-    .rect()
-    .circle()
-    .ellipse()
-    .polygon()
-    .text()
-
-    Element methods:
-    .layerIndex()
-    .remove()
-    .bump()
-    .bumpUp()
-    .bumpDown()
-    .bumpToTop()
-    .bumpToBottom()
-    .update()
-    .moveTo()
-
-    Finally:
-    - Loop through Elements and
-      create a corresponding method on the main Martin instance
-*/
-
-Martin.Element = function(type, canvas, obj) {
-
-    if ( Martin.Element.prototype.hasOwnProperty(type) ) {
-
-        // adds a new canvas within the current layer
-        var layer = canvas.currentLayer;
-
-        // base refers to the instance of Martin
-        this.base = canvas;
-
-        this.data = obj;
-        this.type = type;
-        this.layer = layer;
-
-        layer.addElement(this);
-
-        // automatically push backgrounds to the bottom of the layer
-        if ( this.type === 'background' ) this.bumpToBottom();
-
-        this.base.autorender();
-
-        return this;
-
-    } else {
-
-        throw new Error('Given type is not an allowed element.');
-    }
-};
-
-Martin.Element.prototype.renderElement = function() {
-
-    var layer = this.layer,
-        context = layer.context;
-
-    // scale the context
-    context.scale(
-        layer.scale.x,
-        layer.scale.y
-    );
-
-    // render the element
-    this[this.type]();
-
-    // undo scaling
-    context.scale(
-        1 / layer.scale.x,
-        1 / layer.scale.y
-    );
-
-    return this;
-};
-
-Martin.Element.prototype.image = function() {
-
-    var layer = this.layer,
-        context = layer.context,
-        obj = this.data;
-
-    context.drawImage( obj.original, 0, 0 );
-
-    return this;
-};
-
-Martin.Element.prototype.background = function() {
-
-    var color = typeof this.data === 'string' ? this.data : this.data.color,
-        obj = {};
-
-    obj.color = color;
-    this.data = obj;
-
-    return this.rect();
-};
-
-
-Martin.Element.prototype.line = function() {
-
-    var layer = this.layer,
-        context = layer.context,
-        obj = this.data;
-
-    context.beginPath();
-
-    context.moveTo(
-        layer.normalizeX( obj.x || 0 ),
-        layer.normalizeY( obj.y || 0 )
-    );
-
-    context.lineTo(
-        layer.normalizeX( obj.endX ),
-        layer.normalizeY( obj.endY )
-    );
-
-    obj.width = Math.abs(obj.endX - obj.x);
-    obj.height = Math.abs(obj.endY - obj.y);
-
-    if ( !obj.strokeWidth ) obj.strokeWidth = 1;
-    obj.stroke = obj.color ? obj.color : '#000';
-
-    layer.setContext( obj );
-
-    context.closePath();
-
-    return this;
-
-};
-
-Martin.Element.prototype.rect = function() {
-
-    var layer = this.layer,
-        context = layer.context,
-        obj = this.data;
-
-    context.beginPath();
-
-    context.rect(
-        layer.normalizeX( obj.x || 0 ),
-        layer.normalizeY( obj.y || 0 ),
-        layer.normalizeX( obj.width || layer.width() ),
-        layer.normalizeY( obj.height || layer.height() )
-    );
-
-    layer.setContext( obj );
-
-    context.closePath();
-
-    return this;
-};
-
-Martin.Element.prototype.circle = function() {
-
-    var layer = this.layer,
-        context = layer.context,
-        obj = this.data,
-        centerX = layer.normalizeX( obj.x || 0 ),
-        centerY = layer.normalizeY( obj.y || 0 );
-
-    context.beginPath();
-
-    context.arc( centerX, centerY, obj.radius, 0, 2 * Math.PI, false);
-
-    layer.setContext( obj );
-
-    context.closePath();
-
-    return this;
-
-};
-
-Martin.Element.prototype.ellipse = function() {
-
-    var layer = this.layer,
-        context = layer.context,
-        obj = this.data,
-        centerX = layer.normalizeX( obj.x || 0 ),
-        centerY = layer.normalizeY( obj.y || 0 ),
-        scale;
-
-    if ( obj.radiusX === obj.radiusY ) {
-        obj.radius = obj.radiusX;
-        return this.circle( canvas, obj );
-    }
-
-    context.beginPath();
-
-    if ( obj.radiusX > obj.radiusY ) {
-
-        scale = obj.radiusX / obj.radiusY;
-
-        context.scale( scale, 1 );
-
-        context.arc( centerX / scale, centerY, obj.radiusX / scale, 0, 2 * Math.PI, false);
-
-        context.scale( 1 / scale, 1 );
-
-    } else {
-
-        scale = obj.radiusY / obj.radiusX;
-
-        context.scale( 1, scale );
-
-        context.arc( centerX, centerY / scale, obj.radiusY / scale, 0, 2 * Math.PI, false);
-
-        context.scale( 1, 1 / scale );
-
-    }
-
-    layer.setContext( obj );
-
-    context.closePath();
-
-    return this;
-}
-
-Martin.Element.prototype.polygon = function() {
-
-    var layer = this.layer,
-        context = layer.context,
-        obj = this.data;
-
-    context.beginPath();
-
-    for ( var i = 0; i < obj.points.length; i++ ) {
-
-        var x = obj.points[i][0],
-            y = obj.points[i][1],
-            toX = layer.normalizeX( x ),
-            toY = layer.normalizeY( y );
-
-        if ( i === 0 ) context.moveTo( toX, toY );
-
-        context.lineTo( toX, toY );
-
-    }
-
-    // close the path
-    context.lineTo(
-        layer.normalizeX(obj.points[0][0]),
-        layer.normalizeY(obj.points[0][1])
-    );
-
-    layer.setContext( obj );
-
-    context.closePath();
-
-    return this;
-};
-
-Martin.Element.prototype.text = function() {
-
-	var layer = this.layer,
-        context = layer.context,
-        obj = this.data,
-		size,
-        style,
-        font,
-        fontOutput;
-
-    var clone = {};
-
-    // use custom getters and setters for these properties
-    style = obj.style || '';
-    size = obj.size || '';
-    font = obj.font || '';
-
-    function fontString(style, size, font) {
-        return (style ? style + ' ' : '') + (size || 16) + 'px ' + (font || 'sans-serif');
-    };
-
-    fontOutput = fontString(obj.style, obj.size, obj.font);
-
-    this.fontSize = function(size) {
-        if ( size ) {
-            this.data.size = size;
-            return size;
-        } else {
-            return this.data.size;
-        }
-    };
-
-    this.fontStyle = function(style) {
-        if ( style ) {
-            this.data.style = style;
-            return style;
-        }
-
-        return this.data.style;
-    };
-
-    this.font = function(font) {
-        if ( font ) {
-            this.data.font = font;
-            return font;
-        }
-
-        return this.data.style;
-    };
-
-    this.width = function() {
-        return context.measureText(obj.text || '').width;
-    };
-
-    Object.defineProperty(clone, 'theStyle', {
-        get: function() {
-            return style;
-        },
-        set: function(style) {
-            fontOutput = fontString(style, obj.size, obj.font);
-        }
-    });
-
-    Object.defineProperty(clone, 'theSize', {
-        get: function() {
-            return size;
-        },
-        set: function(size) {
-            fontOutput = fontString(obj.style, size, obj.font);
-        }
-    });
-
-    Object.defineProperty(clone, 'theFont', {
-        get: function() {
-            return font;
-        },
-        set: function(font) {
-            fontOutput = fontString(obj.style, obj.size, font);
-        }
-    });
-
-	context.font = fontOutput;
-	context.fillStyle = obj.color || '#000';
-	context.textBaseline = 'top';
-	context.textAlign = obj.align || 'left';
-	context.fillText(
-		obj.text || '',
-		layer.normalizeX(obj.x || 0),
-		layer.normalizeY(obj.y || 0)
-	);
-
-	return this;
-};
-
-// ----- Removing and moving elements within the stack in the layer
-
-Martin.Element.prototype.layerIndex = function() {
-    return this.layer.elements.indexOf(this);
-};
-
-Martin.Element.prototype.remove = function() {
-    this.layer.elements.splice(this.layerIndex(), 1);
-    this.base.autorender();
-    return this;
-};
-
-Martin.Element.prototype.bump = function(i) {
-    var layerIndex = this.layerIndex();
-    this.remove();
-    this.layer.elements.splice(layerIndex + i, 0, this);
-    this.base.autorender();
-    return this;
-};
-
-Martin.Element.prototype.bumpUp = function() {
-    return this.bump(1);
-};
-
-Martin.Element.prototype.bumpDown = function() {
-    return this.bump(-1);
-};
-
-Martin.Element.prototype.bumpToTop = function() {
-    this.remove();
-    this.layer.elements.push(this);
-    this.base.autorender();
-    return this;
-};
-
-Martin.Element.prototype.bumpToBottom = function() {
-    this.remove();
-    this.layer.elements.unshift(this);
-    this.base.autorender();
-    return this;
 };
 
 // ----- Update an element with new data
@@ -899,111 +661,301 @@ Martin.Element.prototype.moveTo = function(x, y) {
     data.x = x;
     data.y = y;
 
-    this[this.type]();
-
     this.base.autorender();
 
     return this;
 
 };
 
-(function() {
-    var elements = ['background', 'line', 'rect', 'circle', 'ellipse', 'polygon', 'text'];
+function drawImage(img) {
+    this.context.drawImage( img, 0, 0 );
+}
 
-    elements.forEach(function(el) {
-        Martin.prototype[el] = function(obj) {
-            return new Martin.Element(el, this, obj);
-        };
+registerElement('image', function(img) {
+    drawImage.call(this, img);
+});
+
+function rect(data) {
+
+    var layer = this.layer,
+        context = this.context;
+
+    context.rect(
+        layer.normalizeX( data.x || 0 ),
+        layer.normalizeY( data.y || 0 ),
+        layer.normalizeX( data.width || layer.width() ),
+        layer.normalizeY( data.height || layer.height() )
+    );
+}
+
+registerElement('rect', function(data) {
+    rect.call(this, data);
+});
+
+registerElement('background', function(data) {
+    rect.call(this, data);
+});
+
+registerElement('line', function(data) {
+
+    var layer = this.layer,
+        context = this.context;
+
+    context.moveTo(
+        layer.normalizeX( data.x || 0 ),
+        layer.normalizeY( data.y || 0 )
+    );
+
+    context.lineTo(
+        layer.normalizeX( data.endX ),
+        layer.normalizeY( data.endY )
+    );
+
+    if ( !data.strokeWidth ) data.strokeWidth = 1;
+    data.stroke = data.color ? data.color : '#000';
+
+    return this;
+});
+
+registerElement('circle', function(data) {
+
+    var layer = this.layer,
+        context = this.context,
+        centerX = layer.normalizeX( data.x || 0 ),
+        centerY = layer.normalizeY( data.y || 0 );
+
+    context.arc( centerX, centerY, data.radius, 0, 2 * Math.PI, false);
+
+});
+
+registerElement('ellipse', function(data) {
+
+    var layer = this.layer,
+        context = this.context,
+        centerX = layer.normalizeX( data.x || 0 ),
+        centerY = layer.normalizeY( data.y || 0 ),
+        scale;
+
+    if ( data.radiusX > data.radiusY ) {
+
+        scale = data.radiusX / data.radiusY;
+
+        context.scale( scale, 1 );
+
+        context.arc( centerX / scale, centerY, data.radiusX / scale, 0, 2 * Math.PI, false);
+
+        context.scale( 1 / scale, 1 );
+
+    } else {
+
+        scale = data.radiusY / data.radiusX;
+
+        context.scale( 1, scale );
+
+        context.arc( centerX, centerY / scale, data.radiusY / scale, 0, 2 * Math.PI, false);
+
+        context.scale( 1, 1 / scale );
+
+    }
+
+    return this;
+});
+
+registerElement('polygon', function(data) {
+
+    var layer = this.layer,
+        context = this.context;
+
+    for ( var i = 0; i < data.points.length; i++ ) {
+
+        var x = data.points[i][0],
+            y = data.points[i][1],
+            toX = layer.normalizeX( x ),
+            toY = layer.normalizeY( y );
+
+        if ( i === 0 ) context.moveTo( toX, toY );
+
+        context.lineTo( toX, toY );
+
+    }
+
+    // close the path
+    context.lineTo(
+        layer.normalizeX(data.points[0][0]),
+        layer.normalizeY(data.points[0][1])
+    );
+
+    return this;
+});
+
+registerElement('text', function(data) {
+
+	var layer = this.layer,
+        context = this.context,
+		size,
+        style,
+        font,
+        fontOutput;
+
+    var clone = {};
+
+    // use custom getters and setters for these properties
+    style = data.style || '';
+    size = data.size || '';
+    font = data.font || '';
+
+    function fontString(style, size, font) {
+        return (style ? style + ' ' : '') + (size || 16) + 'px ' + (font || 'sans-serif');
+    };
+
+    fontOutput = fontString(data.style, data.size, data.font);
+
+    this.fontSize = function(size) {
+        if ( size ) {
+            this.data.size = size;
+            return size;
+        } else {
+            return this.data.size;
+        }
+    };
+
+    this.fontStyle = function(style) {
+        if ( style ) {
+            this.data.style = style;
+            return style;
+        }
+
+        return this.data.style;
+    };
+
+    this.font = function(font) {
+        if ( font ) {
+            this.data.font = font;
+            return font;
+        }
+
+        return this.data.style;
+    };
+
+    this.width = function() {
+        return context.measureText(data.text || '').width;
+    };
+
+    Object.defineProperty(clone, 'theStyle', {
+        get: function() {
+            return style;
+        },
+        set: function(style) {
+            fontOutput = fontString(style, data.size, data.font);
+        }
     });
-})();
+
+    Object.defineProperty(clone, 'theSize', {
+        get: function() {
+            return size;
+        },
+        set: function(size) {
+            fontOutput = fontString(data.style, size, data.font);
+        }
+    });
+
+    Object.defineProperty(clone, 'theFont', {
+        get: function() {
+            return font;
+        },
+        set: function(font) {
+            fontOutput = fontString(data.style, data.size, font);
+        }
+    });
+
+	context.font = fontOutput;
+	context.fillStyle = data.color || '#000';
+	context.textBaseline = 'top';
+	context.textAlign = data.align || 'left';
+	context.fillText(
+		data.text || '',
+		layer.normalizeX(data.x || 0),
+		layer.normalizeY(data.y || 0)
+	);
+});
 
 /*
 
     Martin.Effect constructor
 
-    .desaturate()
-    .saturate()
-    .lighten()
-    .darken()
-    .opacity()
-    .blur()
-      - plus helper functions... and, I should mention:
-        StackBlur Algorithm Copyright (c) 2010 Mario Klingemann
-        Version: 	0.6
-        Author:		Mario Klingemann
-        Contact: 	mario@quasimondo.com
-        Website:	http://www.quasimondo.com/StackBlurForCanvas
-        Twitter:	@quasimondo
-
     Effect methods:
-    .layerIndex()
     .increase()
     .decrease()
-    .remove()
 */
 
-Martin.registerEffect = function(name, cb) {
-    Martin.prototype[name] = function(data) {
-        Martin.Effect.prototype[name] = cb.bind(this, data);
-        return new Martin.Effect(name, this, data);
+function registerEffect(name, cb) {
+
+    function attachRender(data, stack, stackContainer) {
+
+        // create new effect
+        var effect = new Martin.Effect(name, this, data, stack, stackContainer);
+
+        // attach render function (callback) --
+        // execute with effect's data
+        effect.renderEffect = function renderEffect() {
+            cb.call(effect, this.data);
+        };
+
+        return effect;
+    }
+
+    Martin.prototype[name] = function attachToBase(data) {
+        var effect = attachRender.call(this, data, this.currentLayer.effects, this.currentLayer);
+        this.autorender();
+        return effect;
+    };
+
+    Martin.Layer.prototype[name] =
+    Martin.Element.prototype[name] = function attachToLayerOrElement(data) {
+        var effect = attachRender.call(this.base, data, this.effects, this);
+        this.base.autorender();
+        return effect;
     };
 };
 
-Martin.Effect = function(type, canvas, data) {
+Martin.registerEffect = registerEffect;
 
-    var layer = canvas.currentLayer;
+Martin.Effect = function(type, base, data, stack, stackContainer) {
 
-    this.base = canvas;
+    this.base = base;
     this.type = type;
-    this.inverse = false; // some effects are just the inverse of another
-    this.layer = layer;
 
     this.data = data;
 
-    layer.addEffect(this);
+    this.context = stackContainer;
 
-    this.base.autorender();
+    this.stack = stack;
+    this.stack.push(this);
 
     return this;
 };
 
-// Add an effect
-(function() {
-    var addEffect = function(effect) {
-        if (this.effects) {
-            this.effects.push(effect);
-        } else {
-            this.effects = [effect];
-        }
-        return effect;
-    };
-    // TODO: effect can be added to element
-    // Martin.Element.prototype.addEffect = addEffect;
-    Martin.Layer.prototype.addEffect = addEffect;
-})();
+Martin.Effect.prototype = Object.create(Martin.Object.prototype);
 
-Martin.Effect.prototype.renderEffect = function() {
-    return this[this.type]();
+// Adjust the intensity of an Effect (linear effects only)
+Martin.Effect.prototype.increase = function(amt) {
+
+    if ( typeof this.data === 'number' ) {
+        this.data += amt || 1;
+        this.base.autorender();
+    }
+
+    return this;
 };
 
-// for inverse effects
-Martin.Effect.prototype.invert = function(inverse) {
-    this.inverse = true;
-    return this[inverse]();
+Martin.Effect.prototype.decrease = function(amt) {
+    return this.increase(-amt || -1);
 };
 
 // Desaturate
-Martin.Effect.prototype.desaturate = function() {
+function desaturate(amt) {
 
-    var layer = this.layer,
-        amt = this.data;
-
-    if ( this.inverse ) amt *= -1;
-
-    amt = amt / 100;
-    if ( amt > 1 ) amt = 1;
-
-    layer.loop(function(x, y, pixel) {
+    this.context.loop(function(x, y, pixel) {
 
         var r = pixel.r,
             g = pixel.g,
@@ -1019,28 +971,26 @@ Martin.Effect.prototype.desaturate = function() {
         pixel.b = b;
 
         return pixel;
+
     });
+}
 
-    return this;
-};
+registerEffect('desaturate', function(amt) {
+    amt = amt / 100;
+    desaturate.call(this, amt);
+});
 
-Martin.Effect.prototype.saturate = function() {
-    return this.invert('desaturate');
-};
+// inverse of saturate
+registerEffect('saturate', function(amt) {
+    amt = -amt / 100;
+    desaturate.call(this, amt);
+});
 
 // Lighten and darken. (Darken just returns the opposite of lighten).
 // Takes an input from 0 to 100. Higher values return pure white or black.
-Martin.Effect.prototype.lighten = function() {
+function lighten(amt) {
 
-    var layer = this.layer,
-        amt = this.data;
-
-    if ( this.inverse ) amt *= -1;
-
-    amt = amt / 100;
-    if ( amt > 1 ) amt = 1;
-
-    layer.loop(function(x, y, pixel) {
+    this.context.loop(function(x, y, pixel) {
 
         pixel.r += Math.round(amt * 255);
         pixel.g += Math.round(amt * 255);
@@ -1048,39 +998,50 @@ Martin.Effect.prototype.lighten = function() {
 
         return pixel;
     });
+}
 
-    return this;
-};
+registerEffect('lighten', function(amt) {
+    amt = amt / 100;
+    lighten.call(this, amt);
+});
 
-Martin.Effect.prototype.darken = function() {
-    return this.invert('lighten');
-};
+registerEffect('darken', function(amt) {
+    amt = -amt / 100;
+    lighten.call(this, amt);
+});
 
 // Fade uniform
-Martin.Effect.prototype.opacity = function() {
-
-    var layer = this.layer,
-        amt = this.data;
+registerEffect('opacity', function(amt) {
 
     amt = amt / 100;
-    if ( amt > 1 ) amt = 1;
 
-    layer.loop(function(x, y, pixel) {
+    var base = this.base;
+
+    this.context.loop(function(x, y, pixel) {
         pixel.a *= amt;
         return pixel;
     });
+});
 
-    return this;
-};
+/*
+ *
+ * StackBlur Algorithm Copyright (c) 2010 Mario Klingemann
+ * Version: 0.6
+ * Author:	Mario Klingemann
+ * Contact: mario@quasimondo.com
+ * Website:	http://www.quasimondo.com/StackBlurForCanvas
+ * Twitter:	@quasimondo
+ *
+ */
 
 // simple stack maker
-Martin._BlurStack = function() {
+function BlurStack() {
     this.r = this.g = this.b = this.a = 0;
     this.next = null;
-};
+}
 
 // helper functions for .blur()
-Martin._BlurStack.mul_shift_table = function(i) {
+BlurStack.mul_shift_table = function(i) {
     var mul_table = [1,171,205,293,57,373,79,137,241,27,391,357,41,19,283,265,497,469,443,421,25,191,365,349,335,161,155,149,9,278,269,261,505,245,475,231,449,437,213,415,405,395,193,377,369,361,353,345,169,331,325,319,313,307,301,37,145,285,281,69,271,267,263,259,509,501,493,243,479,118,465,459,113,446,55,435,429,423,209,413,51,403,199,393,97,3,379,375,371,367,363,359,355,351,347,43,85,337,333,165,327,323,5,317,157,311,77,305,303,75,297,294,73,289,287,71,141,279,277,275,68,135,67,133,33,262,260,129,511,507,503,499,495,491,61,121,481,477,237,235,467,232,115,457,227,451,7,445,221,439,218,433,215,427,425,211,419,417,207,411,409,203,202,401,399,396,197,49,389,387,385,383,95,189,47,187,93,185,23,183,91,181,45,179,89,177,11,175,87,173,345,343,341,339,337,21,167,83,331,329,327,163,81,323,321,319,159,79,315,313,39,155,309,307,153,305,303,151,75,299,149,37,295,147,73,291,145,289,287,143,285,71,141,281,35,279,139,69,275,137,273,17,271,135,269,267,133,265,33,263,131,261,130,259,129,257,1];
 
 
@@ -1090,10 +1051,7 @@ Martin._BlurStack.mul_shift_table = function(i) {
 };
 
 // And, what we've all been waiting for:
-Martin.Effect.prototype.blur = function() {
-
-    var layer = this.layer,
-        amt = this.data;
+registerEffect('blur', function(amt) {
 
     if ( isNaN(amt) || amt < 1 ) return this;
     // Round to nearest pixel
@@ -1106,11 +1064,11 @@ Martin.Effect.prototype.blur = function() {
         heightMinus1 = height - 1,
         radiusPlus1 = amt + 1,
         div = 2 * amt + 1,
-        mul_sum = Martin._BlurStack.mul_shift_table(amt)[0],
-        shg_sum = Martin._BlurStack.mul_shift_table(amt)[1];
+        mul_sum = BlurStack.mul_shift_table(amt)[0],
+        shg_sum = BlurStack.mul_shift_table(amt)[1];
 
     var it = iterations, // internal iterations in case doing multiple layers
-        imageData = layer.getImageData(),
+        imageData = this.context.getImageData(),
         pixels = imageData.data;
 
     var x, y, i, p, yp, yi, yw, r_sum, g_sum, b_sum, a_sum,
@@ -1118,13 +1076,13 @@ Martin.Effect.prototype.blur = function() {
         r_in_sum, g_in_sum, b_in_sum, a_in_sum,
         pr, pg, pb, pa;
 
-    var stackStart = new Martin._BlurStack(),
+    var stackStart = new BlurStack(),
         stack = stackStart,
         stackEnd,
         stackIn;
 
     for ( i = 1; i < div; i++ ) {
-        stack = stack.next = new Martin._BlurStack();
+        stack = stack.next = new BlurStack();
         if ( i === radiusPlus1 ) stackEnd = stack;
     }
 
@@ -1257,81 +1215,51 @@ Martin.Effect.prototype.blur = function() {
         }
     }
 
-    layer.putImageData( imageData );
+    this.context.putImageData( imageData );
+});
 
-    return this;
-};
+Martin.registerEffect('invert', function() {
+    this.context.loop(function(x, y, pixel) {
+        pixel.r = 255 - pixel.r;
+        pixel.g = 255 - pixel.g;
+        pixel.b = 255 - pixel.b;
 
-Martin.Effect.prototype.layerIndex = function() {
-    return this.layer.effects.indexOf(this);
-};
-
-Martin.Effect.prototype.remove = function() {
-    this.layer.effects.splice(this.layerIndex(), 1);
-    this.base.autorender();
-    return this;
-};
-
-// Adjust the intensity of an Effect (linear effects only)
-Martin.Effect.prototype.increase = function(amt) {
-
-    if ( this.inverse ) amt = -(amt || 1);
-
-    if ( typeof this.data === 'number' ) {
-        this.data += amt || 1;
-    }
-    this.base.autorender();
-    return this;
-};
-
-Martin.Effect.prototype.decrease = function(amt) {
-    return this.increase(-amt || -1);
-};
-
-(function(){
-    var effects = ['desaturate', 'saturate', 'lighten', 'darken', 'opacity', 'blur'];
-
-    effects.forEach(function(el) {
-        Martin.prototype[el] = function(data) {
-            return new Martin.Effect(el, this, data);
-        };
+        return pixel;
     });
-})();
+});
 
-(function(){
-    var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mouseout', 'mousedown', 'mouseup'];
+var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mouseout', 'mousedown', 'mouseup'];
 
-    events.forEach(function(evt){
-        Martin.prototype[evt] = function(cb) {
-
-            function callback(e) {
-                cb(e);
-                this.autorender();
-            }
-
-            this.canvas.addEventListener(evt, callback.bind(this));
-            return this;
-        };
-    });
-
-    Martin.prototype.on = function(evt, cb) {
-
-        evt = evt.split(' ');
+events.forEach(function(evt){
+    Martin.prototype[evt] = function(cb) {
 
         function callback(e) {
             cb(e);
             this.autorender();
         }
 
-        evt.forEach(function(ev) {
-            if ( events.indexOf(ev) > -1 ) {
-                this.canvas.addEventListener(ev, callback.bind(this));
-            }
-        }, this);
-
+        this.canvas.addEventListener(evt, callback.bind(this));
         return this;
     };
-})();
+});
+
+Martin.prototype.on = function(evt, cb) {
+
+    evt = evt.split(' ');
+
+    function callback(e) {
+        cb(e);
+        this.autorender();
+    }
+
+    evt.forEach(function(ev) {
+        if ( events.indexOf(ev) > -1 ) {
+            this.canvas.addEventListener(ev, callback.bind(this));
+        }
+    }, this);
+
+    return this;
+};
 
 /*
 	Need to find a place for the rest of these important methods.
@@ -1366,7 +1294,12 @@ Martin.Effect.prototype.decrease = function(amt) {
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
-		if ( typeof val === 'string' && val.slice(-1) === '%' ) val = (+val.slice(0, -1)) * this.canvas[which] / 100;
+		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
+
+		// resize element canvases
+		Martin.utils.forEach(this.elements, function(element) {
+			element.canvas[which] = val;
+		});
 
 		// get the ratio, in case we're resizing
 		ratio = resize ? val / this.canvas[which] : 1;
@@ -1384,3 +1317,7 @@ Martin.Effect.prototype.decrease = function(amt) {
 		return this;
 	};
 });
+
+this.Martin = Martin;
+
+})();

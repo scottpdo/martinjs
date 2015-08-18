@@ -6,33 +6,41 @@ $(document).ready(function(){
 
     canvas.darken(10);
 
-    canvas.newLayer();
-
     var circle = canvas.circle({
         x: '50%',
         y: '50%',
         radius: 120,
         color: '#fff'
     });
-    var circleOpacity = canvas.opacity(0);
-    canvas.blur(60);
+
+    var circleOpacity = circle.opacity(0);
+    circle.blur(60);
 
     canvas.mousemove(function(e) {
         circle.moveTo(e.offsetX, e.offsetY);
         canvas.render();
     });
 
+    var t = 0;
+
     (function fadeIn() {
-        if ( effect.data > 30 ) {
-            effect.decrease(2);
-        } else if ( effect.data > 0 ) {
-            effect.decrease();
+        var conds = effect.data > 30 || effect.data > 0 || circleOpacity.data < 100;
+        if ( conds ) {
+            if ( effect.data > 30 ) {
+                effect.decrease(2);
+            } else if ( effect.data > 0 ) {
+                effect.decrease();
+            }
+            if ( circleOpacity.data < 100 ) {
+                circleOpacity.increase();
+            }
+
+            t += Math.PI / 180;
+
+            canvas.render();
+
+            requestAnimationFrame(fadeIn);
         }
-        if ( circleOpacity.data < 100 ) {
-            circleOpacity.increase();
-        }
-        canvas.render();
-        requestAnimationFrame(fadeIn);
     })();
 
     canvas.newLayer();
@@ -110,6 +118,7 @@ $(document).ready(function(){
     canvas.click(function() {
         canvas.options.autorender = !canvas.options.autorender;
         text.data.text = toggleText(text.data.text);
+        canvas.render();
     });
 
 })();
@@ -231,19 +240,33 @@ Martin('martin-text').text({
     })();
 })();
 
+(function() {
+    var canvas = Martin('martin-update');
+    canvas.background('#eee');
+    var text = canvas.text({
+        text: 'Hello, world!'
+    });
+    text.update('text', 'I am the new text!');
+    text.update({
+        color: '#f00',
+        size: 40
+    });
+})();
+
 Martin('martin-saturate').saturate(100);
 Martin('martin-desaturate').desaturate(80);
 Martin('martin-lighten').lighten(25);
 Martin('martin-darken').darken(25);
 Martin('martin-opacity').opacity(50);
 Martin('martin-blur').blur(15);
+Martin('martin-invert').invert();
 
 (function() {
     var canvas = Martin('martin-flash', { autorender: false });
     var effect = canvas.lighten(0);
     var increasing = true;
     (function flash() {
-        var amount = effect.amount;
+        var amount = effect.data;
         if ( increasing && amount < 100 ) {
             effect.increase();
         } else if ( increasing && amount === 100 ) {
@@ -275,7 +298,7 @@ Martin('martin-blur').blur(15);
 
     Martin.registerEffect('myNewEffect', function(data) {
 
-        this.currentLayer.loop(function(x, y, pixel) {
+        this.context.loop(function(x, y, pixel) {
 
             pixel.r = 100;
             pixel.g += 5 + data.a;
@@ -364,6 +387,44 @@ Martin('martin-blur').blur(15);
     });
 })();
 
-Martin('martin-watermark').watermark('Photo credit: Scottland Donaldson');
+(function() {
+    Martin.registerElement('star', function(data) {
+        // let data.size be the radius of the star
+        var size = data.size,
+            centerX = data.x,
+            centerY = data.y;
+
+        var context = this.context;
+
+        var angles = [54, 126, 198, 270, 342];
+        angles = angles.map(Martin.degToRad);
+
+        angles.forEach(function(angle, i) {
+
+            var next = angles[i + 1] || angle + Martin.degToRad(72),
+                average = 0.5 * (angle + next);
+
+            context.lineTo(centerX + Math.cos(angle) * size, centerY + Math.sin(angle) * size);
+            context.lineTo(centerX + Math.cos(average) * size / 2.5, centerY + Math.sin(average) * size / 2.5);
+        });
+
+        context.lineTo(centerX + Math.cos(angles[0]) * size, centerY + Math.sin(angles[0]) * size);
+        context.closePath();
+    });
+
+    var canvas = Martin('martin-plugins-star');
+    var star = canvas.star({
+        color: '#f00',
+        stroke: '#000',
+        strokeWidth: 10,
+        size: 50,
+        x: '50%',
+        y: '50%'
+    });
+
+    canvas.mousemove(function(e) {
+        star.moveTo(e.offsetX, e.offsetY);
+    })
+})();
 
 });

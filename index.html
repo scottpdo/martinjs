@@ -13,25 +13,51 @@
 
     <script src="js/dist/martin.js"></script>
     <script src="js/dist/martin.gradientmap.js"></script>
+    <script src="js/dist/martin.watermark.js"></script>
 
 </head>
 
 <body>
     <div class="section">
         <img id="img" src="docs/images/marty-full.jpg">
+        <!-- <canvas id="img" height="640" width="640"></canvas> -->
     </div>
 
     <script>
-    var canvas = Martin('img');
-    // blue to yellow
-    var effect = canvas.gradientMap({
-        start: '#00f',
-        end: '#fe0'
-    }),
-    blur = canvas.blur(0);
-    canvas.click(function() {
-        blur.increase();
+    var canvas = Martin('img', { autorender: false });
+    // var effect = canvas.blur(60);
+
+    canvas.invert();
+
+    canvas.darken(10);
+
+    var circle = canvas.circle({
+        x: '50%',
+        y: '50%',
+        radius: 120,
+        color: '#f00',
+        strokeWidth: 20
     });
+
+    // var circleOpacity = circle.opacity(0);
+    // circle.blur(60);
+
+    canvas.mousemove(function(e) {
+        circle.moveTo(e.offsetX, e.offsetY);
+        text.moveTo(e.offsetX, e.offsetY);
+        text.data.size++;
+        canvas.render();
+    });
+
+    var t = 0;
+
+    canvas.newLayer();
+
+    var text = canvas.watermark({
+        text: 'Hello there',
+    });
+
+    canvas.render();
 
     </script>
 </body>

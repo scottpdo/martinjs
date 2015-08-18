@@ -1,6 +1,6 @@
 # Events
 
-You can listen for a number of mouse events, and attach functions to run when those events are fired on the working canvas. In your callback function, you can include a parameter for the MouseEvent.
+You can listen for a number of mouse events, and attach functions to run when those events are fired on the working canvas. In your callback function, you can include a parameter for the `MouseEvent`.
 
 If you use the `.on()` method instead of the shorthand, you can attach listeners for multiple events by calling `.on('event1 event2 event3', callback)` , with events separated by spaces.
 
