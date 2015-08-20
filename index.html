@@ -43,8 +43,8 @@
     // circle.blur(60);
 
     canvas.mousemove(function(e) {
-        circle.moveTo(e.offsetX, e.offsetY);
-        text.moveTo(e.offsetX, e.offsetY);
+        circle.moveTo(e.x, e.y);
+        text.moveTo(e.x, e.y);
         text.data.size++;
         canvas.render();
     });

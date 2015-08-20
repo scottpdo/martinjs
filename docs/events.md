@@ -1,6 +1,6 @@
 # Events
 
-You can listen for a number of mouse events, and attach functions to run when those events are fired on the working canvas. In your callback function, you can include a parameter for the `MouseEvent`.
+You can listen for a number of mouse events, and attach functions to run when those events are fired on the working canvas. In your callback function, include a single parameter for the `Event` object, which contains keys `x` and `y` (as well as the usual `MouseEvent` keys), corresponding to the mouse's coordinates over the working canvas.
 
 If you use the `.on()` method instead of the shorthand, you can attach listeners for multiple events by calling `.on('event1 event2 event3', callback)` , with events separated by spaces.
 
@@ -89,7 +89,7 @@ var text = canvas.text({
 });
 
 canvas.mousemove(function(e) {
-    text.moveTo(e.offsetX, e.offsetY);
+    text.moveTo(e.x, e.y);
 });
 ```
 
