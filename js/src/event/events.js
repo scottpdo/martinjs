@@ -1,11 +1,14 @@
 var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mouseout', 'mousedown', 'mouseup'];
 
-function EventCallback(base, cb) {
+function EventCallback(base, cb, type) {
     return {
-        base: base,
-        cb: cb,
         exec: function exec(e) {
-            var eventObj = e;
+
+            var eventObj = {}, k;
+
+            for ( k in e ) {
+                eventObj[k] = e[k];
+            }
 
             eventObj.x = e.offsetX ? e.offsetX : e.clientX - base.canvas.getBoundingClientRect().left;
             eventObj.y = e.offsetY ? e.offsetY : e.clientY - base.canvas.getBoundingClientRect().top;
@@ -19,7 +22,7 @@ function EventCallback(base, cb) {
 events.forEach(function(evt){
     Martin.prototype[evt] = function(cb) {
 
-        var callback = EventCallback(this, cb);
+        var callback = EventCallback(this, cb, evt);
 
         this.canvas.addEventListener(evt, callback.exec);
         return this;
@@ -31,7 +34,7 @@ Martin.prototype.on = function(evt, cb) {
     evt = evt.split(' ');
 
     evt.forEach(function(ev) {
-        var callback = EventCallback(this, cb);
+        var callback = EventCallback(this, cb, ev);
         if ( events.indexOf(ev) > -1 ) {
             this.canvas.addEventListener(ev, callback.exec);
         }
