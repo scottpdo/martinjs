@@ -4,6 +4,7 @@ var fs = require('fs'),
     jslint = require('gulp-jslint'),
     concat = require('gulp-concat'),
     rename = require('gulp-rename'),
+    sourcemaps = require('gulp-sourcemaps'),
     awspublish = require('gulp-awspublish'),
     browserSync = require('browser-sync').create(),
     shell = require('gulp-shell');
@@ -102,11 +103,13 @@ function fullAndMin(dest) {
 
         gulp.src( paths.jsCoreIn )
             .pipe(concat('martin.min.js'))
+            .pipe(sourcemaps.init())
             .pipe(uglify())
+            .pipe(sourcemaps.write('.'))
             .pipe(gulp.dest( dest ));
 
         if ( dest !== 'docs/download' ) {
-            
+
             gulp.src( paths.plugins )
                 .pipe(rename(function(path) {
                     path.basename = 'martin.' + path.basename

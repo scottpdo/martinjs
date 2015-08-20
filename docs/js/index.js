@@ -17,7 +17,7 @@ $(document).ready(function(){
     circle.blur(60);
 
     canvas.mousemove(function(e) {
-        circle.moveTo(e.offsetX, e.offsetY);
+        circle.moveTo(e.x, e.y);
         canvas.render();
     });
 
@@ -383,7 +383,7 @@ Martin('martin-invert').invert();
     });
 
     canvas.mousemove(function(e) {
-        text.moveTo(e.offsetX, e.offsetY);
+        text.moveTo(e.x, e.y);
     });
 })();
 
@@ -423,8 +423,8 @@ Martin('martin-invert').invert();
     });
 
     canvas.mousemove(function(e) {
-        star.moveTo(e.offsetX, e.offsetY);
-    })
+        star.moveTo(e.x, e.y);
+    });
 })();
 
 });

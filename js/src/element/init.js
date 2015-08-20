@@ -90,7 +90,7 @@ Martin.Element = function(type, caller, data) {
         y: 1
     };
 
-    this.data = data;
+    this.data = data || {};
     if ( data.x ) this.data.x = layer.normalizeX(data.x);
     if ( data.y ) this.data.y = layer.normalizeY(data.y);
     this.type = type;
