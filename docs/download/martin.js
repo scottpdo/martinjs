@@ -89,7 +89,7 @@ Martin.prototype.makeCanvas = function() {
     return this;
 };
 
-Martin._version = '0.3.2';
+Martin._version = '0.3.3';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -273,7 +273,7 @@ ObjMethods = {
                 // xy coordinates
                 n = i / 4;
                 x = n % width;
-                y = Math.floor(n / height);
+                y = Math.floor(n / width);
 
                 // rgba values
                 r = pixels[i];

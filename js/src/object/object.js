@@ -29,7 +29,7 @@ ObjMethods = {
                 // xy coordinates
                 n = i / 4;
                 x = n % width;
-                y = Math.floor(n / height);
+                y = Math.floor(n / width);
 
                 // rgba values
                 r = pixels[i];
