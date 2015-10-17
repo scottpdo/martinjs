@@ -1,1 +1,1 @@
-Martin._version = '0.3.3';
+module.exports = '0.4.0';

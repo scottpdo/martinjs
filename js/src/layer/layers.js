@@ -21,8 +21,10 @@
     .layer()
 */
 
+var Obj = require('../object/object.js');
+
 // ----- Layer constructor
-Martin.Layer = function(base, arg) {
+var Layer = function(base, arg) {
 
     this.base = base;
     this.canvas = document.createElement('canvas');
@@ -56,42 +58,29 @@ Martin.Layer = function(base, arg) {
 
 };
 
-Martin.Layer.prototype = Object.create(Martin.Object.prototype);
+Layer.prototype = Object.create(Obj.prototype);
 
 // Normalize X and Y values
-Martin.Layer.prototype.normalizeX = function( val ) {
+Layer.prototype.normalizeX = function( val ) {
     if ( typeof val === 'string' && val.slice(-1) === '%' ) {
         val = this.normalizePercentX( +val.slice(0, -1) );
     }
     return val / this.scale.x;
 };
 
-Martin.Layer.prototype.normalizeY = function( val ) {
+Layer.prototype.normalizeY = function( val ) {
     if ( typeof val === 'string' && val.slice(-1) === '%' ) {
         val = this.normalizePercentY( +val.slice(0, -1) );
     }
     return val / this.scale.y;
 };
 
-Martin.Layer.prototype.normalizePercentX = function( val ) {
+Layer.prototype.normalizePercentX = function( val ) {
     return ( val / 100 ) * this.canvas.width;
 };
 
-Martin.Layer.prototype.normalizePercentY = function( val ) {
+Layer.prototype.normalizePercentY = function( val ) {
     return ( val / 100 ) * this.canvas.height;
-};
-
-// Create a new (top-most) layer and switch to that layer.
-Martin.prototype.newLayer = function(arg) {
-
-    var newLayer = new Martin.Layer(this, arg);
-
-    this.currentLayer = newLayer;
-
-    this.autorender();
-
-    return newLayer;
-
 };
 
 // Switch the context and return the requested later
@@ -102,3 +91,5 @@ Martin.prototype.layer = function( num ) {
     return this.layers[num || 0];
 
 };
+
+module.exports = Layer;

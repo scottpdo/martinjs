@@ -9,11 +9,9 @@
     MARTIN
 */
 
-(function() {
-
 // The great initializer. Pass in a string to select element by ID,
 // or an HTMLElement
-function Martin( val, options ) {
+var Martin = function( val, options ) {
 
     if ( !(this instanceof Martin) ) return new Martin( val, options );
 
@@ -29,7 +27,26 @@ function Martin( val, options ) {
 
     // Now prepare yourself...
     return this.makeCanvas();
-
 };
 
-Martin.utils = {};
+Martin.prototype.makeCanvas = require('./core/init.js');
+
+var utils = {};
+
+// var utils = require('./core/utils.js');
+
+for ( var types in utils ) {
+    for ( var func in utils[types] ) {
+        if ( type === '_private' ) {
+            Martin.utils[func] = utils[types][func];
+        } else {
+            Martin.prototype[func] = utils[types][func];
+        }
+    }
+}
+
+if ( typeof window === 'object' ) {
+    window.Martin = Martin;
+}
+
+module.exports = Martin;

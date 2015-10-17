@@ -1,5 +1,6 @@
 var fs = require('fs'),
     gulp = require('gulp'),
+    browserify = require('browserify'),
     uglify = require('gulp-uglify'),
     jslint = require('gulp-jslint'),
     concat = require('gulp-concat'),
@@ -7,44 +8,23 @@ var fs = require('fs'),
     sourcemaps = require('gulp-sourcemaps'),
     awspublish = require('gulp-awspublish'),
     browserSync = require('browser-sync').create(),
-    shell = require('gulp-shell');
+    shell = require('gulp-shell')
+    source = require('vinyl-source-stream'),
+    buffer = require('vinyl-buffer');
 
 var reload = browserSync.reload;
 
 // ----- Config
 var bower = require('./bower.json'),
+    npm = require('./package.json'),
     aws = require('./aws.json');
 
 var jsPrefix = 'js/src/',
     pluginsPrefix = 'js/src/plugins/';
 
 var paths = {
-    jsCoreIn: [
-        'start',
-        'core/init',
-        'core/version',
-        'core/helpers',
-        'core/utils',
-        'object/object',
-        'layer/layers',
-        'element/init',
-            'element/image',
-            'element/rect',
-            'element/line',
-            'element/circle',
-            'element/ellipse',
-            'element/polygon',
-            'element/text',
-        'effect/init',
-            'effect/desaturate',
-            'effect/lighten',
-            'effect/opacity',
-            'effect/blur',
-            'effect/invert',
-        'event/events',
-        'core/dimensions',
-        'end'
-    ],
+    js: ['js/src/**/*.js'],
+    jsEntry: 'js/src/index.js',
     plugins: [
         'watermark',
         'gradientmap',
@@ -55,31 +35,27 @@ var paths = {
     html: ['./**/*.html']
 };
 
-paths.jsCoreIn.forEach(function(path, i) {
-    paths.jsCoreIn[i] = jsPrefix + path + '.js';
-});
-
 // looks for filename martin.PLUGIN.js
 paths.plugins.forEach(function(path, i) {
     paths.plugins[i] = pluginsPrefix + path + '.js'
 });
 
-function writeBowerVersion(version) {
-    bower.version = version;
-    fs.writeFile('./bower.json', JSON.stringify(bower, null, '  '), function(err, data) {
+function writeVersion(version, which, path) {
+    which.version = version;
+    fs.writeFile(path, JSON.stringify(which, null, '  '), function(err, data) {
         if (err) return console.log(err);
-        console.log('Wrote version to bower.json');
+        console.log('Wrote version to ' + path);
     });
 }
 
-function writeVersion(callback) {
+function writeVersions(callback) {
 
     var versionFile = './js/src/core/version.js';
 
     fs.readFile(versionFile, 'utf8', function read(err, data) {
 
         var lines = data.split('\n'),
-            versionString = 'Martin._version = ',
+            versionString = 'module.exports = ',
             version;
 
         lines.forEach(function(line, i) {
@@ -88,7 +64,10 @@ function writeVersion(callback) {
             }
         });
 
-        writeBowerVersion(version.replace(/["';]/g, ''));
+        version = version.replace(/["';]/g, '')
+
+        writeVersion(version, bower, './bower.json');
+        writeVersion(version, npm, './package.json');
 
         callback();
     });
@@ -97,18 +76,17 @@ function writeVersion(callback) {
 function fullAndMin(dest) {
 
     function processFiles() {
-        gulp.src( paths.jsCoreIn )
-            .pipe(concat('martin.js'))
+        browserify( paths.jsEntry ).bundle()
+            .pipe(source('martin.js'))
             .pipe(gulp.dest( dest ));
 
-        gulp.src( paths.jsCoreIn )
-            .pipe(concat('martin.min.js'))
-            .pipe(sourcemaps.init())
+        browserify( paths.jsEntry ).bundle()
+            .pipe(source('martin.min.js'))
+            .pipe(buffer())
             .pipe(uglify())
-            .pipe(sourcemaps.write('.'))
             .pipe(gulp.dest( dest ));
 
-        if ( dest !== 'docs/download' ) {
+        /* if ( dest !== 'docs/download' ) {
 
             gulp.src( paths.plugins )
                 .pipe(rename(function(path) {
@@ -122,10 +100,10 @@ function fullAndMin(dest) {
                     path.basename = 'martin.' + path.basename + '.min'
                 }))
                 .pipe(gulp.dest( dest ));
-        }
+        } */
     }
 
-    writeVersion(processFiles);
+    writeVersions(processFiles);
 }
 
 gulp.task('js', function() {
@@ -166,8 +144,8 @@ gulp.task('serve', ['js'], function() {
         }
     });
 
-    gulp.watch( paths.jsCoreIn, ['js'] ).on('change', reload);
-    gulp.watch( paths.plugins, ['js'] ).on('change', reload);
+    gulp.watch( paths.js, ['js'] ).on('change', reload);
+    // gulp.watch( paths.plugins, ['js'] ).on('change', reload);
     gulp.watch( './test/test.js' ).on('change', reload);
     gulp.watch( paths.html ).on('change', reload);
 

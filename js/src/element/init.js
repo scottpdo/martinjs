@@ -7,71 +7,9 @@
     .moveTo()
 */
 
-function registerElement(name, cb) {
+var Obj = require('../object/object.js');
 
-    function attachRender(data) {
-
-        // create new element
-        var element = new Martin.Element(name, this, data);
-
-        // attach render function (callback) --
-        // execute with element's data
-        element.renderElement = function renderElement() {
-
-            var layer = this.layer,
-                context = this.context;
-
-            // clear any image data
-            this.clear();
-
-            // scale the context
-            context.scale(
-                layer.scale.x,
-                layer.scale.y
-            );
-
-            context.beginPath();
-
-            cb.call(element, this.data);
-
-            this.setContext(this.data);
-
-            context.closePath();
-
-            // undo scaling
-            context.scale(
-                1 / layer.scale.x,
-                1 / layer.scale.y
-            );
-
-            // render this element's effects
-            Martin.utils.forEach(this.effects, function(effect) {
-                effect.renderEffect && effect.renderEffect();
-            });
-
-            // draw to layer
-            layer.context.drawImage(this.canvas, 0, 0);
-        };
-
-        return element;
-    }
-
-    Martin.prototype[name] = function registerToBase(data) {
-        var el = attachRender.call(this, data);
-        this.autorender();
-        return el;
-    };
-
-    Martin.Layer.prototype[name] = function registerToLayer(data) {
-        var el = attachRender.call(this.base, data);
-        this.base.autorender();
-        return el;
-    };
-};
-
-Martin.registerElement = registerElement;
-
-Martin.Element = function(type, caller, data) {
+function Element(type, caller, data) {
 
     var base = caller.base || caller,
         layer = caller.currentLayer || caller;
@@ -112,10 +50,10 @@ Martin.Element = function(type, caller, data) {
     return this;
 };
 
-Martin.Element.prototype = Object.create(Martin.Object.prototype);
+Element.prototype = Object.create(Obj.prototype);
 
 // Set the fill, stroke, alpha for a new shape
-Martin.Element.prototype.setContext = function( obj ) {
+Element.prototype.setContext = function( obj ) {
 
     var context = this.context;
 
@@ -141,7 +79,7 @@ Martin.Element.prototype.setContext = function( obj ) {
 };
 
 // ----- Update an element with new data
-Martin.Element.prototype.update = function(arg1, arg2) {
+Element.prototype.update = function(arg1, arg2) {
 
     var key, value, data;
 
@@ -160,7 +98,7 @@ Martin.Element.prototype.update = function(arg1, arg2) {
 };
 
 // ----- Move an element to new coordinates
-Martin.Element.prototype.moveTo = function(x, y) {
+Element.prototype.moveTo = function(x, y) {
 
     var data = this.data;
 
@@ -193,3 +131,5 @@ Martin.Element.prototype.moveTo = function(x, y) {
     return this;
 
 };
+
+module.exports = Element;

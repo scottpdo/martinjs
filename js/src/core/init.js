@@ -1,5 +1,7 @@
+var registerElement = require('../element/register.js');
+
 // Convert an image to a canvas or just return the canvas.
-Martin.prototype.makeCanvas = function() {
+module.exports = function makeCanvas() {
 
     this.canvas = document.createElement('canvas');
     this.context = this.canvas.getContext('2d');
