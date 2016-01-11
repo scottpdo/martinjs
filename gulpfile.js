@@ -7,9 +7,11 @@ var fs = require('fs'),
     sourcemaps = require('gulp-sourcemaps'),
     awspublish = require('gulp-awspublish'),
     browserSync = require('browser-sync').create(),
-    shell = require('gulp-shell');
+    shell = require('gulp-shell'),
+    server = require('./server');
 
 var reload = browserSync.reload;
+server.start();
 
 // ----- Config
 var bower = require('./bower.json'),

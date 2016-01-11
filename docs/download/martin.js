@@ -53,6 +53,10 @@ Martin.prototype.makeCanvas = function() {
 
             function d() {
 
+                // switch to bottom layer
+                var curLayer = this.currentLayer.stackIndex();
+                this.layer(0);
+
                 canvas.width = original.naturalWidth;
                 canvas.height = original.naturalHeight;
 
@@ -67,7 +71,10 @@ Martin.prototype.makeCanvas = function() {
                     drawImage.call(this, img);
                 });
 
-                this.image(original);
+                this.image(original).bumpToBottom();
+
+                // switch back to previous layer
+                this.layer(curLayer);
             }
 
             // This should only fire once! Fire if the image is complete,
@@ -89,7 +96,7 @@ Martin.prototype.makeCanvas = function() {
     return this;
 };
 
-Martin._version = '0.3.3';
+Martin._version = '0.4.0';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -1310,6 +1317,9 @@ Martin.prototype.on = function(evt, cb) {
 
 		// normalize the value
 		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
+
+		// resize this layer's canvas
+		this.canvas[which] = val;
 
 		// resize element canvases
 		Martin.utils.forEach(this.elements, function(element) {

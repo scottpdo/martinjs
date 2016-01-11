@@ -33,6 +33,9 @@
 		// normalize the value
 		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
 
+		// resize this layer's canvas
+		this.canvas[which] = val;
+
 		// resize element canvases
 		Martin.utils.forEach(this.elements, function(element) {
 			element.canvas[which] = val;
