@@ -50,7 +50,9 @@ function registerElement(name, cb) {
             });
 
             // draw to layer
-            layer.context.drawImage(this.canvas, 0, 0);
+            if ( this.canvas.width > 0 && this.canvas.height > 0 ) {
+                layer.context.drawImage(this.canvas, 0, 0);
+            }
         };
 
         return element;
