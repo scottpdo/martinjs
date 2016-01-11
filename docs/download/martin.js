@@ -96,7 +96,7 @@ Martin.prototype.makeCanvas = function() {
     return this;
 };
 
-Martin._version = '0.4.0';
+Martin._version = '0.4.1';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -575,8 +575,26 @@ Martin.Element = function(type, caller, data) {
     };
 
     this.data = data || {};
+    
+    // if given a percentage x or y position, the element has a relative position --
+    // it should be updated on layer resizing
+    if ( typeof data.x === 'string' || typeof data.y === 'string' ) {
+        var x = data.x || '',
+            y = data.y || '';
+
+        if ( x.slice(-1) === '%' ) {
+            this.data.percentX = x;
+            this.relativePosition = true;
+        }
+
+        if ( y.slice(-1) === '%' ) {
+            this.data.percentY = y;
+        }
+    }
+
     if ( data.x ) this.data.x = layer.normalizeX(data.x);
     if ( data.y ) this.data.y = layer.normalizeY(data.y);
+
     this.type = type;
     this.layer = layer;
 
@@ -640,6 +658,10 @@ Martin.Element.prototype.update = function(arg1, arg2) {
         }
     }
 
+    if ( key === 'x' || key === 'y' ) {
+        this.relativePosition = false;
+    }
+
     this.base.autorender();
 };
 
@@ -671,6 +693,8 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
     data.x = x;
     data.y = y;
+
+    this.relativePosition = false;
 
     this.base.autorender();
 
@@ -1315,7 +1339,8 @@ Martin.prototype.on = function(evt, cb) {
 
 	Martin.Layer.prototype[which] = function(val, resize) {
 
-		var ratio;
+		var layer = this,
+			ratio;
 
 		if ( !val ) return this.canvas[which];
 
@@ -1328,6 +1353,16 @@ Martin.prototype.on = function(evt, cb) {
 		// resize element canvases
 		Martin.utils.forEach(this.elements, function(element) {
 			element.canvas[which] = val;
+
+			// if relatively positioned, reposition
+			if ( element.relativePosition ) {
+				if ( element.data.percentX ) {
+					element.data.x = layer.normalizeX(element.data.percentX);
+				}
+				if ( element.data.percentY ) {
+					element.data.y = layer.normalizeY(element.data.percentY);
+				}
+			}
 		});
 
 		// get the ratio, in case we're resizing
