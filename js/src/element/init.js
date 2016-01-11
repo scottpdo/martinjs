@@ -100,12 +100,12 @@ Martin.Element = function(type, caller, data) {
         var x = data.x || '',
             y = data.y || '';
 
-        if ( x.slice(-1) === '%' ) {
+        if ( typeof x === 'string' && x.slice(-1) === '%' ) {
             this.data.percentX = x;
             this.relativePosition = true;
         }
 
-        if ( y.slice(-1) === '%' ) {
+        if ( typeof y === 'string' && y.slice(-1) === '%' ) {
             this.data.percentY = y;
         }
     }
