@@ -1,50 +1,51 @@
 $(document).ready(function(){
 
 (function() {
-    var canvas = Martin('martin-home-blur', { autorender: false }),
-        effect = canvas.blur(60);
 
-    canvas.darken(10);
+    var canvas = Martin('martin-home-blur', { autorender: false }),
+        rainbow,
+        t = 0; // time starts at 0
+
+    Martin.registerEffect('rainbow', function(t) {
+        this.context.loop(function(x, y, pixel) {
+
+            // Increase by a maximum of 100, and take in x value
+            // and time as parameters.
+            pixel.r += 100 * Math.sin((x - 4 * t) / 100);
+            pixel.g += 100 * Math.sin((x - 8 * t) / 100);
+            pixel.b += 100 * Math.sin((x - 12 * t) / 100);
+
+            return pixel;
+        });
+    });
+
+    (function createRainbow() {
+
+        if ( rainbow ) rainbow.remove();
+        rainbow = canvas.layer(0).rainbow(t);
+        t++;
+
+        canvas.render();
+
+        // requestAnimationFrame will wait until the browser is ready to
+        // repaint the canvas.
+        requestAnimationFrame(createRainbow);
+    })();
 
     var circle = canvas.circle({
         x: '50%',
         y: '50%',
-        radius: 120,
+        radius: 80,
         color: '#fff'
     });
 
-    var circleOpacity = circle.opacity(0);
     circle.blur(60);
 
     canvas.mousemove(function(e) {
         circle.moveTo(e.x, e.y);
-        canvas.render();
     });
 
-    var t = 0;
-
-    (function fadeIn() {
-        var conds = effect.data > 30 || effect.data > 0 || circleOpacity.data < 100;
-        if ( conds ) {
-            if ( effect.data > 30 ) {
-                effect.decrease(2);
-            } else if ( effect.data > 0 ) {
-                effect.decrease();
-            }
-            if ( circleOpacity.data < 100 ) {
-                circleOpacity.increase();
-            }
-
-            t += Math.PI / 180;
-
-            canvas.render();
-
-            requestAnimationFrame(fadeIn);
-        }
-    })();
-
     canvas.newLayer();
-
     var text = canvas.text({
         font: 'Futura',
         text: 'THIS IS MARTIN.JS',
