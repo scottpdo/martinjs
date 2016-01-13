@@ -4,7 +4,9 @@ $(document).ready(function(){
 
     var canvas = Martin('martin-home-blur', { autorender: false }),
         rainbow,
-        t = 0; // time starts at 0
+        t = 0, // time starts at 0
+        hasMousedOver = false,
+        animatingHelper = false;
 
     Martin.registerEffect('rainbow', function(t) {
         this.context.loop(function(x, y, pixel) {
@@ -25,6 +27,16 @@ $(document).ready(function(){
         rainbow = canvas.layer(0).rainbow(t);
         t++;
 
+        if ( t === 100 && !hasMousedOver && !animatingHelper ) {
+            animatingHelper = true;
+            animateHelperTo(280);
+        }
+
+        if ( animatingHelper && hasMousedOver ) {
+            animatingHelper = false;
+            animateHelperTo(360);
+        }
+
         canvas.render();
 
         // requestAnimationFrame will wait until the browser is ready to
@@ -42,10 +54,12 @@ $(document).ready(function(){
     circle.blur(60);
 
     canvas.mousemove(function(e) {
+        hasMousedOver = true;
         circle.moveTo(e.x, e.y);
     });
 
     canvas.newLayer();
+
     var text = canvas.text({
         font: 'Futura',
         text: 'THIS IS MARTIN.JS',
@@ -55,6 +69,34 @@ $(document).ready(function(){
         color: '#fff',
         size: 66
     });
+
+    var helperText = canvas.text({
+        font: 'Futura',
+        align: 'center',
+        x: '50%',
+        y: 360,
+        text: '(Hover over or touch the rabbit)',
+        size: 20,
+        color: '#fff'
+    });
+
+    function animateHelperTo(target) {
+        
+        var diff;
+        
+        if ( helperText.data.y !== target ) {
+            
+            diff = target - helperText.data.y;
+            
+            diff = diff > 0 ? 1 : -1;
+            
+            requestAnimationFrame(function() {
+                helperText.data.y += diff;
+                animateHelperTo(target);
+            });
+        }
+    }
+
 })();
 
 (function() {
