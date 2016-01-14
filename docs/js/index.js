@@ -302,6 +302,7 @@ Martin('martin-lighten').lighten(25);
 Martin('martin-darken').darken(25);
 Martin('martin-opacity').opacity(50);
 Martin('martin-blur').blur(15);
+Martin('martin-sharpen').sharpen(150);
 Martin('martin-invert').invert();
 
 (function() {

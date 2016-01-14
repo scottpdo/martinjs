@@ -25,17 +25,26 @@
 
     <script>
     var canvas = Martin('img');
+    
     canvas.invert();
+    
     var circle = canvas.circle({
         radius: 50,
         x: '50%',
         y: '50%'
     });
-    canvas.mousemove(function(e) {
 
+    canvas.mousemove(function(e) {
         circle.moveTo(e.x, e.y);
     });
+    
     console.log(circle);
+
+    var sharp = canvas.sharpen(0);
+
+    canvas.click(function() {
+        sharp.increase(50);
+    });
 
     </script>
 </body>

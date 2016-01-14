@@ -54,13 +54,23 @@ canvas.opacity(50);
 
 ### .blur(`amount`)
 
-Places an `amount` px blur on the layer or element, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js).
+Places an `amount` px blur on the layer or element, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js). `amount` must be between 0 and 256.
 
 ```
 canvas.blur(15);
 ```
 
 <img id="martin-blur" src="/images/bunny.jpg">
+
+### .sharpen(`amount`)
+
+Sharpen the element or layer by `amount`, where `amount` is a number greater than 0. There is technically no limit, but rendering will slow down with higher values.
+
+```
+canvas.sharpen(150);
+```
+
+<img id="martin-sharpen" src="/images/bunny.jpg">
 
 ### .invert()
 

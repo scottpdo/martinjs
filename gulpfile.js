@@ -43,6 +43,7 @@ var paths = {
             'effect/opacity',
             'effect/blur',
             'effect/invert',
+            'effect/sharpen',
         'event/events',
         'core/dimensions',
         'end'
