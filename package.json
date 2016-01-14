@@ -1,5 +1,7 @@
 {
   "name": "martinjs",
+  "version": "1.0.0",
+  "description": "Martin.js is a browser-based library for photo manipulation and drawing with HTML5 canvas.",
   "repository": "https://github.com/scottdonaldson/martin",
   "devDependencies": {
     "autoprefixer-core": "^5.2.0",

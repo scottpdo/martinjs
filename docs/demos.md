@@ -2,7 +2,7 @@
 
 ### Sepia photo with caption
 
-<img id="demo-sepia" height="300" width="400" src="images/bunny.jpg">
+<img id="demo-sepia" height="300" width="400" src="/images/bunny.jpg">
 
 ```js
 // darken and desaturate the base image

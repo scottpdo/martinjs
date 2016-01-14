@@ -120,4 +120,4 @@ layer.myNewEffect(params); // or
 element.myNewEffect(params);
 ```
 
-<img id="martin-my-new-effect" src="images/bunny.jpg">
+<img id="martin-my-new-effect" src="/images/bunny.jpg">
