@@ -133,8 +133,8 @@ canvas.click(function() {
 
 <img id="martin-effect-remove" src="/images/bunny.jpg">
 
-### .bump(`i`) / .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
+### .bump(`i`)
 
-Like layers and elements, effects can also be reordered on their layer's or element's stack of effects.
+Bump to position `i` (0-based). Can also use `.bumpUp()`, `.bumpDown()`, `.bumpToTop()`, or `.bumpToBottom()`. Like layers and elements, effects can also be reordered on their layer's or element's stack of effects.
 
 &nbsp;

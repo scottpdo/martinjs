@@ -175,9 +175,9 @@ All of the above methods return the element, on which can be called other, eleme
 
 Removes the element from its layer. It can then be added to another layer by calling `otherLayer.addElement(element)` . Returns the element.
 
-### .bump(`i`) / .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
+### .bump(`i`)
 
-As with layers, elements can be reordered within their stack on the layer.
+Bump to position `i` (0-based). Can also use `.bumpUp()`, `.bumpDown()`, `.bumpToTop()`, or `.bumpToBottom()`. As with layers, elements can be reordered within their stack on the layer.
 
 In the below example, calling `circle1.bumpUp()` has the same effect as calling `circle1.bumpToTop()` , and `circle2.bumpDown()` .
 
