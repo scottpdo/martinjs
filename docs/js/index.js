@@ -1,47 +1,62 @@
 $(document).ready(function(){
 
 (function() {
-    var canvas = Martin('martin-home-blur', { autorender: false }),
-        effect = canvas.blur(60);
 
-    canvas.darken(10);
+    var canvas = Martin('martin-home-blur', { autorender: false }),
+        rainbow,
+        t = 0, // time starts at 0
+        hasMousedOver = false,
+        animatingHelper = false;
+
+    Martin.registerEffect('rainbow', function(t) {
+        this.context.loop(function(x, y, pixel) {
+
+            // Increase by a maximum of 100, and take in x value
+            // and time as parameters.
+            pixel.r += 100 * Math.sin((x - 4 * t) / 100);
+            pixel.g += 100 * Math.sin((x - 8 * t) / 100);
+            pixel.b += 100 * Math.sin((x - 12 * t) / 100);
+
+            return pixel;
+        });
+    });
+
+    (function createRainbow() {
+
+        if ( rainbow ) rainbow.remove();
+        rainbow = canvas.layer(0).rainbow(t);
+        t++;
+
+        if ( t === 100 && !hasMousedOver && !animatingHelper ) {
+            animatingHelper = true;
+            animateHelperTo(280);
+        }
+
+        if ( animatingHelper && hasMousedOver ) {
+            animatingHelper = false;
+            animateHelperTo(360);
+        }
+
+        canvas.render();
+
+        // requestAnimationFrame will wait until the browser is ready to
+        // repaint the canvas.
+        requestAnimationFrame(createRainbow);
+    })();
 
     var circle = canvas.circle({
         x: '50%',
         y: '50%',
-        radius: 120,
+        radius: 80,
         color: '#fff'
     });
 
-    var circleOpacity = circle.opacity(0);
     circle.blur(60);
 
     canvas.mousemove(function(e) {
+        hasMousedOver = true;
         circle.moveTo(e.x, e.y);
-        canvas.render();
     });
-
-    var t = 0;
-
-    (function fadeIn() {
-        var conds = effect.data > 30 || effect.data > 0 || circleOpacity.data < 100;
-        if ( conds ) {
-            if ( effect.data > 30 ) {
-                effect.decrease(2);
-            } else if ( effect.data > 0 ) {
-                effect.decrease();
-            }
-            if ( circleOpacity.data < 100 ) {
-                circleOpacity.increase();
-            }
-
-            t += Math.PI / 180;
-
-            canvas.render();
-
-            requestAnimationFrame(fadeIn);
-        }
-    })();
 
     canvas.newLayer();
 
@@ -54,6 +69,34 @@ $(document).ready(function(){
         color: '#fff',
         size: 66
     });
+
+    var helperText = canvas.text({
+        font: 'Futura',
+        align: 'center',
+        x: '50%',
+        y: 360,
+        text: '(Hover over or touch the rabbit)',
+        size: 20,
+        color: '#fff'
+    });
+
+    function animateHelperTo(target) {
+        
+        var diff;
+        
+        if ( helperText.data.y !== target ) {
+            
+            diff = target - helperText.data.y;
+            
+            diff = diff > 0 ? 1 : -1;
+            
+            requestAnimationFrame(function() {
+                helperText.data.y += diff;
+                animateHelperTo(target);
+            });
+        }
+    }
+
 })();
 
 (function() {
@@ -259,6 +302,7 @@ Martin('martin-lighten').lighten(25);
 Martin('martin-darken').darken(25);
 Martin('martin-opacity').opacity(50);
 Martin('martin-blur').blur(15);
+Martin('martin-sharpen').sharpen(150);
 Martin('martin-invert').invert();
 
 (function() {

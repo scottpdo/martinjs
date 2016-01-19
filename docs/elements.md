@@ -15,7 +15,7 @@ canvas.opacity(50);
 // acts as a red overlay on the base layer's image
 ```
 
-<img id="martin-background" src="images/bunny.jpg">
+<img id="martin-background" src="/images/bunny.jpg">
 
 ### .line(`obj`)
 
@@ -46,7 +46,7 @@ canvas.line({
 });
 ```
 
-<img id="martin-line" src="images/bunny.jpg">
+<img id="martin-line" src="/images/bunny.jpg">
 
 ### .rect(obj)
 
@@ -75,7 +75,7 @@ canvas.rect({
 });
 ```
 
-<img id="martin-rect" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-rect" src="/images/bunny.jpg" height="300" width="400">
 
 ### .polygon(`obj`)
 
@@ -106,7 +106,7 @@ canvas.polygon({
 });
 ```
 
-<img id="martin-polygon" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-polygon" src="/images/bunny.jpg" height="300" width="400">
 
 ### .circle(`obj`)
 
@@ -123,7 +123,7 @@ canvas.circle({
 });
 ```
 
-<img id="martin-circle" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-circle" src="/images/bunny.jpg" height="300" width="400">
 
 ### .ellipse(`obj`)
 
@@ -141,7 +141,7 @@ canvas.ellipse({
 });
 ```
 
-<img id="martin-ellipse" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-ellipse" src="/images/bunny.jpg" height="300" width="400">
 
 ### .text(`obj`)
 
@@ -165,7 +165,7 @@ canvas.text({
 });
 ```
 
-<img id="martin-text" src="images/bunny.jpg">
+<img id="martin-text" src="/images/bunny.jpg">
 
 <hr>
 
@@ -175,9 +175,9 @@ All of the above methods return the element, on which can be called other, eleme
 
 Removes the element from its layer. It can then be added to another layer by calling `otherLayer.addElement(element)` . Returns the element.
 
-### .bump(`i`) / .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
+### .bump(`i`)
 
-As with layers, elements can be reordered within their stack on the layer.
+Bump to position `i` (0-based). Can also use `.bumpUp()`, `.bumpDown()`, `.bumpToTop()`, or `.bumpToBottom()`. As with layers, elements can be reordered within their stack on the layer.
 
 In the below example, calling `circle1.bumpUp()` has the same effect as calling `circle1.bumpToTop()` , and `circle2.bumpDown()` .
 
@@ -196,7 +196,7 @@ circle1.bumpUp();
 // circle 1 is now above circle 2
 ```
 
-<img id="martin-bump-up" src="images/bunny.jpg">
+<img id="martin-bump-up" src="/images/bunny.jpg">
 
 **In the above example, calling `circle2.bump2Bottom()` would effectively hide `circle2` from the viewer.** The reason for this is that, when a working canvas is created from an image, an element is created from that image. So the element stack for the above layer, after running the example code, looks like:
 
@@ -252,7 +252,7 @@ var t = 0;
 })();
 ```
 
-<img id="martin-move-to" src="images/bunny.jpg">
+<img id="martin-move-to" src="/images/bunny.jpg">
 
 ### element.update(`key`, `value`) or element.update(`data`)
 

@@ -2,10 +2,10 @@
 
 Martin.js is a JavaScript library for working with HTML5 canvas. Martin supports jQuery-like chained methods, and makes photo manipulation, drawing, and animation in browser easy for developers and users.
 
-You can download Martin (latest: v0.3.2) here:
+You can download Martin (latest: v0.4.2) here:
 
-- [Full version, annotated (34 kb)](download/martin.js)
-- [Minified (15 kb)](download/martin.min.js)
+- [Full version, annotated (36 kb)](download/martin.js)
+- [Minified (16 kb)](download/martin.min.js)
 
 Or through Bower:
 

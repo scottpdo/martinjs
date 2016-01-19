@@ -17,6 +17,10 @@ Martin.prototype.makeCanvas = function() {
 
             function d() {
 
+                // switch to bottom layer
+                var curLayer = this.currentLayer.stackIndex();
+                this.layer(0);
+
                 canvas.width = original.naturalWidth;
                 canvas.height = original.naturalHeight;
 
@@ -31,7 +35,10 @@ Martin.prototype.makeCanvas = function() {
                     drawImage.call(this, img);
                 });
 
-                this.image(original);
+                this.image(original).bumpToBottom();
+
+                // switch back to previous layer
+                this.layer(curLayer);
             }
 
             // This should only fire once! Fire if the image is complete,

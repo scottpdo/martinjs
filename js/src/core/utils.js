@@ -61,7 +61,9 @@ render: function render(cb) {
             effect.renderEffect && effect.renderEffect();
         });
 
-        ctx.drawImage(layer.canvas, 0, 0);
+        if ( layer.canvas.width > 0 && layer.canvas.height > 0 ) {
+            ctx.drawImage(layer.canvas, 0, 0);
+        }
     });
 
     if (cb) return cb();

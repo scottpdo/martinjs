@@ -53,6 +53,10 @@ Martin.prototype.makeCanvas = function() {
 
             function d() {
 
+                // switch to bottom layer
+                var curLayer = this.currentLayer.stackIndex();
+                this.layer(0);
+
                 canvas.width = original.naturalWidth;
                 canvas.height = original.naturalHeight;
 
@@ -67,7 +71,10 @@ Martin.prototype.makeCanvas = function() {
                     drawImage.call(this, img);
                 });
 
-                this.image(original);
+                this.image(original).bumpToBottom();
+
+                // switch back to previous layer
+                this.layer(curLayer);
             }
 
             // This should only fire once! Fire if the image is complete,
@@ -89,7 +96,7 @@ Martin.prototype.makeCanvas = function() {
     return this;
 };
 
-Martin._version = '0.3.3';
+Martin._version = '0.4.2';
 
 /*
     For helper functions that don't extend Martin prototype.
@@ -200,7 +207,9 @@ render: function render(cb) {
             effect.renderEffect && effect.renderEffect();
         });
 
-        ctx.drawImage(layer.canvas, 0, 0);
+        if ( layer.canvas.width > 0 && layer.canvas.height > 0 ) {
+            ctx.drawImage(layer.canvas, 0, 0);
+        }
     });
 
     if (cb) return cb();
@@ -523,7 +532,9 @@ function registerElement(name, cb) {
             });
 
             // draw to layer
-            layer.context.drawImage(this.canvas, 0, 0);
+            if ( this.canvas.width > 0 && this.canvas.height > 0 ) {
+                layer.context.drawImage(this.canvas, 0, 0);
+            }
         };
 
         return element;
@@ -564,8 +575,26 @@ Martin.Element = function(type, caller, data) {
     };
 
     this.data = data || {};
+    
+    // if given a percentage x or y position, the element has a relative position --
+    // it should be updated on layer resizing
+    if ( typeof data.x === 'string' || typeof data.y === 'string' ) {
+        var x = data.x || '',
+            y = data.y || '';
+
+        if ( typeof x === 'string' && x.slice(-1) === '%' ) {
+            this.data.percentX = x;
+            this.relativePosition = true;
+        }
+
+        if ( typeof y === 'string' && y.slice(-1) === '%' ) {
+            this.data.percentY = y;
+        }
+    }
+
     if ( data.x ) this.data.x = layer.normalizeX(data.x);
     if ( data.y ) this.data.y = layer.normalizeY(data.y);
+
     this.type = type;
     this.layer = layer;
 
@@ -629,6 +658,10 @@ Martin.Element.prototype.update = function(arg1, arg2) {
         }
     }
 
+    if ( key === 'x' || key === 'y' ) {
+        this.relativePosition = false;
+    }
+
     this.base.autorender();
 };
 
@@ -660,6 +693,8 @@ Martin.Element.prototype.moveTo = function(x, y) {
 
     data.x = x;
     data.y = y;
+
+    this.relativePosition = false;
 
     this.base.autorender();
 
@@ -1220,7 +1255,6 @@ registerEffect('blur', function(amt) {
         this.context.putImageData( imageData );
     }
 });
-
 Martin.registerEffect('invert', function() {
     this.context.loop(function(x, y, pixel) {
         pixel.r = 255 - pixel.r;
@@ -1231,6 +1265,70 @@ Martin.registerEffect('invert', function() {
     });
 });
 
+Martin.registerEffect('sharpen', function(amt) {
+
+    if ( isNaN(amt) ) return this;
+
+    var w = this.base.width(),
+        h = this.base.height();
+
+    var buffer = document.createElement('canvas');
+    buffer.width = this.base.width();
+    buffer.height = this.base.height();
+
+    var dstData = buffer.getContext('2d').createImageData(w, h),
+        dstBuff = dstData.data;
+    
+    var weights = [0, -1, 0, -1, 5, -1, 0, -1, 0],
+        katet = Math.round(Math.sqrt(weights.length)),
+        half = (katet * 0.5) | 0,
+        srcBuff = this.context.getImageData(0, 0, w, h).data,
+        y = h;
+
+    amt /= 100;
+
+    while (y--) {
+
+        x = w;
+
+        while (x--) {
+
+            var sy = y,
+                sx = x,
+                dstOff = (y * w + x) * 4,
+                r = 0,
+                g = 0,
+                b = 0,
+                a = 0;
+
+            for (var cy = 0; cy < katet; cy++) {
+                for (var cx = 0; cx < katet; cx++) {
+
+                    var scy = sy + cy - half;
+                    var scx = sx + cx - half;
+
+                    if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
+
+                        var srcOff = (scy * w + scx) * 4;
+                        var wt = weights[cy * katet + cx];
+
+                        r += srcBuff[srcOff] * wt;
+                        g += srcBuff[srcOff + 1] * wt;
+                        b += srcBuff[srcOff + 2] * wt;
+                        a += srcBuff[srcOff + 3] * wt;
+                    }
+                }
+            }
+
+            dstBuff[dstOff]     = r * amt + srcBuff[dstOff] * (1 - amt);
+            dstBuff[dstOff + 1] = g * amt + srcBuff[dstOff + 1] * (1 - amt);
+            dstBuff[dstOff + 2] = b * amt + srcBuff[dstOff + 2] * (1 - amt)
+            dstBuff[dstOff + 3] = srcBuff[dstOff + 3];
+        }
+    }
+
+    this.context.putImageData(dstData);
+});
 var events = ['click', 'mouseover', 'mousemove', 'mouseenter', 'mouseleave', 'mouseout', 'mousedown', 'mouseup'];
 
 function EventCallback(base, cb, type) {
@@ -1304,16 +1402,30 @@ Martin.prototype.on = function(evt, cb) {
 
 	Martin.Layer.prototype[which] = function(val, resize) {
 
-		var ratio;
+		var layer = this,
+			ratio;
 
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
 		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
 
+		// resize this layer's canvas
+		this.canvas[which] = val;
+
 		// resize element canvases
 		Martin.utils.forEach(this.elements, function(element) {
 			element.canvas[which] = val;
+
+			// if relatively positioned, reposition
+			if ( element.relativePosition ) {
+				if ( element.data.percentX ) {
+					element.data.x = layer.normalizeX(element.data.percentX);
+				}
+				if ( element.data.percentY ) {
+					element.data.y = layer.normalizeY(element.data.percentY);
+				}
+			}
 		});
 
 		// get the ratio, in case we're resizing

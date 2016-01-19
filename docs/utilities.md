@@ -28,7 +28,7 @@ canvas.convertToImage();
 
 Returns:
 
-<img src="images/bunny.jpg" height="300" width="400">
+<img src="/images/bunny.jpg" height="300" width="400">
 
 ### canvas.height(`null` or `value`, `resize = false`)
 
@@ -40,19 +40,19 @@ If a value is given, adjusts the height to be `value` pixels high, or by `value`
 canvas.height(200); // crop
 ```
 
-<img id="martin-height-200-crop" src="images/bunny.jpg">
+<img id="martin-height-200-crop" src="/images/bunny.jpg">
 
 ```js
 canvas.height(200, true); // resize
 ```
 
-<img id="martin-height-200-resize" src="images/bunny.jpg">
+<img id="martin-height-200-resize" src="/images/bunny.jpg">
 
 ```js
 canvas.height(400, true); // resize
 ```
 
-<img id="martin-height-400-resize" src="images/bunny.jpg">
+<img id="martin-height-400-resize" src="/images/bunny.jpg">
 
 ### canvas.width(`null` or `value`, `resize = false`)
 
@@ -64,16 +64,16 @@ If a value is given, adjusts the width to be `value` pixels wide, or by `value` 
 canvas.width(200); // crop
 ```
 
-<img id="martin-width-200-crop" src="images/bunny.jpg">
+<img id="martin-width-200-crop" src="/images/bunny.jpg">
 
 ```js
 canvas.width(200, true); // resize
 ```
 
-<img id="martin-width-200-resize" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-width-200-resize" src="/images/bunny.jpg" height="300" width="400">
 
 ```js
 canvas.width(500, true); // resize
 ```
 
-<img id="martin-width-500-resize" src="images/bunny.jpg" height="300" width="400">
+<img id="martin-width-500-resize" src="/images/bunny.jpg" height="300" width="400">

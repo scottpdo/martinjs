@@ -19,45 +19,32 @@
 
 <body>
     <div class="section">
-        <img id="img" src="docs/images/marty-full.jpg">
+        <img id="img" src="images/humphrey.jpg">
         <!-- <canvas id="img" height="640" width="640"></canvas> -->
     </div>
 
     <script>
-    var canvas = Martin('img', { autorender: false });
-    // var effect = canvas.blur(60);
-
+    var canvas = Martin('img');
+    
     canvas.invert();
-
-    canvas.darken(10);
-
+    
     var circle = canvas.circle({
+        radius: 50,
         x: '50%',
-        y: '50%',
-        radius: 120,
-        color: '#f00',
-        strokeWidth: 20
+        y: '50%'
     });
-
-    // var circleOpacity = circle.opacity(0);
-    // circle.blur(60);
 
     canvas.mousemove(function(e) {
         circle.moveTo(e.x, e.y);
-        text.moveTo(e.x, e.y);
-        text.data.size++;
-        canvas.render();
     });
+    
+    console.log(circle);
 
-    var t = 0;
+    var sharp = canvas.sharpen(0);
 
-    canvas.newLayer();
-
-    var text = canvas.watermark({
-        text: 'Hello there',
+    canvas.click(function() {
+        sharp.increase(50);
     });
-
-    canvas.render();
 
     </script>
 </body>

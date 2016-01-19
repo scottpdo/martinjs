@@ -26,16 +26,30 @@
 
 	Martin.Layer.prototype[which] = function(val, resize) {
 
-		var ratio;
+		var layer = this,
+			ratio;
 
 		if ( !val ) return this.canvas[which];
 
 		// normalize the value
 		val = this['normalize' + (which === 'width' ? 'X' : 'Y')](val);
 
+		// resize this layer's canvas
+		this.canvas[which] = val;
+
 		// resize element canvases
 		Martin.utils.forEach(this.elements, function(element) {
 			element.canvas[which] = val;
+
+			// if relatively positioned, reposition
+			if ( element.relativePosition ) {
+				if ( element.data.percentX ) {
+					element.data.x = layer.normalizeX(element.data.percentX);
+				}
+				if ( element.data.percentY ) {
+					element.data.y = layer.normalizeY(element.data.percentY);
+				}
+			}
 		});
 
 		// get the ratio, in case we're resizing

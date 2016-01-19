@@ -10,7 +10,7 @@ Makes colors appear more intense by `amount` (number, 0-100).
 canvas.saturate(100);
 ```
 
-<img id="martin-saturate" src="images/bunny.jpg">
+<img id="martin-saturate" src="/images/bunny.jpg">
 
 ### .desaturate(`amt`)
 
@@ -20,7 +20,7 @@ Makes colors appear less intense by `amount` (number, 0-100).
 canvas.desaturate(80);
 ```
 
-<img id="martin-desaturate" src="images/bunny.jpg">
+<img id="martin-desaturate" src="/images/bunny.jpg">
 
 ### .lighten(`amount`)
 
@@ -30,7 +30,7 @@ Lightens by `amount` (number, 0-100).
 canvas.lighten(25);
 ```
 
-<img id="martin-lighten" src="images/bunny.jpg">
+<img id="martin-lighten" src="/images/bunny.jpg">
 
 ### .darken(`amount`)
 
@@ -40,7 +40,7 @@ Darkens by `amount` (number, 0-100).
 canvas.darken(25);
 ```
 
-<img id="martin-darken" src="images/bunny.jpg">
+<img id="martin-darken" src="/images/bunny.jpg">
 
 ### .opacity(`amount`)
 
@@ -50,17 +50,27 @@ Sets the layer's or element's opacity to `amount` (0-100).
 canvas.opacity(50);
 ```
 
-<img id="martin-opacity" src="images/bunny.jpg">
+<img id="martin-opacity" src="/images/bunny.jpg">
 
 ### .blur(`amount`)
 
-Places an `amount` px blur on the layer or element, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js).
+Places an `amount` px blur on the layer or element, following Mario Klingemann's [StackBlur algorithm](https://github.com/Quasimondo/QuasimondoJS/blob/master/blur/StackBlur.js). `amount` must be between 0 and 256.
 
 ```
 canvas.blur(15);
 ```
 
-<img id="martin-blur" src="images/bunny.jpg">
+<img id="martin-blur" src="/images/bunny.jpg">
+
+### .sharpen(`amount`)
+
+Sharpen the element or layer by `amount`, where `amount` is a number greater than 0. There is technically no limit, but rendering will slow down with higher values.
+
+```
+canvas.sharpen(150);
+```
+
+<img id="martin-sharpen" src="/images/bunny.jpg">
 
 ### .invert()
 
@@ -70,7 +80,7 @@ Inverts the layer or element's colors. Does not take any arguments.
 canvas.invert();
 ```
 
-<img id="martin-invert" src="images/bunny.jpg">
+<img id="martin-invert" src="/images/bunny.jpg">
 
 <hr>
 
@@ -106,7 +116,7 @@ var increasing = true;
     requestAnimationFrame(flash);
 })();
 ```
-<img id="martin-flash" src="images/bunny.jpg">
+<img id="martin-flash" src="/images/bunny.jpg">
 
 `Effects` can also be removed from their layer by calling:
 
@@ -121,10 +131,10 @@ canvas.click(function() {
 });
 ```
 
-<img id="martin-effect-remove" src="images/bunny.jpg">
+<img id="martin-effect-remove" src="/images/bunny.jpg">
 
-### .bump(`i`) / .bumpUp() / .bumpDown() / .bumpToTop() / .bumpToBottom()
+### .bump(`i`)
 
-Like layers and elements, effects can also be reordered on their layer's or element's stack of effects.
+Bump to position `i` (0-based). Can also use `.bumpUp()`, `.bumpDown()`, `.bumpToTop()`, or `.bumpToBottom()`. Like layers and elements, effects can also be reordered on their layer's or element's stack of effects.
 
 &nbsp;

@@ -21,7 +21,7 @@ canvas.click(function() {
     }
 });
 ```
-<img id="martin-click" src="images/bunny.jpg">
+<img id="martin-click" src="/images/bunny.jpg">
 
 ### .mouseover(`callback`) or .on('mouseover', `callback`)
 ### .mouseout(`callback`) or .on('mouseout', `callback`)
@@ -41,7 +41,7 @@ canvas.on('mouseover mouseout', function() {
     circle.moveTo( Math.random() * canvas.width(), Math.random() * canvas.height() );
 });
 ```
-<img id="martin-mouseover" src="images/bunny.jpg">
+<img id="martin-mouseover" src="/images/bunny.jpg">
 
 ### .mouseenter(`callback`) or .on('mouseenter', `callback`)
 ### .mouseleave(`callback`) or .on('mouseleave', `callback`)
@@ -73,7 +73,7 @@ randomCircle();
 canvas.on('mousedown mouseup', randomCircle);
 ```
 
-<img id="martin-mousedown" src="images/bunny.jpg">
+<img id="martin-mousedown" src="/images/bunny.jpg">
 
 ### .mousemove(`callback`) or .on('mousemove', `callback`)
 
@@ -93,4 +93,4 @@ canvas.mousemove(function(e) {
 });
 ```
 
-<img id="martin-mousemove" src="images/bunny.jpg">
+<img id="martin-mousemove" src="/images/bunny.jpg">
