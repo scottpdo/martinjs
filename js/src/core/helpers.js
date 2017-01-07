@@ -6,15 +6,15 @@
     hexToRGB()
 */
 
-Martin.degToRad = function(deg) {
+function degToRad(deg) {
     return deg * ( Math.PI / 180 );
-};
+}
 
-Martin.radToDeg = function(rad) {
+function radToDeg(rad) {
     return rad * ( 180 / Math.PI );
-};
+}
 
-Martin.hexToRGB = function( hex ) {
+function hexToRGB( hex ) {
 
     if ( !hex ) { return false; }
 
@@ -42,4 +42,4 @@ Martin.hexToRGB = function( hex ) {
         b: parseInt(b, 16)
     };
 
-};
+}

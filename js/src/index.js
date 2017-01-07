@@ -1,48 +1,25 @@
 /*
-    Martin.js: In-browser photo and image editing
+    Martin.js
     Author: Scott Donaldson
     Contact: scott.p.donaldson@gmail.com
     Twitter: @scottpdonaldson
-
-    ----------------------------------------
-
-    MARTIN
 */
 
 // The great initializer. Pass in a string to select element by ID,
 // or an HTMLElement
-var Martin = function( val, options ) {
+function Martin( val, options ) {
 
-    if ( !(this instanceof Martin) ) return new Martin( val, options );
+    var original = null;
 
-    // Set the original element, if there is one
-    this.original = null;
     if ( typeof val === 'string' ) {
-        this.original = document.getElementById(val);
+        original = document.getElementById(val);
     } else if ( val instanceof HTMLElement ) {
-        this.original = val;
+        original = val;
     }
 
-    this.options = options || {};
-
-    // Now prepare yourself...
-    return this.makeCanvas();
-};
-
-Martin.prototype.makeCanvas = require('./core/init.js');
-
-var utils = {};
-
-// var utils = require('./core/utils.js');
-
-for ( var types in utils ) {
-    for ( var func in utils[types] ) {
-        if ( type === '_private' ) {
-            Martin.utils[func] = utils[types][func];
-        } else {
-            Martin.prototype[func] = utils[types][func];
-        }
-    }
+    var output = require('./core.js')(original, options);
+    output.init();
+    return output;
 }
 
 if ( typeof window === 'object' ) {
